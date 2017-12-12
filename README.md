@@ -3,6 +3,8 @@
 An experimental backend to `mdbook` which will render your document as an `EPUB`
 file, suitable for viewing on e-readers and other similar devices.
 
+> **WARNING:** May eat your laundry.
+
 
 ## Getting Started
 
@@ -43,14 +45,19 @@ Now everything is set up, just run `mdbook` as normal and the output directory
 `mdBook Documentation.epub` (substituting in whatever your book's title is).
 
 
-## Features
+## Planned Features
 
-The following features are completed, or planned:
+The following features are planned (a checked box indicates it's complete). This
+list is by no means complete, so feature requests are most welcome!
 
 - [x] Make a valid `EPUB` file with the bare chapter contents
 - [x] Generate a basic TOC
+- [ ] Nested chapters - currently they're all inserted at the top level
 - [ ] Include a default CSS stylesheet
 - [ ] Include user-defined stylesheets and themes
+- [ ] Support the `{{#playpen some/rust/file.rs}}` annotation for including 
+  Rust files (will just include because running snippets via the Playpen doesn't 
+  make sense).
 
 
 ## Contributing
