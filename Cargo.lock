@@ -736,7 +736,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 [[package]]
 name = "mdbook"
 version = "0.0.29-alpha.0"
-source = "git+https://github.com/Michael-F-Bryan/mdbook?branch=alternate_backends#4f2d2d19114dfd24fa240d181a37718ba68950f4"
+source = "git+https://github.com/Michael-F-Bryan/mdbook?branch=alternate_backends#95682e35b678c0233a92813636fbe745abed9cb9"
 dependencies = [
  "clap 2.29.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "crossbeam 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
