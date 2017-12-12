@@ -1,6 +1,11 @@
 language: rust
-sudo: false
+sudo: true
 cache: cargo
+
+addons:
+  apt:
+    packages:
+      - python3
 
 rust:
 - stable
@@ -9,7 +14,6 @@ rust:
 
 os:
 - linux
-- osx
 
 script:
 - cargo build --verbose

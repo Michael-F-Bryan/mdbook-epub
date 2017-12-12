@@ -3,7 +3,7 @@ use std::path::PathBuf;
 
 use mdbook::renderer::RenderContext;
 use mdbook::book::{BookItem, Chapter};
-use epub_builder::{EpubBuilder, EpubContent, ReferenceType, Toc, TocElement, ZipLibrary};
+use epub_builder::{EpubBuilder, EpubContent, TocElement, ZipLibrary};
 use failure::{Error, SyncFailure};
 use pulldown_cmark::{html, Parser};
 

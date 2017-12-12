@@ -5,6 +5,10 @@ description = "An EPUB backend for mdbook."
 name = "mdbook-epub"
 version = "0.1.0"
 
+[[bin]]
+name = "mdbook-epub"
+doc = false
+
 [build-dependencies]
 cargo = "0.23.0"
 
