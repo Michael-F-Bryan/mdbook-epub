@@ -1,11 +1,12 @@
 extern crate failure;
 extern crate mdbook;
 extern crate mdbook_epub;
+extern crate pulldown_cmark;
 extern crate serde_json;
 
 use std::io;
+use std::env;
 use mdbook::renderer::RenderContext;
-use failure::Fail;
 
 
 fn main() {
@@ -17,9 +18,9 @@ fn main() {
             eprintln!("\tCaused By: {}", cause);
         }
 
-        if let Some(bt) = e.backtrace() {
+        if let Ok(_) = env::var("RUST_BACKTRACE") {
             eprintln!();
-            eprintln!("{}", bt);
+            eprintln!("{}", e.backtrace());
         }
     }
 }
