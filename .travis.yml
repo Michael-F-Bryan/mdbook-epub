@@ -1,0 +1,38 @@
+language: rust
+sudo: false
+cache: cargo
+
+rust:
+- stable
+- beta
+- nightly
+
+os:
+- linux
+- osx
+
+script:
+- cargo build --verbose
+- cargo test --verbose
+
+after_success:
+- test "$TRAVIS_PULL_REQUEST" == "false" && test "$TRAVIS_BRANCH" == "master" && test
+  "$TRAVIS_RUST_VERSION" == "stable" && bash ci/github_pages.sh
+
+before_deploy:
+- bash ci/before_deploy.sh
+
+deploy:
+  provider: releases
+  api_key:
+    secure:
+      secure: "V2TQ3SV3kiqSGEcEGFUtUkBhMrU5m/jGF0p5n1hjLOUHi1tbczevb25hslfQLzq067Q2MXWiQz93jVCPMEE45lTJiOUsfB37uBsdF667RMGYw2lYxpWsiS5vgi9blHsJYNqJJNcp7+kR5T/hZIvX7JALYz/bCxP9JDBu32EFu5ubCPtqKJ/KYDXovWqtZMYFwJqoDi9gaGjF4xtURUHkrtnOFDwAgBuVwO2OR7E6nJGe/vOJ9zbwqeTN5+s/EOy7bzwLAhVrjFxCfBTUV10t1BMdQMmx+lp9TXsMt3TTfbSSG43fazum/qIi6eWV6Trmjij4LQU/QUNfXW6akvhgW5cX3uFX+BndOc8Am11Tfg2NtIZ5AYYhGvys6BU1pfwU90Yr/oIpKd/4oXzTnK1t7en6r0z2jhrEHGuwaYvKXedX+S/4YHcSG9pBXoihgNESe/Az13wF0s6XZsErLBxUlJRzaSAtOpo22TkUpZl0eQNpX2rFf1J6uzQkh/1RhpM8ty9f2pqMy//CjIeNoF8SgL/LW0UaLVmn+I83IgGkeRWrfJICWme7k54nA98eEIE2wf682hhbSGljRcO7s1F+fts4Mut6UtW4Rzf27hgQQat4KKyVst/u5b52lPaAKjkd2MLdCl+9TQ7hfua8W8590GAIydc8WKkuMlBCx1zuvKI=""
+  file: "${PROJECT_NAME}-${TRAVIS_TAG}-${TRAVIS_OS_NAME}.tar.gz"
+  skip_cleanup: true
+  on:
+    condition: "$TRAVIS_RUST_VERSION = stable"
+    tags: true
+
+notifications:
+  email:
+    on_success: never
