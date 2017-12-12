@@ -1,5 +1,7 @@
 # MDBook EPUB Backend
 
+[![Build Status](https://travis-ci.org/Michael-F-Bryan/mdbook-epub.svg?branch=master)](https://travis-ci.org/Michael-F-Bryan/mdbook-epub)
+
 An experimental backend to `mdbook` which will render your document as an `EPUB`
 file, suitable for viewing on e-readers and other similar devices.
 
