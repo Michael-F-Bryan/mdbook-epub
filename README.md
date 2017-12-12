@@ -18,7 +18,8 @@ First you'll need to install a patched version of `mdbook`.
 $ cargo install --git https://github.com/Michael-F-Bryan/mdbook --branch alternate_backends
 ```
 
-Then you'll need to install the `EPUB` backend (a program called `mdbook-epub`).
+Then you'll need to install the `EPUB` backend (a program called `mdbook-epub`)
+directly from its git repository.
 
 ```
 $ cargo install --git https://github.com/Michael-F-Bryan/mdbook-epub

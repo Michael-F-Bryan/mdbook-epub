@@ -4,6 +4,7 @@ extern crate failure;
 extern crate failure_derive;
 extern crate mdbook;
 extern crate pulldown_cmark;
+extern crate semver;
 extern crate serde_json;
 
 
@@ -15,6 +16,11 @@ use mdbook::config::Config;
 use failure::{Error, SyncFailure};
 use pulldown_cmark::{html, Parser};
 use epub_builder::{EpubBuilder, EpubContent, Zip, ZipLibrary};
+use semver::{Version, VersionReq};
+
+
+/// The exact version of `mdbook` this crate is compiled against.
+pub const MDBOOK_VERSION: &'static str = env!("MDBOOK_VERSION");
 
 
 trait ResultExt<T, E> {
@@ -34,8 +40,35 @@ impl<T, E> ResultExt<T, E> for Result<T, E> {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Fail)]
+#[fail(display = "Incompatible mdbook version, expected {} but got {}", expected, got)]
+struct IncompatibleMdbookVersion {
+    expected: String,
+    got: String,
+}
+
+
+/// Check that the version of `mdbook` we're called by is compatible with this
+/// backend.
+fn version_check(ctx: &RenderContext) -> Result<(), Error> {
+    let provided_version = Version::parse(&ctx.version)?;
+    let required_version = VersionReq::parse(MDBOOK_VERSION)?;
+
+    if !required_version.matches(&provided_version) {
+        let e = IncompatibleMdbookVersion {
+            expected: MDBOOK_VERSION.to_string(),
+            got: ctx.version.clone(),
+        };
+
+        Err(Error::from(e))
+    } else {
+        Ok(())
+    }
+}
 
 pub fn generate(ctx: &RenderContext) -> Result<(), Error> {
+    version_check(ctx)?;
+
     let mut builder = EpubBuilder::new(ZipLibrary::new().sync()?).sync()?;
 
     populate_metadata(&mut builder, &ctx.config)?;
