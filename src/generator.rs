@@ -76,22 +76,30 @@ impl<'a> Generator<'a> {
         let path = ch.path.with_extension("html").display().to_string();
         let mut content = EpubContent::new(path, data).title(format!("{}", ch));
 
-        let level = ch.number.as_ref().map(|n| n.len() as i32).unwrap_or(0);
+        let level = ch.number.as_ref().map(|n| n.len() as i32 - 1).unwrap_or(0);
         content = content.level(level);
 
+        // unfortunately we need to do two passes through `ch.sub_items` here.
+        // The first pass will add each sub-item to the current chapter's toc
+        // and the second pass actually adds the sub-items to the book.
         for sub_item in &ch.sub_items {
             if let BookItem::Chapter(ref sub_ch) = *sub_item {
-                self.add_chapter(sub_ch)?;
-
                 let child_path = sub_ch.path.with_extension("html").display().to_string();
                 content = content.child(TocElement::new(child_path, format!("{}", sub_ch)));
             }
         }
 
         self.builder.add_content(content).sync()?;
+
+        // second pass to actually add the sub-chapters
+        for sub_item in &ch.sub_items {
+            if let BookItem::Chapter(ref sub_ch) = *sub_item {
+                self.add_chapter(sub_ch)?;
+            }
+        }
+
         Ok(())
     }
-
 
     /// Add any other additional assets to the book (CSS, images, etc).
     fn additional_assets(&mut self) -> Result<(), Error> {
