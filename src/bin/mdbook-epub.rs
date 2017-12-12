@@ -6,6 +6,7 @@ extern crate serde_json;
 
 use std::io;
 use std::env;
+use std::process;
 use mdbook::renderer::RenderContext;
 
 
@@ -22,5 +23,7 @@ fn main() {
             eprintln!();
             eprintln!("{}", e.backtrace());
         }
+
+        process::exit(1);
     }
 }
