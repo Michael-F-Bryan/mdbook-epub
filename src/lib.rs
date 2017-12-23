@@ -19,8 +19,14 @@ use failure::Error;
 use semver::{Version, VersionReq};
 
 mod generator;
+mod config;
+mod utils;
 
 pub use generator::Generator;
+pub use config::Config;
+
+/// The default stylesheet used to make the rendered document pretty.
+pub const DEFAULT_CSS: &str = include_str!("master.css");
 
 
 /// The exact version of `mdbook` this crate is compiled against.

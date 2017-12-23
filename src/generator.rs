@@ -1,25 +1,29 @@
-use std::io::{Cursor, Write};
-use std::path::PathBuf;
+use std::io::{Cursor, Write, Read};
+use std::fs::File;
 
 use mdbook::renderer::RenderContext;
 use mdbook::book::{BookItem, Chapter};
 use epub_builder::{EpubBuilder, EpubContent, TocElement, ZipLibrary};
-use failure::{Error, SyncFailure};
+use failure::{Error, ResultExt, Fail};
 use pulldown_cmark::{html, Parser};
+
+use config::Config;
+use DEFAULT_CSS;
+use utils::ResultExt as SyncResultExt;
 
 
 #[derive(Debug)]
 pub struct Generator<'a> {
     ctx: &'a RenderContext,
     builder: EpubBuilder<ZipLibrary>,
-    config: EpubConfig,
+    config: Config,
 }
 
 impl<'a> Generator<'a> {
     pub fn new(ctx: &'a RenderContext) -> Result<Generator<'a>, Error> {
         let builder = EpubBuilder::new(ZipLibrary::new().sync()?).sync()?;
 
-        let config = EpubConfig::from_render_context(ctx)?;
+        let config = Config::from_render_context(ctx)?;
 
         Ok(Generator {
             builder,
@@ -103,40 +107,27 @@ impl<'a> Generator<'a> {
 
     /// Add any other additional assets to the book (CSS, images, etc).
     fn additional_assets(&mut self) -> Result<(), Error> {
+        let stylesheet = self.generate_stylesheet().context("Unable to generate stylesheet")?;
+        self.builder.stylesheet(stylesheet.as_slice()).sync()?;
+
         Ok(())
     }
-}
 
-trait ResultExt<T, E> {
-    fn sync(self) -> Result<T, SyncFailure<E>>
-    where
-        Self: Sized,
-        E: ::std::error::Error + Send + 'static;
-}
+    /// Concatenate all provided stylesheets into one long stylesheet.
+    fn generate_stylesheet(&self) -> Result<Vec<u8>, Error> {
+        let mut stylesheet = Vec::new();
 
-impl<T, E> ResultExt<T, E> for Result<T, E> {
-    fn sync(self) -> Result<T, SyncFailure<E>>
-    where
-        Self: Sized,
-        E: ::std::error::Error + Send + 'static,
-    {
-        self.map_err(SyncFailure::new)
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
-#[serde(default, rename_all = "kebab-case")]
-pub struct EpubConfig {
-    additional_css: Vec<PathBuf>,
-}
-
-impl EpubConfig {
-    /// Get the `output.epub` table from the provided `book.toml` config,
-    /// falling back to the default if
-    pub fn from_render_context(ctx: &RenderContext) -> Result<EpubConfig, Error> {
-        match ctx.config.get("output.epub") {
-            Some(table) => table.clone().try_into().map_err(|e| Error::from(e)),
-            None => Ok(EpubConfig::default()),
+        if self.config.use_default_css {
+            stylesheet.extend(DEFAULT_CSS.as_bytes());
         }
+
+        for additional_css in &self.config.additional_css {
+            let mut f = File::open(&additional_css)
+                .with_context(|_| format!("Unable to open {}", additional_css.display()))?;
+            f.read_to_end(&mut stylesheet)
+                .context("Error reading stylesheet")?;
+        }
+
+        Ok(stylesheet)
     }
 }
