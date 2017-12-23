@@ -1,4 +1,4 @@
-# MDBook EPUB Backend
+ MDBook EPUB Backend
 
 [![Build Status](https://travis-ci.org/Michael-F-Bryan/mdbook-epub.svg?branch=master)](https://travis-ci.org/Michael-F-Bryan/mdbook-epub)
 
@@ -6,6 +6,8 @@ An experimental backend to `mdbook` which will render your document as an `EPUB`
 file, suitable for viewing on e-readers and other similar devices.
 
 > **WARNING:** May eat your laundry.
+
+[**(Rendered Docs)**](https://michael-f-bryan.github.io/mdbook-epub/)
 
 
 ## Getting Started
@@ -55,7 +57,7 @@ list is by no means complete, so feature requests are most welcome!
 
 - [x] Make a valid `EPUB` file with the bare chapter contents
 - [x] Generate a basic TOC
-- [ ] Nested chapters - currently they're all inserted at the top level
+- [x] Nested chapters - currently they're all inserted at the top level
 - [ ] Include a default CSS stylesheet
 - [ ] Include user-defined stylesheets and themes
 - [ ] Support the `{{#playpen some/rust/file.rs}}` annotation for including 
