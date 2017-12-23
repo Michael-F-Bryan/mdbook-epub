@@ -3,10 +3,13 @@ use failure::Error;
 use mdbook::renderer::RenderContext;
 
 
+/// The configuration struct used to tweak how an EPUB document is generated.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case")]
 pub struct Config {
+    /// A list of additional stylesheets to include in the document.
     pub additional_css: Vec<PathBuf>,
+    /// Should we use the default stylesheet (default: true)?
     pub use_default_css: bool,
 }
 

@@ -4,7 +4,7 @@ use std::fs::File;
 use mdbook::renderer::RenderContext;
 use mdbook::book::{BookItem, Chapter};
 use epub_builder::{EpubBuilder, EpubContent, TocElement, ZipLibrary};
-use failure::{Error, ResultExt, Fail};
+use failure::{Error, ResultExt};
 use pulldown_cmark::{html, Parser};
 
 use config::Config;
@@ -12,6 +12,7 @@ use DEFAULT_CSS;
 use utils::ResultExt as SyncResultExt;
 
 
+/// The actual EPUB book renderer.
 #[derive(Debug)]
 pub struct Generator<'a> {
     ctx: &'a RenderContext,
