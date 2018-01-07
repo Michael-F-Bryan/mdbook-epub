@@ -12,7 +12,7 @@ extern crate serde;
 extern crate serde_derive;
 extern crate serde_json;
 
-use std::fs::File;
+use std::fs::{create_dir_all, File};
 use mdbook::renderer::RenderContext;
 use failure::Error;
 use semver::{Version, VersionReq};
@@ -63,6 +63,10 @@ pub fn generate(ctx: &RenderContext) -> Result<(), Error> {
         Some(ref title) => ctx.destination.join(title).with_extension("epub"),
         None => ctx.destination.join("book.epub"),
     };
+
+    if !ctx.destination.exists() {
+        create_dir_all(&ctx.destination)?;
+    }
 
     let f = File::create(&outfile)?;
     Generator::new(ctx)?.generate(f)?;
