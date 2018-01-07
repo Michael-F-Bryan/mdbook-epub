@@ -2,7 +2,6 @@ use std::path::PathBuf;
 use failure::Error;
 use mdbook::renderer::RenderContext;
 
-
 /// The configuration struct used to tweak how an EPUB document is generated.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case")]

@@ -12,7 +12,6 @@ extern crate serde;
 extern crate serde_derive;
 extern crate serde_json;
 
-
 use std::fs::File;
 use mdbook::renderer::RenderContext;
 use failure::Error;
@@ -28,10 +27,8 @@ pub use config::Config;
 /// The default stylesheet used to make the rendered document pretty.
 pub const DEFAULT_CSS: &str = include_str!("master.css");
 
-
 /// The exact version of `mdbook` this crate is compiled against.
 pub const MDBOOK_VERSION: &'static str = env!("MDBOOK_VERSION");
-
 
 #[derive(Debug, Clone, PartialEq, Fail)]
 #[fail(display = "Incompatible mdbook version, expected {} but got {}", expected, got)]
@@ -39,7 +36,6 @@ struct IncompatibleMdbookVersion {
     expected: String,
     got: String,
 }
-
 
 /// Check that the version of `mdbook` we're called by is compatible with this
 /// backend.
@@ -64,8 +60,8 @@ pub fn generate(ctx: &RenderContext) -> Result<(), Error> {
     version_check(ctx)?;
 
     let outfile = match ctx.config.book.title {
-        Some(ref title) => ctx.build_dir().join(title).with_extension("epub"),
-        None => ctx.build_dir().join("book.epub"),
+        Some(ref title) => ctx.destination.join(title).with_extension("epub"),
+        None => ctx.destination.join("book.epub"),
     };
 
     let f = File::create(&outfile)?;

@@ -16,7 +16,6 @@ use structopt::StructOpt;
 use mdbook::renderer::RenderContext;
 use mdbook::MDBook;
 
-
 fn main() {
     let args = Args::from_args();
 
@@ -41,7 +40,15 @@ fn run(args: &Args) -> Result<(), Error> {
     // or by instrumenting MDBook directly (in standalone mode).
     let ctx: RenderContext = if args.standalone {
         let md = MDBook::load(&args.root).map_err(SyncFailure::new)?;
-        RenderContext::new(md.root, md.book, md.config)
+        let destination = md.build_dir_for("epub");
+
+        RenderContext {
+            version: mdbook_epub::MDBOOK_VERSION.to_string(),
+            root: md.root,
+            book: md.book,
+            config: md.config,
+            destination: destination,
+        }
     } else {
         serde_json::from_reader(io::stdin()).context("Unable to parse RenderContext")?
     };

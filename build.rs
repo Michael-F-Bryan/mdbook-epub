@@ -12,7 +12,6 @@ use cargo::core::Workspace;
 use cargo::util::Config;
 use cargo::ops;
 
-
 fn main() {
     let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
 

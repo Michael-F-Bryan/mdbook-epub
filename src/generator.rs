@@ -1,4 +1,4 @@
-use std::io::{Cursor, Write, Read};
+use std::io::{Cursor, Read, Write};
 use std::fs::File;
 
 use mdbook::renderer::RenderContext;
@@ -10,7 +10,6 @@ use pulldown_cmark::{html, Parser};
 use config::Config;
 use DEFAULT_CSS;
 use utils::ResultExt as SyncResultExt;
-
 
 /// The actual EPUB book renderer.
 #[derive(Debug)]
@@ -108,7 +107,8 @@ impl<'a> Generator<'a> {
 
     /// Add any other additional assets to the book (CSS, images, etc).
     fn additional_assets(&mut self) -> Result<(), Error> {
-        let stylesheet = self.generate_stylesheet().context("Unable to generate stylesheet")?;
+        let stylesheet = self.generate_stylesheet()
+            .context("Unable to generate stylesheet")?;
         self.builder.stylesheet(stylesheet.as_slice()).sync()?;
 
         Ok(())
