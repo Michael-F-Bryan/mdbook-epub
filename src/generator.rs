@@ -11,6 +11,20 @@ use config::Config;
 use DEFAULT_CSS;
 use utils::ResultExt as SyncResultExt;
 
+const CHAPTER_TEMPLATE_HEADER: &str = r#"<?xml version='1.0' encoding='utf-8'?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <link href="stylesheet.css" rel="stylesheet" type="text/css"/>
+    <title>TODO something here TODO</title>
+</head>
+<body>
+"#;
+
+const CHAPTER_TEMPLATE_FOOTER: &str = r#"</body>
+</html>
+"#;
+
 /// The actual EPUB book renderer.
 #[derive(Debug)]
 pub struct Generator<'a> {
@@ -73,7 +87,9 @@ impl<'a> Generator<'a> {
 
     fn add_chapter(&mut self, ch: &Chapter) -> Result<(), Error> {
         let mut buffer = String::new();
+        buffer.push_str(CHAPTER_TEMPLATE_HEADER);
         html::push_html(&mut buffer, Parser::new(&ch.content));
+        buffer.push_str(CHAPTER_TEMPLATE_FOOTER);
 
         let data = Cursor::new(Vec::from(buffer));
 
