@@ -44,16 +44,23 @@ fn output_epub_is_valid() {
 }
 
 #[test]
+fn look_for_chapter_1_heading() {
+    let mut doc = generate_epub().unwrap();
+
+    let content = doc.get_resource_str_by_path("OEBPS/chapter_1.html")
+        .unwrap();
+
+    assert!(content.contains("<h1>Chapter 1</h1>"));
+}
+
+#[test]
 fn rendered_document_contains_all_chapter_files() {
     let chapters = vec!["chapter_1"];
     let mut doc = generate_epub().unwrap();
 
-    println!("{:?}", doc.resources);
-
     for chapter in chapters {
         let path = Path::new("OEBPS").join(chapter).with_extension("html");
         let got = doc.get_resource_by_path(&path);
-        println!("{:?}", got);
 
         assert!(got.is_ok(), "{}", path.display());
     }
