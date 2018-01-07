@@ -58,8 +58,8 @@ list is by no means complete, so feature requests are most welcome!
 - [x] Make a valid `EPUB` file with the bare chapter contents
 - [x] Generate a basic TOC
 - [x] Nested chapters - currently they're all inserted at the top level
-- [ ] Include a default CSS stylesheet
-- [ ] Include user-defined stylesheets and themes
+- [x] Include a default CSS stylesheet ([master.css])
+- [x] Include user-defined stylesheets and themes
 - [ ] Support the `{{#playpen some/rust/file.rs}}` annotation for including 
   Rust files (will just include because running snippets via the Playpen doesn't 
   make sense).
@@ -73,3 +73,4 @@ create an issue on the [issue tracker]!
 
 
 [issue tracker]: https://github.com/Michael-F-Bryan/mdbook-epub/issues
+[master.css]: https://github.com/Michael-F-Bryan/mdbook-epub/blob/master/src/master.css
