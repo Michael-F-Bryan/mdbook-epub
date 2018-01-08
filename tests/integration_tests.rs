@@ -54,12 +54,12 @@ fn look_for_chapter_1_heading() {
 }
 
 #[test]
-fn rendered_document_contains_all_chapter_files() {
-    let chapters = vec!["chapter_1"];
+fn rendered_document_contains_all_chapter_files_and_assets() {
+    let chapters = vec!["chapter_1.html", "rust-logo.png"];
     let mut doc = generate_epub().unwrap();
 
     for chapter in chapters {
-        let path = Path::new("OEBPS").join(chapter).with_extension("html");
+        let path = Path::new("OEBPS").join(chapter);
         let got = doc.get_resource_by_path(&path);
 
         assert!(got.is_ok(), "{}", path.display());
