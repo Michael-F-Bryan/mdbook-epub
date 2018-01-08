@@ -13,7 +13,9 @@ extern crate serde_derive;
 extern crate serde_json;
 
 use std::fs::{create_dir_all, File};
+use std::path::{Path, PathBuf};
 use mdbook::renderer::RenderContext;
+use mdbook::config::Config as MdConfig;
 use failure::Error;
 use semver::{Version, VersionReq};
 
@@ -59,10 +61,7 @@ fn version_check(ctx: &RenderContext) -> Result<(), Error> {
 pub fn generate(ctx: &RenderContext) -> Result<(), Error> {
     version_check(ctx)?;
 
-    let outfile = match ctx.config.book.title {
-        Some(ref title) => ctx.destination.join(title).with_extension("epub"),
-        None => ctx.destination.join("book.epub"),
-    };
+    let outfile = output_filename(&ctx.destination, &ctx.config);
 
     if !ctx.destination.exists() {
         create_dir_all(&ctx.destination)?;
@@ -72,4 +71,12 @@ pub fn generate(ctx: &RenderContext) -> Result<(), Error> {
     Generator::new(ctx)?.generate(f)?;
 
     Ok(())
+}
+
+/// Calculate the output filename using the `mdbook` config.
+pub fn output_filename(dest: &Path, config: &MdConfig) -> PathBuf {
+    match config.book.title {
+        Some(ref title) => dest.join(title).with_extension("epub"),
+        None => dest.join("book.epub"),
+    }
 }
