@@ -24,6 +24,8 @@ serde_json = "1.0.8"
 structopt = "0.1.6"
 structopt-derive = "0.1.6"
 mime_guess = "1.8.3"
+env_logger = "0.5.0-rc.2"
+log = "0.4.1"
 
 [dependencies.mdbook]
 git = "https://github.com/rust-lang-nursery/mdbook"

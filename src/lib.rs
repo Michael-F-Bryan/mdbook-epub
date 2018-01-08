@@ -4,6 +4,8 @@ extern crate epub_builder;
 extern crate failure;
 #[macro_use]
 extern crate failure_derive;
+#[macro_use]
+extern crate log;
 extern crate mdbook;
 extern crate mime_guess;
 extern crate pulldown_cmark;
@@ -61,11 +63,17 @@ fn version_check(ctx: &RenderContext) -> Result<(), Error> {
 
 /// Generate an `EPUB` version of the provided book.
 pub fn generate(ctx: &RenderContext) -> Result<(), Error> {
+    info!("Starting the EPUB generator");
     version_check(ctx)?;
 
     let outfile = output_filename(&ctx.destination, &ctx.config);
+    trace!("Output File: {}", outfile.display());
 
     if !ctx.destination.exists() {
+        debug!(
+            "Creating destination directory ({})",
+            ctx.destination.display()
+        );
         create_dir_all(&ctx.destination)?;
     }
 

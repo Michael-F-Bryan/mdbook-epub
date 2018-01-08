@@ -14,6 +14,8 @@ pub fn find(ctx: &RenderContext) -> Result<Vec<Asset>, Error> {
 
     for section in ctx.book.iter() {
         if let BookItem::Chapter(ref ch) = *section {
+            trace!("Searching {} for links and assets", ch);
+
             let full_path = src_dir.join(&ch.path);
             let parent = full_path
                 .parent()
@@ -23,8 +25,8 @@ pub fn find(ctx: &RenderContext) -> Result<Vec<Asset>, Error> {
             for full_filename in found {
                 let relative = full_filename.strip_prefix(&src_dir).unwrap();
                 assets.push(Asset::new(relative, &full_filename));
+            }
         }
-    }
     }
 
     Ok(assets)

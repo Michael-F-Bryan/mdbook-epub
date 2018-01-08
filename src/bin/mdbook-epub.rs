@@ -1,3 +1,4 @@
+extern crate env_logger;
 extern crate failure;
 extern crate mdbook;
 extern crate mdbook_epub;
@@ -17,6 +18,7 @@ use mdbook::renderer::RenderContext;
 use mdbook::MDBook;
 
 fn main() {
+    env_logger::init();
     let args = Args::from_args();
 
     if let Err(e) = run(&args) {
