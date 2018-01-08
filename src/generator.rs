@@ -53,6 +53,8 @@ impl<'a> Generator<'a> {
     }
 
     pub fn generate<W: Write>(mut self, writer: W) -> Result<(), Error> {
+        info!("Generating the EPUB book");
+
         self.populate_metadata()?;
         self.generate_chapters()?;
 
@@ -64,8 +66,11 @@ impl<'a> Generator<'a> {
     }
 
     fn generate_chapters(&mut self) -> Result<(), Error> {
+        debug!("Rendering Chapters");
+
         for item in &self.ctx.book.sections {
             if let BookItem::Chapter(ref ch) = *item {
+                debug!("Adding chapter \"{}\"", ch);
                 self.add_chapter(ch)?;
             }
         }
@@ -109,6 +114,8 @@ impl<'a> Generator<'a> {
 
     /// Generate the stylesheet and add it to the document.
     fn embed_stylesheets(&mut self) -> Result<(), Error> {
+        debug!("Embedding stylesheets");
+
         let stylesheet = self.generate_stylesheet()
             .context("Unable to generate stylesheet")?;
         self.builder.stylesheet(stylesheet.as_slice()).sync()?;
@@ -117,12 +124,15 @@ impl<'a> Generator<'a> {
     }
 
     fn additional_assets(&mut self) -> Result<(), Error> {
+        debug!("Embedding additional assets");
+
         let assets =
             resources::find(self.ctx).context("Inspecting the book for additional assets failed")?;
 
         for asset in assets {
+            debug!("Embedding {}", asset.filename.display());
             self.load_asset(&asset)
-                .with_context(|_| format!("Couldn't load {}", asset.location_on_disk.display()))?;
+                .with_context(|_| format!("Couldn't load {}", asset.filename.display()))?;
         }
 
         Ok(())
