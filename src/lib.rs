@@ -5,6 +5,7 @@ extern crate failure;
 #[macro_use]
 extern crate failure_derive;
 extern crate mdbook;
+extern crate mime_guess;
 extern crate pulldown_cmark;
 extern crate semver;
 extern crate serde;
@@ -22,6 +23,7 @@ use semver::{Version, VersionReq};
 mod generator;
 mod config;
 mod utils;
+mod resources;
 
 pub use generator::Generator;
 pub use config::Config;
