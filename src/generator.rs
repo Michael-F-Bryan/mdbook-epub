@@ -129,6 +129,14 @@ impl<'a> Generator<'a> {
     }
 
     fn load_asset(&mut self, asset: &Asset) -> Result<(), Error> {
+        let content = File::open(&asset.location_on_disk).context("Unable to open asset")?;
+
+        let mt = asset.mimetype.to_string();
+
+        self.builder
+            .add_resource(&asset.filename, content, mt)
+            .sync()?;
+
         Ok(())
     }
 
