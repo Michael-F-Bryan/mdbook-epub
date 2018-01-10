@@ -4,6 +4,7 @@ extern crate epub_builder;
 extern crate failure;
 #[macro_use]
 extern crate failure_derive;
+extern crate handlebars;
 #[macro_use]
 extern crate log;
 extern crate mdbook;
@@ -13,6 +14,7 @@ extern crate semver;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
+#[macro_use]
 extern crate serde_json;
 
 use std::fs::{create_dir_all, File};

@@ -1,4 +1,5 @@
-use std::io::{Cursor, Read, Write};
+use std::io::{Read, Write};
+use std::fmt::{self, Debug, Formatter};
 use std::fs::File;
 
 use mdbook::renderer::RenderContext;
@@ -6,6 +7,7 @@ use mdbook::book::{BookItem, Chapter};
 use epub_builder::{EpubBuilder, EpubContent, TocElement, ZipLibrary};
 use failure::{Error, ResultExt};
 use pulldown_cmark::{html, Parser};
+use handlebars::{Handlebars, RenderError};
 
 use config::Config;
 use resources::{self, Asset};
@@ -13,23 +15,27 @@ use DEFAULT_CSS;
 use utils::ResultExt as SyncResultExt;
 
 /// The actual EPUB book renderer.
-#[derive(Debug)]
 pub struct Generator<'a> {
     ctx: &'a RenderContext,
     builder: EpubBuilder<ZipLibrary>,
     config: Config,
+    hbs: Handlebars,
 }
 
 impl<'a> Generator<'a> {
     pub fn new(ctx: &'a RenderContext) -> Result<Generator<'a>, Error> {
         let builder = EpubBuilder::new(ZipLibrary::new().sync()?).sync()?;
-
         let config = Config::from_render_context(ctx)?;
+
+        let mut hbs = Handlebars::new();
+        hbs.register_template_string("index", config.template()?)
+            .context("Couldn't parse the template")?;
 
         Ok(Generator {
             builder,
             ctx,
             config,
+            hbs,
         })
     }
 
@@ -38,7 +44,10 @@ impl<'a> Generator<'a> {
 
         if let Some(title) = self.ctx.config.book.title.clone() {
             self.builder.metadata("title", title).sync()?;
+        } else {
+            warn!("No `title` attribute found yet all EPUB documents should have a title");
         }
+
         if let Some(desc) = self.ctx.config.book.description.clone() {
             self.builder.metadata("description", desc).sync()?;
         }
@@ -48,6 +57,11 @@ impl<'a> Generator<'a> {
                 .metadata("author", self.ctx.config.book.authors.join(", "))
                 .sync()?;
         }
+
+        self.builder
+            .metadata("generator", env!("CARGO_PKG_NAME"))
+            .sync()?;
+        self.builder .metadata("lang", "en") .sync()?;
 
         Ok(())
     }
@@ -79,13 +93,12 @@ impl<'a> Generator<'a> {
     }
 
     fn add_chapter(&mut self, ch: &Chapter) -> Result<(), Error> {
-        let mut buffer = String::new();
-        html::push_html(&mut buffer, Parser::new(&ch.content));
-
-        let data = Cursor::new(Vec::from(buffer));
+        let rendered = self.render_chapter(ch)
+            .sync()
+            .context("Unable to render template")?;
 
         let path = ch.path.with_extension("html").display().to_string();
-        let mut content = EpubContent::new(path, data).title(format!("{}", ch));
+        let mut content = EpubContent::new(path, rendered.as_bytes()).title(format!("{}", ch));
 
         let level = ch.number.as_ref().map(|n| n.len() as i32 - 1).unwrap_or(0);
         content = content.level(level);
@@ -110,6 +123,16 @@ impl<'a> Generator<'a> {
         }
 
         Ok(())
+    }
+
+    /// Render the chapter into its fully formed HTML representation.
+    fn render_chapter(&self, ch: &Chapter) -> Result<String, RenderError> {
+        let mut body = String::new();
+        html::push_html(&mut body, Parser::new(&ch.content));
+
+        let ctx = json!({ "body": body, "title": ch.name });
+
+        self.hbs.render("index", &ctx)
     }
 
     /// Generate the stylesheet and add it to the document.
@@ -166,5 +189,15 @@ impl<'a> Generator<'a> {
         }
 
         Ok(stylesheet)
+    }
+}
+
+impl<'a> Debug for Generator<'a> {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        f.debug_struct("Generator")
+            .field("ctx", &self.ctx)
+            .field("builder", &self.builder)
+            .field("config", &self.config)
+            .finish()
     }
 }
