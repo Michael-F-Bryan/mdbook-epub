@@ -16,10 +16,10 @@ The support for alternative `mdbook` backends is still very much in the
 experimental phase, so getting everything working isn't as simple as a 
 `cargo install mdbook-epub`.
 
-First you'll need to install a patched version of `mdbook`.
+First you'll need to install `mdbook` directly from `master`.
 
 ```
-$ cargo install --git https://github.com/Michael-F-Bryan/mdbook --branch alternate_backends
+$ cargo install --git https://github.com/rust-lang-nursery/mdbook 
 ```
 
 Then you'll need to install the `EPUB` backend (a program called `mdbook-epub`)
@@ -60,9 +60,10 @@ list is by no means complete, so feature requests are most welcome!
 - [x] Nested chapters - currently they're all inserted at the top level
 - [x] Include a default CSS stylesheet ([master.css])
 - [x] Include user-defined stylesheets and themes
-- [ ] Support the `{{#playpen some/rust/file.rs}}` annotation for including 
-  Rust files (will just include because running snippets via the Playpen doesn't 
-  make sense).
+- [ ] Allow users to tweak the generated page by providing their own template
+- [ ] Ensure the generated document is viewable on the following platforms
+  - [ ] Amazon Kindle
+  - [ ] Sony PRS-T3
 
 
 ## Contributing
