@@ -5,6 +5,7 @@ extern crate mdbook_epub;
 extern crate tempdir;
 
 use std::path::Path;
+use std::process::Command;
 use failure::{Error, SyncFailure};
 use tempdir::TempDir;
 use epub::doc::EpubDoc;
@@ -41,6 +42,28 @@ fn output_epub_is_valid() {
     let got = EpubDoc::new(&output_file);
 
     assert!(got.is_ok());
+
+    // also try to run epubcheck, if it's available
+    epub_check(&output_file).unwrap();
+}
+
+fn epub_check(path: &Path) -> Result<(), Error> {
+    let cmd = Command::new("epubcheck").arg(path).output();
+
+    match cmd {
+        Ok(output) => {
+            if output.status.success() {
+                Ok(())
+            } else {
+                let msg = failure::err_msg(format!("epubcheck failed\n{:?}", output));
+                Err(msg)
+            }
+        }
+        Err(_) => {
+            // failed to launch epubcheck, it's probably not installed
+            Ok(())
+        }
+    }
 }
 
 #[test]

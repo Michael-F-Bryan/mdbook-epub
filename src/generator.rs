@@ -1,10 +1,11 @@
+use std::iter;
 use std::io::{Read, Write};
 use std::fmt::{self, Debug, Formatter};
 use std::fs::File;
 
 use mdbook::renderer::RenderContext;
 use mdbook::book::{BookItem, Chapter};
-use epub_builder::{EpubBuilder, EpubContent, TocElement, ZipLibrary};
+use epub_builder::{EpubBuilder, EpubContent, ZipLibrary};
 use failure::{Error, ResultExt};
 use pulldown_cmark::{html, Parser};
 use handlebars::{Handlebars, RenderError};
@@ -61,7 +62,7 @@ impl<'a> Generator<'a> {
         self.builder
             .metadata("generator", env!("CARGO_PKG_NAME"))
             .sync()?;
-        self.builder .metadata("lang", "en") .sync()?;
+        self.builder.metadata("lang", "en").sync()?;
 
         Ok(())
     }
@@ -103,16 +104,6 @@ impl<'a> Generator<'a> {
         let level = ch.number.as_ref().map(|n| n.len() as i32 - 1).unwrap_or(0);
         content = content.level(level);
 
-        // unfortunately we need to do two passes through `ch.sub_items` here.
-        // The first pass will add each sub-item to the current chapter's toc
-        // and the second pass actually adds the sub-items to the book.
-        for sub_item in &ch.sub_items {
-            if let BookItem::Chapter(ref sub_ch) = *sub_item {
-                let child_path = sub_ch.path.with_extension("html").display().to_string();
-                content = content.child(TocElement::new(child_path, format!("{}", sub_ch)));
-            }
-        }
-
         self.builder.add_content(content).sync()?;
 
         // second pass to actually add the sub-chapters
@@ -130,7 +121,16 @@ impl<'a> Generator<'a> {
         let mut body = String::new();
         html::push_html(&mut body, Parser::new(&ch.content));
 
-        let ctx = json!({ "body": body, "title": ch.name });
+        let stylesheet_path = ch.path
+            .parent()
+            .expect("All chapters have a parent")
+            .components()
+            .map(|_| "..")
+            .chain(iter::once("stylesheet.css"))
+            .collect::<Vec<_>>()
+            .join("/");
+
+        let ctx = json!({ "title": ch.name, "body": body, "stylesheet": stylesheet_path });
 
         self.hbs.render("index", &ctx)
     }
