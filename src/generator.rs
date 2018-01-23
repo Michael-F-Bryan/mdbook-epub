@@ -68,8 +68,11 @@ impl<'a> Generator<'a> {
     fn generate_chapters(&mut self) -> Result<(), Error> {
         debug!("Rendering Chapters");
 
-        for item in &self.ctx.book.sections {
+        for item in self.ctx.book.iter() {
             if let BookItem::Chapter(ref ch) = *item {
+                // iter() gives us an iterator over every node in the tree
+                // but we only want the top level here so we can recursively
+                // visit the chapters.
                 debug!("Adding chapter \"{}\"", ch);
                 self.add_chapter(ch)?;
             }

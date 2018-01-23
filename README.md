@@ -49,6 +49,14 @@ Now everything is set up, just run `mdbook` as normal and the output directory
 (`book/` by default) should now contain an extra file called 
 `mdBook Documentation.epub` (substituting in whatever your book's title is).
 
+The `mdbook-epub` executable can be run in "standalone" mode. This is where
+the backend can be used without needing to be called by `mdbook`, useful if
+you only want to render the EPUB document.
+
+```
+$ mdbook-epub --standalone ./path/to/book/dir
+```
+
 
 ## Planned Features
 

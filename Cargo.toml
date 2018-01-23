@@ -28,11 +28,9 @@ env_logger = "0.5.0-rc.2"
 log = "0.4.1"
 
 [dependencies.mdbook]
-git = "https://github.com/rust-lang-nursery/mdbook"
+git = "https://github.com/rust-lang-nursery/mdbook" 
+rev = "5379a0bdf8c6e07c03956956fcd35e298c0b43f3"
 
 [dev-dependencies]
 tempdir = "0.3.5"
 epub = { git = "https://github.com/danigm/epub-rs" }
-
-[patch.crates-io.pulldown-cmark]
-git = "https://github.com/google/pulldown-cmark"
