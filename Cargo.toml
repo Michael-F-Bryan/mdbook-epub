@@ -1,13 +1,22 @@
 [package]
 authors = ["Michael Bryan <michaelfbryan@gmail.com>"]
 build = "build.rs"
-description = "An EPUB backend for mdbook."
+description = "An EPUB renderer for mdbook."
 name = "mdbook-epub"
 version = "0.1.0"
 readme = "README.md"
 license = "MIT"
 repository = "https://github.com/Michael-F-Bryan/mdbook-epub"
 documentation = "https://docs.rs/mdbook-epub"
+keywords = ["epub", "mdbook", "documentation"]
+categories = ["command-line-interface", "development-tools"]
+
+[package.metadata.release]
+sign-commit = true
+
+[badges]
+travis-ci = { repository = "Michael-F-Bryan/mdbook-epub", branch = "master" }
+maintenance = { status = "actively-developed" }
 
 [[bin]]
 name = "mdbook-epub"
