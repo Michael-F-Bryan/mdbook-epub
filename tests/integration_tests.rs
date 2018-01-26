@@ -17,6 +17,7 @@ fn generate_epub() -> Result<EpubDoc, Error> {
     mdbook_epub::generate(&ctx)?;
     let output_file = mdbook_epub::output_filename(temp.path(), &ctx.config);
 
+    let output_file = output_file.display().to_string();
     EpubDoc::new(&output_file).map_err(Error::from)
 }
 
@@ -37,6 +38,7 @@ fn output_epub_is_valid() {
     mdbook_epub::generate(&ctx).unwrap();
 
     let output_file = mdbook_epub::output_filename(temp.path(), &ctx.config);
+    let output_file = output_file.display().to_string();
 
     let got = EpubDoc::new(&output_file);
 
@@ -60,9 +62,10 @@ fn rendered_document_contains_all_chapter_files_and_assets() {
 
     for chapter in chapters {
         let path = Path::new("OEBPS").join(chapter);
+        let path = path.display().to_string();
         let got = doc.get_resource_by_path(&path);
 
-        assert!(got.is_ok(), "{}", path.display());
+        assert!(got.is_ok(), "{}", path);
     }
 }
 
