@@ -1,6 +1,7 @@
  # MDBook EPUB Backend
 
 [![Build Status](https://travis-ci.org/Michael-F-Bryan/mdbook-epub.svg?branch=master)](https://travis-ci.org/Michael-F-Bryan/mdbook-epub)
+[![Build status](https://ci.appveyor.com/api/projects/status/33y7ewdbvo4ap1i9/branch/master?svg=true)](https://ci.appveyor.com/project/Michael-F-Bryan/mdbook-epub/branch/master)
 
 [**(Rendered Docs)**](https://michael-f-bryan.github.io/mdbook-epub/)
 
