@@ -64,7 +64,7 @@ fn assets_in_markdown(src: &str, parent_dir: &Path) -> Result<Vec<PathBuf>, Erro
     for event in Parser::new(src) {
         match event {
             Event::Start(Tag::Image(dest, _)) => {
-                found.push(dest.to_owned());
+                found.push(dest.into_owned());
             }
             _ => {}
         }
@@ -81,7 +81,8 @@ fn assets_in_markdown(src: &str, parent_dir: &Path) -> Result<Vec<PathBuf>, Erro
     let mut assets = Vec::new();
 
     for link in found {
-        let filename = parent_dir.join(&*link);
+        let link = PathBuf::from(link);
+        let filename = parent_dir.join(link);
         let filename = filename.canonicalize().with_context(|_| {
             format!(
                 "Unable to fetch the canonical path for {}",
