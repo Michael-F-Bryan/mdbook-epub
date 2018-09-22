@@ -49,8 +49,9 @@ fn output_epub_is_valid() {
 fn look_for_chapter_1_heading() {
     let mut doc = generate_epub().unwrap();
 
-    let content = doc.get_resource_str_by_path("OEBPS/chapter_1.html")
-        .unwrap();
+    let res_path = Path::new("OEBPS").join("chapter_1.html");
+    let res_path = res_path.to_str().unwrap();
+    let content = doc.get_resource_str_by_path(res_path).unwrap();
 
     assert!(content.contains("<h1>Chapter 1</h1>"));
 }
