@@ -24,7 +24,7 @@ fn main() {
     if let Err(e) = run(&args) {
         eprintln!("Error: {}", e);
 
-        for cause in e.causes().skip(1) {
+        for cause in e.iter_causes() {
             eprintln!("\tCaused By: {}", cause);
         }
 
