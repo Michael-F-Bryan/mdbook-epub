@@ -80,13 +80,7 @@ fn create_dummy_book() -> Result<(RenderContext, MDBook, TempDir), Error> {
 
     let md = MDBook::load(dummy_book).map_err(SyncFailure::new)?;
 
-    let ctx = RenderContext {
-        version: mdbook_epub::MDBOOK_VERSION.to_string(),
-        root: md.root.clone(),
-        book: md.book.clone(),
-        config: md.config.clone(),
-        destination: temp.path().to_path_buf(),
-    };
+    let ctx = RenderContext::new(md.root.clone(), md.book.clone(), md.config.clone(), temp.path().to_path_buf());
 
     Ok((ctx, md, temp))
 }
