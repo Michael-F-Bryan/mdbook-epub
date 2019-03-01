@@ -1,13 +1,14 @@
-use std::path::{Path, PathBuf};
-use mime_guess::{self, Mime};
-use mdbook::renderer::RenderContext;
-use mdbook::book::BookItem;
-use pulldown_cmark::{Event, Parser, Tag};
 use failure::{self, Error, ResultExt};
+use mdbook::book::BookItem;
+use mdbook::renderer::RenderContext;
+use mime_guess::{self, Mime};
+use pulldown_cmark::{Event, Parser, Tag};
+use std::path::{Path, PathBuf};
 
 pub fn find(ctx: &RenderContext) -> Result<Vec<Asset>, Error> {
     let mut assets = Vec::new();
-    let src_dir = ctx.root
+    let src_dir = ctx
+        .root
         .join(&ctx.config.book.src)
         .canonicalize()
         .context("Unable to canonicalize the src directory")?;
@@ -51,7 +52,7 @@ impl Asset {
         let mt = mime_guess::guess_mime_type(&location_on_disk);
 
         Asset {
-            location_on_disk: location_on_disk,
+            location_on_disk,
             filename: filename.into(),
             mimetype: mt,
         }
@@ -62,11 +63,8 @@ fn assets_in_markdown(src: &str, parent_dir: &Path) -> Result<Vec<PathBuf>, Erro
     let mut found = Vec::new();
 
     for event in Parser::new(src) {
-        match event {
-            Event::Start(Tag::Image(dest, _)) => {
-                found.push(dest.into_owned());
-            }
-            _ => {}
+        if let Event::Start(Tag::Image(dest, _)) = event {
+            found.push(dest.into_owned());
         }
     }
 

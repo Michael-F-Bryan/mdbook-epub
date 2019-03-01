@@ -1,16 +1,16 @@
-use std::io::{Cursor, Read, Write};
 use std::fs::File;
+use std::io::{Cursor, Read, Write};
 
-use mdbook::renderer::RenderContext;
-use mdbook::book::{BookItem, Chapter};
 use epub_builder::{EpubBuilder, EpubContent, TocElement, ZipLibrary};
 use failure::{Error, ResultExt};
+use mdbook::book::{BookItem, Chapter};
+use mdbook::renderer::RenderContext;
 use pulldown_cmark::{html, Parser};
 
 use config::Config;
 use resources::{self, Asset};
-use DEFAULT_CSS;
 use utils::ResultExt as SyncResultExt;
+use DEFAULT_CSS;
 
 /// The actual EPUB book renderer.
 #[derive(Debug)]
@@ -119,7 +119,8 @@ impl<'a> Generator<'a> {
     fn embed_stylesheets(&mut self) -> Result<(), Error> {
         debug!("Embedding stylesheets");
 
-        let stylesheet = self.generate_stylesheet()
+        let stylesheet = self
+            .generate_stylesheet()
             .context("Unable to generate stylesheet")?;
         self.builder.stylesheet(stylesheet.as_slice()).sync()?;
 
@@ -129,8 +130,8 @@ impl<'a> Generator<'a> {
     fn additional_assets(&mut self) -> Result<(), Error> {
         debug!("Embedding additional assets");
 
-        let assets =
-            resources::find(self.ctx).context("Inspecting the book for additional assets failed")?;
+        let assets = resources::find(self.ctx)
+            .context("Inspecting the book for additional assets failed")?;
 
         for asset in assets {
             debug!("Embedding {}", asset.filename.display());

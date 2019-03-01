@@ -15,29 +15,32 @@ extern crate serde;
 extern crate serde_derive;
 extern crate serde_json;
 
+use failure::Error;
+use mdbook::config::Config as MdConfig;
+use mdbook::renderer::RenderContext;
+use semver::{Version, VersionReq};
 use std::fs::{create_dir_all, File};
 use std::path::{Path, PathBuf};
-use mdbook::renderer::RenderContext;
-use mdbook::config::Config as MdConfig;
-use failure::Error;
-use semver::{Version, VersionReq};
 
-mod generator;
 mod config;
-mod utils;
+mod generator;
 mod resources;
+mod utils;
 
-pub use generator::Generator;
 pub use config::Config;
+pub use generator::Generator;
 
 /// The default stylesheet used to make the rendered document pretty.
 pub const DEFAULT_CSS: &str = include_str!("master.css");
 
 /// The exact version of `mdbook` this crate is compiled against.
-pub const MDBOOK_VERSION: &'static str = env!("MDBOOK_VERSION");
+pub const MDBOOK_VERSION: &str = env!("MDBOOK_VERSION");
 
 #[derive(Debug, Clone, PartialEq, Fail)]
-#[fail(display = "Incompatible mdbook version, expected {} but got {}", expected, got)]
+#[fail(
+    display = "Incompatible mdbook version, expected {} but got {}",
+    expected, got
+)]
 struct IncompatibleMdbookVersion {
     expected: String,
     got: String,

@@ -5,12 +5,12 @@
 extern crate cargo;
 
 use std::env;
-use std::path::Path;
 use std::error::Error;
+use std::path::Path;
 
 use cargo::core::Workspace;
-use cargo::util::Config;
 use cargo::ops;
+use cargo::util::Config;
 
 fn main() {
     let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
