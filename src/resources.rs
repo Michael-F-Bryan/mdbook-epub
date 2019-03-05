@@ -113,8 +113,8 @@ mod tests {
         let src =
             "![Image 1](./rust-logo.png)\n[a link](to/nowhere) ![Image 2][2]\n\n[2]: reddit.svg\n";
         let should_be = vec![
-            parent_dir.join("rust-logo.png"),
-            parent_dir.join("reddit.svg"),
+            parent_dir.join("rust-logo.png").canonicalize().unwrap(),
+            parent_dir.join("reddit.svg").canonicalize().unwrap(),
         ];
 
         let got = assets_in_markdown(src, &parent_dir).unwrap();
