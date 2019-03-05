@@ -12,10 +12,6 @@ environment:
     - TARGET: i686-pc-windows-msvc
     - TARGET: x86_64-pc-windows-msvc
 
-    # Testing other channels
-    - TARGET: x86_64-pc-windows-msvc
-      RUST_VERSION: 1.24.0
-
 install:
   - ps: >-
       If ($Env:TARGET -eq 'x86_64-pc-windows-gnu') {
