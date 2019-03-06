@@ -1,6 +1,6 @@
-use std::path::PathBuf;
 use failure::Error;
 use mdbook::renderer::RenderContext;
+use std::path::PathBuf;
 
 /// The configuration struct used to tweak how an EPUB document is generated.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -17,7 +17,7 @@ impl Config {
     /// falling back to the default if
     pub fn from_render_context(ctx: &RenderContext) -> Result<Config, Error> {
         match ctx.config.get("output.epub") {
-            Some(table) => table.clone().try_into().map_err(|e| Error::from(e)),
+            Some(table) => table.clone().try_into().map_err(Error::from),
             None => Ok(Config::default()),
         }
     }

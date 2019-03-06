@@ -4,12 +4,12 @@ extern crate mdbook;
 extern crate mdbook_epub;
 extern crate tempdir;
 
-use std::path::Path;
-use failure::{Error, SyncFailure};
-use tempdir::TempDir;
 use epub::doc::EpubDoc;
+use failure::{Error, SyncFailure};
 use mdbook::renderer::RenderContext;
 use mdbook::MDBook;
+use std::path::Path;
+use tempdir::TempDir;
 
 /// Convenience function for compiling the dummy book into an `EpubDoc`.
 fn generate_epub() -> Result<EpubDoc, Error> {
@@ -49,8 +49,9 @@ fn output_epub_is_valid() {
 fn look_for_chapter_1_heading() {
     let mut doc = generate_epub().unwrap();
 
-    let content = doc.get_resource_str_by_path("OEBPS/chapter_1.html")
-        .unwrap();
+    let path = Path::new("OEBPS").join("chapter_1.html");
+    let path = path.display().to_string();
+    let content = doc.get_resource_str_by_path(path).unwrap();
 
     assert!(content.contains("<h1>Chapter 1</h1>"));
 }
@@ -80,13 +81,12 @@ fn create_dummy_book() -> Result<(RenderContext, MDBook, TempDir), Error> {
 
     let md = MDBook::load(dummy_book).map_err(SyncFailure::new)?;
 
-    let ctx = RenderContext {
-        version: mdbook_epub::MDBOOK_VERSION.to_string(),
-        root: md.root.clone(),
-        book: md.book.clone(),
-        config: md.config.clone(),
-        destination: temp.path().to_path_buf(),
-    };
+    let ctx = RenderContext::new(
+        md.root.clone(),
+        md.book.clone(),
+        md.config.clone(),
+        temp.path().to_path_buf(),
+    );
 
     Ok((ctx, md, temp))
 }
