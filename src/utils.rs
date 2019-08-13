@@ -1,7 +1,7 @@
 use failure::SyncFailure;
 use std::error::Error as StdError;
 
-pub trait ResultExt<T, E> {
+pub(crate) trait ResultExt<T, E> {
     fn sync(self) -> Result<T, SyncFailure<E>>
     where
         Self: Sized,

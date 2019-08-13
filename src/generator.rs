@@ -7,10 +7,10 @@ use mdbook::book::{BookItem, Chapter};
 use mdbook::renderer::RenderContext;
 use pulldown_cmark::{html, Parser};
 
-use config::Config;
-use resources::{self, Asset};
-use utils::ResultExt as SyncResultExt;
-use DEFAULT_CSS;
+use crate::config::Config;
+use crate::resources::{self, Asset};
+use crate::utils::ResultExt as _;
+use crate::DEFAULT_CSS;
 
 /// The actual EPUB book renderer.
 #[derive(Debug)]
@@ -53,7 +53,7 @@ impl<'a> Generator<'a> {
     }
 
     pub fn generate<W: Write>(mut self, writer: W) -> Result<(), Error> {
-        info!("Generating the EPUB book");
+        log::info!("Generating the EPUB book");
 
         self.populate_metadata()?;
         self.generate_chapters()?;
@@ -66,14 +66,14 @@ impl<'a> Generator<'a> {
     }
 
     fn generate_chapters(&mut self) -> Result<(), Error> {
-        debug!("Rendering Chapters");
+        log::debug!("Rendering Chapters");
 
         for item in self.ctx.book.iter() {
             if let BookItem::Chapter(ref ch) = *item {
                 // iter() gives us an iterator over every node in the tree
                 // but we only want the top level here so we can recursively
                 // visit the chapters.
-                debug!("Adding chapter \"{}\"", ch);
+                log::debug!("Adding chapter \"{}\"", ch);
                 self.add_chapter(ch)?;
             }
         }
@@ -117,7 +117,7 @@ impl<'a> Generator<'a> {
 
     /// Generate the stylesheet and add it to the document.
     fn embed_stylesheets(&mut self) -> Result<(), Error> {
-        debug!("Embedding stylesheets");
+        log::debug!("Embedding stylesheets");
 
         let stylesheet = self
             .generate_stylesheet()
@@ -128,13 +128,13 @@ impl<'a> Generator<'a> {
     }
 
     fn additional_assets(&mut self) -> Result<(), Error> {
-        debug!("Embedding additional assets");
+        log::debug!("Embedding additional assets");
 
         let assets = resources::find(self.ctx)
             .context("Inspecting the book for additional assets failed")?;
 
         for asset in assets {
-            debug!("Embedding {}", asset.filename.display());
+            log::debug!("Embedding {}", asset.filename.display());
             self.load_asset(&asset)
                 .with_context(|_| format!("Couldn't load {}", asset.filename.display()))?;
         }

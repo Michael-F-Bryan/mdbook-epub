@@ -10,7 +10,7 @@ addons:
 
 rust:
 - stable
-- beta
+- "1.32.0"
 - nightly
 
 os:

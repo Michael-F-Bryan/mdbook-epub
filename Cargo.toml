@@ -9,6 +9,7 @@ repository = "https://github.com/Michael-F-Bryan/mdbook-epub"
 documentation = "https://docs.rs/mdbook-epub"
 keywords = ["epub", "mdbook", "documentation"]
 categories = ["command-line-interface", "development-tools"]
+edition = "2018"
 
 [package.metadata.release]
 sign-commit = true

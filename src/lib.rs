@@ -1,19 +1,22 @@
 //! A `mdbook` backend for generating a book in the `EPUB` format.
 
-extern crate epub_builder;
-extern crate failure;
+#![deny(
+    bare_trait_objects,
+    elided_lifetimes_in_paths,
+    missing_copy_implementations,
+    missing_debug_implementations,
+    rust_2018_idioms,
+    unreachable_pub,
+    unsafe_code,
+    unused_qualifications,
+    unused_results,
+    variant_size_differences
+)]
+
 #[macro_use]
 extern crate failure_derive;
 #[macro_use]
-extern crate log;
-extern crate mdbook;
-extern crate mime_guess;
-extern crate pulldown_cmark;
-extern crate semver;
-extern crate serde;
-#[macro_use]
 extern crate serde_derive;
-extern crate serde_json;
 
 use failure::Error;
 use mdbook::config::Config as MdConfig;
@@ -27,8 +30,8 @@ mod generator;
 mod resources;
 mod utils;
 
-pub use config::Config;
-pub use generator::Generator;
+pub use crate::config::Config;
+pub use crate::generator::Generator;
 
 /// The default stylesheet used to make the rendered document pretty.
 pub const DEFAULT_CSS: &str = include_str!("master.css");
@@ -66,14 +69,14 @@ fn version_check(ctx: &RenderContext) -> Result<(), Error> {
 
 /// Generate an `EPUB` version of the provided book.
 pub fn generate(ctx: &RenderContext) -> Result<(), Error> {
-    info!("Starting the EPUB generator");
+    log::info!("Starting the EPUB generator");
     version_check(ctx)?;
 
     let outfile = output_filename(&ctx.destination, &ctx.config);
-    trace!("Output File: {}", outfile.display());
+    log::trace!("Output File: {}", outfile.display());
 
     if !ctx.destination.exists() {
-        debug!(
+        log::debug!(
             "Creating destination directory ({})",
             ctx.destination.display()
         );

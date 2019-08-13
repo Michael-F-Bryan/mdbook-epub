@@ -5,7 +5,7 @@ use mime_guess::{self, Mime};
 use pulldown_cmark::{Event, Parser, Tag};
 use std::path::{Path, PathBuf};
 
-pub fn find(ctx: &RenderContext) -> Result<Vec<Asset>, Error> {
+pub(crate) fn find(ctx: &RenderContext) -> Result<Vec<Asset>, Error> {
     let mut assets = Vec::new();
     let src_dir = ctx
         .root
@@ -15,7 +15,7 @@ pub fn find(ctx: &RenderContext) -> Result<Vec<Asset>, Error> {
 
     for section in ctx.book.iter() {
         if let BookItem::Chapter(ref ch) = *section {
-            trace!("Searching {} for links and assets", ch);
+            log::trace!("Searching {} for links and assets", ch);
 
             let full_path = src_dir.join(&ch.path);
             let parent = full_path
@@ -34,12 +34,12 @@ pub fn find(ctx: &RenderContext) -> Result<Vec<Asset>, Error> {
 }
 
 #[derive(Clone, PartialEq, Debug)]
-pub struct Asset {
+pub(crate) struct Asset {
     /// The asset's absolute location on disk.
-    pub location_on_disk: PathBuf,
+    pub(crate) location_on_disk: PathBuf,
     /// The asset's filename relative to the `src/` directory.
-    pub filename: PathBuf,
-    pub mimetype: Mime,
+    pub(crate) filename: PathBuf,
+    pub(crate) mimetype: Mime,
 }
 
 impl Asset {
