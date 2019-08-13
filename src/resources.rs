@@ -49,7 +49,7 @@ impl Asset {
         Q: Into<PathBuf>,
     {
         let location_on_disk = absolute_location.into();
-        let mt = mime_guess::guess_mime_type(&location_on_disk);
+        let mt = mime_guess::from_path(&location_on_disk).first_or_octet_stream();
 
         Asset {
             location_on_disk,
@@ -63,8 +63,8 @@ fn assets_in_markdown(src: &str, parent_dir: &Path) -> Result<Vec<PathBuf>, Erro
     let mut found = Vec::new();
 
     for event in Parser::new(src) {
-        if let Event::Start(Tag::Image(dest, _)) = event {
-            found.push(dest.into_owned());
+        if let Event::Start(Tag::Image(_, dest, _)) = event {
+            found.push(dest.to_string());
         }
     }
 

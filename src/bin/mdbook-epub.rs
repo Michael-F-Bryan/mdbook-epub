@@ -5,8 +5,6 @@ extern crate mdbook_epub;
 extern crate pulldown_cmark;
 extern crate serde_json;
 extern crate structopt;
-#[macro_use]
-extern crate structopt_derive;
 
 use failure::{Error, ResultExt, SyncFailure};
 use mdbook::renderer::RenderContext;

@@ -34,7 +34,7 @@ pub use generator::Generator;
 pub const DEFAULT_CSS: &str = include_str!("master.css");
 
 /// The exact version of `mdbook` this crate is compiled against.
-pub const MDBOOK_VERSION: &str = env!("MDBOOK_VERSION");
+pub const MDBOOK_VERSION: &str = mdbook::MDBOOK_VERSION;
 
 #[derive(Debug, Clone, PartialEq, Fail)]
 #[fail(
