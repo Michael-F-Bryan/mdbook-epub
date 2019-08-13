@@ -9,7 +9,6 @@
     unreachable_pub,
     unsafe_code,
     unused_qualifications,
-    unused_results,
     variant_size_differences
 )]
 
