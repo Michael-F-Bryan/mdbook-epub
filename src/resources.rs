@@ -71,7 +71,7 @@ fn asset_from_url(link: &str, out_dir: &Path) -> Result<Asset, Error> {
 
     if !relative.is_file() {
         let mut file = OpenOptions::new().write(true).open(&relative).with_context(|_| format!(
-            "Unable to open the image's cache file for writing: {}",
+            "Unable to open an image's cache file for writing: {}",
             relative.display()
         ))?;
 
@@ -82,7 +82,7 @@ fn asset_from_url(link: &str, out_dir: &Path) -> Result<Asset, Error> {
         ))?;
 
         downloaded.copy_to(&mut file).with_context(|_| format!(
-            "Unable to write the downloaded image to {}",
+            "Unable to write a downloaded image to {}",
             relative.display()
         ))?;
     }
@@ -96,12 +96,12 @@ fn asset_from_url(link: &str, out_dir: &Path) -> Result<Asset, Error> {
 }
 
 fn asset_from_path(link: &str, ch: &Chapter, src_dir: &Path) -> Result<Asset, Error> {
-    let ch_dir = src_dir.join(&ch.path);
-    let ch_dir_parent = ch_dir.parent().ok_or_else(|| failure::err_msg(
+    let ch_path = src_dir.join(&ch.path);
+    let ch_dir = ch_path.parent().ok_or_else(|| failure::err_msg(
         "All book chapters have a parent directory"
     ))?;
 
-    let full_filename = ch_dir_parent.join(link);
+    let full_filename = ch_dir.join(link);
     let full_filename = full_filename.canonicalize().with_context(|_| format!(
         "Unable to fetch the canonical path for {}",
         full_filename.display()
