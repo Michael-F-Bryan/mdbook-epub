@@ -23,6 +23,7 @@ name = "mdbook-epub"
 doc = false
 
 [dependencies]
+blake2 = "0.8"
 epub-builder = "0.4"
 failure = "0.1.1"
 failure_derive = "0.1.1"
@@ -36,6 +37,10 @@ mime_guess = "2.0"
 env_logger = "0.6"
 log = "0.4"
 mdbook = "0.3.1"
+
+[dependencies.reqwest]
+version = "0.10"
+features = ["blocking"]
 
 [dev-dependencies]
 tempdir = "0.3.5"
