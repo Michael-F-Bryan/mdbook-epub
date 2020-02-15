@@ -24,11 +24,11 @@ fn main() {
     if let Err(e) = run(&args) {
         eprintln!("Error: {}", e);
 
-        for cause in e.causes().skip(1) {
+        for cause in e.iter_chain().skip(1) {
             eprintln!("\tCaused By: {}", cause);
         }
 
-        if let Ok(_) = env::var("RUST_BACKTRACE") {
+        if env::var("RUST_BACKTRACE").is_ok() {
             eprintln!();
             eprintln!("{}", e.backtrace());
         }
@@ -44,13 +44,15 @@ fn run(args: &Args) -> Result<(), Error> {
         let md = MDBook::load(&args.root).map_err(SyncFailure::new)?;
         let destination = md.build_dir_for("epub");
 
-        RenderContext {
-            version: mdbook_epub::MDBOOK_VERSION.to_string(),
-            root: md.root,
-            book: md.book,
-            config: md.config,
-            destination: destination,
-        }
+        // NOTE not checking the version for now.
+        // mdbook_epub::MDBOOK_VERSION
+
+        RenderContext::new(
+            md.root,
+            md.book,
+            md.config,
+            destination,
+        )
     } else {
         serde_json::from_reader(io::stdin()).context("Unable to parse RenderContext")?
     };

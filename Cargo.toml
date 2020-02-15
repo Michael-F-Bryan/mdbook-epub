@@ -10,10 +10,10 @@ name = "mdbook-epub"
 doc = false
 
 [build-dependencies]
-cargo = "0.24.0"
+cargo = "0.42.0"
 
 [dependencies]
-epub-builder = "0.3.0"
+epub-builder = "0.4"
 failure = "0.1.1"
 failure_derive = "0.1.1"
 pulldown-cmark = "0.1.0"

@@ -26,7 +26,7 @@ fn main() {
 fn find_dependency_version<P: AsRef<Path>>(
     manifest_dir: P,
     dep: &str,
-) -> Result<String, Box<Error>> {
+) -> Result<String, Box<dyn Error>> {
     let config = Config::default()?;
 
     let manifest = manifest_dir.as_ref().join("Cargo.toml");
