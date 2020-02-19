@@ -1,35 +1,42 @@
+use std::iter;
+use std::io::{Read, Write};
+use std::fmt::{self, Debug, Formatter};
 use std::fs::File;
-use std::io::{Cursor, Read, Write};
 
-use epub_builder::{EpubBuilder, EpubContent, TocElement, ZipLibrary};
-use failure::{Error, ResultExt};
-use mdbook::book::{BookItem, Chapter};
 use mdbook::renderer::RenderContext;
+use mdbook::book::{BookItem, Chapter};
+use epub_builder::{EpubBuilder, EpubContent, ZipLibrary};
+use failure::{Error, ResultExt};
 use pulldown_cmark::{html, Parser};
+use handlebars::{Handlebars, RenderError};
 
 use crate::config::Config;
 use crate::resources::{self, Asset};
-use crate::utils::ResultExt as _;
+use crate::utils::ResultExt as SyncResultExt;
 use crate::DEFAULT_CSS;
 
 /// The actual EPUB book renderer.
-#[derive(Debug)]
 pub struct Generator<'a> {
     ctx: &'a RenderContext,
     builder: EpubBuilder<ZipLibrary>,
     config: Config,
+    hbs: Handlebars,
 }
 
 impl<'a> Generator<'a> {
     pub fn new(ctx: &'a RenderContext) -> Result<Generator<'a>, Error> {
         let builder = EpubBuilder::new(ZipLibrary::new().sync()?).sync()?;
-
         let config = Config::from_render_context(ctx)?;
+
+        let mut hbs = Handlebars::new();
+        hbs.register_template_string("index", config.template()?)
+            .context("Couldn't parse the template")?;
 
         Ok(Generator {
             builder,
             ctx,
             config,
+            hbs,
         })
     }
 
@@ -38,7 +45,10 @@ impl<'a> Generator<'a> {
 
         if let Some(title) = self.ctx.config.book.title.clone() {
             self.builder.metadata("title", title).sync()?;
+        } else {
+            warn!("No `title` attribute found yet all EPUB documents should have a title");
         }
+
         if let Some(desc) = self.ctx.config.book.description.clone() {
             self.builder.metadata("description", desc).sync()?;
         }
@@ -49,11 +59,16 @@ impl<'a> Generator<'a> {
                 .sync()?;
         }
 
+        self.builder
+            .metadata("generator", env!("CARGO_PKG_NAME"))
+            .sync()?;
+        self.builder.metadata("lang", "en").sync()?;
+
         Ok(())
     }
 
     pub fn generate<W: Write>(mut self, writer: W) -> Result<(), Error> {
-        log::info!("Generating the EPUB book");
+        info!("Generating the EPUB book");
 
         self.populate_metadata()?;
         self.generate_chapters()?;
@@ -66,14 +81,11 @@ impl<'a> Generator<'a> {
     }
 
     fn generate_chapters(&mut self) -> Result<(), Error> {
-        log::debug!("Rendering Chapters");
+        debug!("Rendering Chapters");
 
-        for item in self.ctx.book.iter() {
+        for item in &self.ctx.book.sections {
             if let BookItem::Chapter(ref ch) = *item {
-                // iter() gives us an iterator over every node in the tree
-                // but we only want the top level here so we can recursively
-                // visit the chapters.
-                log::debug!("Adding chapter \"{}\"", ch);
+                debug!("Adding chapter \"{}\"", ch);
                 self.add_chapter(ch)?;
             }
         }
@@ -82,16 +94,17 @@ impl<'a> Generator<'a> {
     }
 
     fn add_chapter(&mut self, ch: &Chapter) -> Result<(), Error> {
-        let mut buffer = String::new();
-        html::push_html(&mut buffer, Parser::new(&ch.content));
-
-        let data = Cursor::new(Vec::from(buffer));
+        let rendered = self.render_chapter(ch)
+            .sync()
+            .context("Unable to render template")?;
 
         let path = ch.path.with_extension("html").display().to_string();
-        let mut content = EpubContent::new(path, data).title(format!("{}", ch));
+        let mut content = EpubContent::new(path, rendered.as_bytes()).title(format!("{}", ch));
 
         let level = ch.number.as_ref().map(|n| n.len() as i32 - 1).unwrap_or(0);
         content = content.level(level);
+
+        /* FIXME: is this logic still necessary?
 
         // unfortunately we need to do two passes through `ch.sub_items` here.
         // The first pass will add each sub-item to the current chapter's toc
@@ -102,6 +115,7 @@ impl<'a> Generator<'a> {
                 content = content.child(TocElement::new(child_path, format!("{}", sub_ch)));
             }
         }
+        */
 
         self.builder.add_content(content).sync()?;
 
@@ -115,9 +129,28 @@ impl<'a> Generator<'a> {
         Ok(())
     }
 
+    /// Render the chapter into its fully formed HTML representation.
+    fn render_chapter(&self, ch: &Chapter) -> Result<String, RenderError> {
+        let mut body = String::new();
+        html::push_html(&mut body, Parser::new(&ch.content));
+
+        let stylesheet_path = ch.path
+            .parent()
+            .expect("All chapters have a parent")
+            .components()
+            .map(|_| "..")
+            .chain(iter::once("stylesheet.css"))
+            .collect::<Vec<_>>()
+            .join("/");
+
+        let ctx = json!({ "title": ch.name, "body": body, "stylesheet": stylesheet_path });
+
+        self.hbs.render("index", &ctx)
+    }
+
     /// Generate the stylesheet and add it to the document.
     fn embed_stylesheets(&mut self) -> Result<(), Error> {
-        log::debug!("Embedding stylesheets");
+        debug!("Embedding stylesheets");
 
         let stylesheet = self
             .generate_stylesheet()
@@ -128,13 +161,13 @@ impl<'a> Generator<'a> {
     }
 
     fn additional_assets(&mut self) -> Result<(), Error> {
-        log::debug!("Embedding additional assets");
+        debug!("Embedding additional assets");
 
         let assets = resources::find(self.ctx)
             .context("Inspecting the book for additional assets failed")?;
 
         for asset in assets {
-            log::debug!("Embedding {}", asset.filename.display());
+            debug!("Embedding {}", asset.filename.display());
             self.load_asset(&asset)
                 .with_context(|_| format!("Couldn't load {}", asset.filename.display()))?;
         }
@@ -170,5 +203,15 @@ impl<'a> Generator<'a> {
         }
 
         Ok(stylesheet)
+    }
+}
+
+impl<'a> Debug for Generator<'a> {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        f.debug_struct("Generator")
+            .field("ctx", &self.ctx)
+            .field("builder", &self.builder)
+            .field("config", &self.config)
+            .finish()
     }
 }
