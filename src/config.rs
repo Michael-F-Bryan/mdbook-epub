@@ -4,7 +4,7 @@ use std::fs::File;
 use failure::{Error, ResultExt};
 use mdbook::renderer::RenderContext;
 
-pub const DEFAULT_TEMPLATE: &'static str = include_str!("index.hbs");
+pub const DEFAULT_TEMPLATE: &str = include_str!("index.hbs");
 
 /// The configuration struct used to tweak how an EPUB document is generated.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -17,6 +17,8 @@ pub struct Config {
     /// The template file to use when rendering individual chapters (relative
     /// to the book root).
     pub index_template: Option<PathBuf>,
+    /// A cover image to use for the epub.
+    pub cover_image: Option<PathBuf>,
 }
 
 impl Config {
@@ -61,6 +63,7 @@ impl Default for Config {
             use_default_css: true,
             additional_css: Vec::new(),
             index_template: None,
+            cover_image: None,
         }
     }
 }

@@ -73,6 +73,7 @@ impl<'a> Generator<'a> {
         self.populate_metadata()?;
         self.generate_chapters()?;
 
+        self.add_cover_image()?;
         self.embed_stylesheets()?;
         self.additional_assets()?;
         self.builder.generate(writer).sync()?;
@@ -170,6 +171,22 @@ impl<'a> Generator<'a> {
             debug!("Embedding {}", asset.filename.display());
             self.load_asset(&asset)
                 .with_context(|_| format!("Couldn't load {}", asset.filename.display()))?;
+        }
+
+        Ok(())
+    }
+
+    fn add_cover_image(&mut self) -> Result<(), Error> {
+        debug!("Adding cover image");
+
+        if let Some(ref path) = self.config.cover_image {
+            let name = path.file_name().expect("Can't provide file name.");
+            let full_path = path.canonicalize()?;
+            let mt = mime_guess::from_path(&full_path).first_or_octet_stream();
+
+            let content = File::open(&full_path).context("Unable to open asset")?;
+
+            self.builder.add_cover_image(&name, content, mt.to_string()).sync()?;
         }
 
         Ok(())
