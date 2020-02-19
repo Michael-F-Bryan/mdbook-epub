@@ -65,11 +65,15 @@ Recognized options:
 
 `cover-image`: A path to a cover image file for the ebook.
 
+`additional-resources`: A list of path to files which should be added to the
+EPUB, such as typefaces. They will be added with path `OEBPS/<filename>`.
+
 ```toml
 [output.epub]
 additional-css = ["./path/to/main.css"]
 use-default-css = false
 cover-image = "ebook-cover.png"
+additional-resources = ["./assets/Open-Sans-Regular.ttf"]
 ```
 
 

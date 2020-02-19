@@ -76,6 +76,7 @@ impl<'a> Generator<'a> {
         self.add_cover_image()?;
         self.embed_stylesheets()?;
         self.additional_assets()?;
+        self.additional_resources()?;
         self.builder.generate(writer).sync()?;
 
         Ok(())
@@ -171,6 +172,24 @@ impl<'a> Generator<'a> {
             debug!("Embedding {}", asset.filename.display());
             self.load_asset(&asset)
                 .with_context(|_| format!("Couldn't load {}", asset.filename.display()))?;
+        }
+
+        Ok(())
+    }
+
+    fn additional_resources(&mut self) -> Result<(), Error> {
+        debug!("Embedding additional resources");
+
+        for path in self.config.additional_resources.iter() {
+            debug!("Embedding {:?}", path);
+
+            let name = path.file_name().unwrap_or_else(|| panic!("Can't determine file name of: {:?}", &path));
+            let full_path = path.canonicalize()?;
+            let mt = mime_guess::from_path(&full_path).first_or_octet_stream();
+
+            let content = File::open(&full_path).context("Unable to open asset").unwrap();
+
+            self.builder.add_resource(&name, content, mt.to_string()).sync()?;
         }
 
         Ok(())

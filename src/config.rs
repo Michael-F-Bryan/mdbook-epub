@@ -19,6 +19,8 @@ pub struct Config {
     pub index_template: Option<PathBuf>,
     /// A cover image to use for the epub.
     pub cover_image: Option<PathBuf>,
+    /// Additional assets to include in the ebook, such as typefaces.
+    pub additional_resources: Vec<PathBuf>,
 }
 
 impl Config {
@@ -64,6 +66,7 @@ impl Default for Config {
             additional_css: Vec::new(),
             index_template: None,
             cover_image: None,
+            additional_resources: Vec::new(),
         }
     }
 }
