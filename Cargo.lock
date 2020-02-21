@@ -323,6 +323,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "env_logger"
+version = "0.7.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "44533bbbb3bb3c1fa17d9f2e4e38bbbaf8396ba82193c4cb1b6445d711445d36"
+dependencies = [
+ "atty",
+ "humantime",
+ "log 0.4.8",
+ "regex 1.3.4",
+ "termcolor",
+]
+
+[[package]]
 name = "epub"
 version = "1.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -354,12 +367,12 @@ dependencies = [
 
 [[package]]
 name = "error-chain"
-version = "0.12.1"
+version = "0.12.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3ab49e9dcb602294bc42f9a7dfc9bc6e936fca4418ea300dbfb84fe16de0b7d9"
+checksum = "d371106cc88ffdfb1eabd7111e432da544f16f3e2d7bf1dfe8bf575f1df045cd"
 dependencies = [
  "backtrace",
- "version_check 0.1.5",
+ "version_check 0.9.1",
 ]
 
 [[package]]
@@ -772,9 +785,9 @@ checksum = "b294d6fa9ee409a054354afc4352b0b9ef7ca222c69b8812cbea9e7d2bf3783f"
 
 [[package]]
 name = "libc"
-version = "0.2.66"
+version = "0.2.67"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d515b1f41455adea1313a4a2ac8a8a477634fbae63cc6100e3aebb207ce61558"
+checksum = "eb147597cdf94ed43ab7a9038716637d2d1bf2bc571da995d0028dec06bd3018"
 
 [[package]]
 name = "log"
@@ -839,7 +852,7 @@ dependencies = [
  "chrono",
  "clap",
  "elasticlunr-rs",
- "env_logger",
+ "env_logger 0.6.2",
  "error-chain",
  "gitignore",
  "handlebars 2.0.4",
@@ -867,7 +880,7 @@ dependencies = [
 name = "mdbook-epub"
 version = "0.3.1-alpha.0"
 dependencies = [
- "env_logger",
+ "env_logger 0.7.1",
  "epub",
  "epub-builder",
  "failure",
@@ -876,7 +889,7 @@ dependencies = [
  "log 0.4.8",
  "mdbook",
  "mime_guess 2.0.1",
- "pulldown-cmark 0.5.3",
+ "pulldown-cmark 0.7.0",
  "semver",
  "serde 1.0.104",
  "serde_derive",
@@ -1213,6 +1226,32 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "925383efa346730478fb4838dbe9137d2a47675ad789c546d150a6e1dd4ab31c"
 
 [[package]]
+name = "proc-macro-error"
+version = "0.4.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "052b3c9af39c7e5e94245f820530487d19eb285faedcb40e0c3275132293f242"
+dependencies = [
+ "proc-macro-error-attr",
+ "proc-macro2 1.0.8",
+ "quote 1.0.2",
+ "rustversion",
+ "syn 1.0.14",
+]
+
+[[package]]
+name = "proc-macro-error-attr"
+version = "0.4.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d175bef481c7902e63e3165627123fff3502f06ac043d3ef42d08c1246da9253"
+dependencies = [
+ "proc-macro2 1.0.8",
+ "quote 1.0.2",
+ "rustversion",
+ "syn 1.0.14",
+ "syn-mid",
+]
+
+[[package]]
 name = "proc-macro2"
 version = "0.4.30"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1232,9 +1271,9 @@ dependencies = [
 
 [[package]]
 name = "pulldown-cmark"
-version = "0.5.3"
+version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "77043da1282374688ee212dc44b3f37ff929431de9c9adc3053bd3cee5630357"
+checksum = "1c205cc82214f3594e2d50686730314f817c67ffa80fe800cf0db78c3c2b9d9e"
 dependencies = [
  "bitflags",
  "getopts",
@@ -1244,9 +1283,9 @@ dependencies = [
 
 [[package]]
 name = "pulldown-cmark"
-version = "0.6.1"
+version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1c205cc82214f3594e2d50686730314f817c67ffa80fe800cf0db78c3c2b9d9e"
+checksum = "2c2d7fd131800e0d63df52aff46201acaab70b431a4a1ec6f0343fe8e64f35a4"
 dependencies = [
  "bitflags",
  "getopts",
@@ -1509,6 +1548,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4c691c0e608126e00913e33f0ccf3727d5fc84573623b8d65b2df340b5201783"
 
 [[package]]
+name = "rustversion"
+version = "1.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b3bba175698996010c4f6dce5e7f173b6eb781fce25d2cfc45e27091ce0b79f6"
+dependencies = [
+ "proc-macro2 1.0.8",
+ "quote 1.0.2",
+ "syn 1.0.14",
+]
+
+[[package]]
 name = "ryu"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1689,24 +1739,26 @@ checksum = "8ea5119cdb4c55b55d432abb513a0429384878c15dde60cc77b1c99de1a95a6a"
 
 [[package]]
 name = "structopt"
-version = "0.2.18"
+version = "0.3.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "16c2cdbf9cc375f15d1b4141bc48aeef444806655cd0e904207edc8d68d86ed7"
+checksum = "a1bcbed7d48956fcbb5d80c6b95aedb553513de0a1b451ea92679d999c010e98"
 dependencies = [
  "clap",
+ "lazy_static 1.4.0",
  "structopt-derive",
 ]
 
 [[package]]
 name = "structopt-derive"
-version = "0.2.18"
+version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "53010261a84b37689f9ed7d395165029f9cc7abb9f56bbfe86bee2597ed25107"
+checksum = "095064aa1f5b94d14e635d0a5684cf140c43ae40a0fd990708d38f5d669e5f64"
 dependencies = [
  "heck",
- "proc-macro2 0.4.30",
- "quote 0.6.13",
- "syn 0.15.44",
+ "proc-macro-error",
+ "proc-macro2 1.0.8",
+ "quote 1.0.2",
+ "syn 1.0.14",
 ]
 
 [[package]]
@@ -1747,6 +1799,17 @@ dependencies = [
  "proc-macro2 1.0.8",
  "quote 1.0.2",
  "unicode-xid 0.2.0",
+]
+
+[[package]]
+name = "syn-mid"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7be3539f6c128a931cf19dcee741c1af532c7fd387baa739c03dd2e96479338a"
+dependencies = [
+ "proc-macro2 1.0.8",
+ "quote 1.0.2",
+ "syn 1.0.14",
 ]
 
 [[package]]
