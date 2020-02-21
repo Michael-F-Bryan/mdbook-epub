@@ -1,0 +1,89 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="API documentation for the Rust `Factory` trait in crate `ws`."><meta name="keywords" content="rust, rustlang, rust-lang, Factory"><title>ws::Factory - Rust</title><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../dark.css"><link rel="stylesheet" type="text/css" href="../light.css" id="themeStyle"><script src="../storage.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="shortcut icon" href="../favicon.ico"><style type="text/css">#crate-search{background-image:url("../down-arrow.svg");}</style></head><body class="rustdoc trait"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../ws/index.html'><div class='logo-container'><img src='../rust-logo.png' alt='logo'></div></a><p class='location'>Trait Factory</p><div class="sidebar-elems"><div class="block items"><a class="sidebar-title" href="#associated-types">Associated Types</a><div class="sidebar-links"><a href="#associatedtype.Handler">Handler</a></div><a class="sidebar-title" href="#required-methods">Required Methods</a><div class="sidebar-links"><a href="#tymethod.connection_made">connection_made</a></div><a class="sidebar-title" href="#provided-methods">Provided Methods</a><div class="sidebar-links"><a href="#method.client_connected">client_connected</a><a href="#method.connection_lost">connection_lost</a><a href="#method.on_shutdown">on_shutdown</a><a href="#method.server_connected">server_connected</a></div><a class="sidebar-title" href="#implementors">Implementors</a></div><p class='location'><a href='index.html'>ws</a></p><script>window.sidebarCurrent = {name: 'Factory', ty: 'trait', relpath: ''};</script><script defer src="sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../settings.html"><img src="../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class='fqn'><span class='out-of-band'><span id='render-detail'><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class='inner'>&#x2212;</span>]</a></span><a class='srclink' href='../src/ws/factory.rs.html#5-102' title='goto source code'>[src]</a></span><span class='in-band'>Trait <a href='index.html'>ws</a>::<wbr><a class="trait" href=''>Factory</a></span></h1><div class="docblock type-decl hidden-by-usual-hider"><pre class='rust trait'>pub trait Factory {
+    type <a href='#associatedtype.Handler' class="type">Handler</a>: <a class="trait" href="../ws/trait.Handler.html" title="trait ws::Handler">Handler</a>;
+    fn <a href='#tymethod.connection_made' class='fnname'>connection_made</a>(&amp;mut self, _: <a class="struct" href="../ws/struct.Sender.html" title="struct ws::Sender">Sender</a>) -&gt; Self::<a class="type" href="../ws/trait.Factory.html#associatedtype.Handler" title="type ws::Factory::Handler">Handler</a>;
+
+    fn <a href='#method.on_shutdown' class='fnname'>on_shutdown</a>(&amp;mut self) { ... }
+<div class='item-spacer'></div>    fn <a href='#method.client_connected' class='fnname'>client_connected</a>(&amp;mut self, ws: <a class="struct" href="../ws/struct.Sender.html" title="struct ws::Sender">Sender</a>) -&gt; Self::<a class="type" href="../ws/trait.Factory.html#associatedtype.Handler" title="type ws::Factory::Handler">Handler</a> { ... }
+<div class='item-spacer'></div>    fn <a href='#method.server_connected' class='fnname'>server_connected</a>(&amp;mut self, ws: <a class="struct" href="../ws/struct.Sender.html" title="struct ws::Sender">Sender</a>) -&gt; Self::<a class="type" href="../ws/trait.Factory.html#associatedtype.Handler" title="type ws::Factory::Handler">Handler</a> { ... }
+<div class='item-spacer'></div>    fn <a href='#method.connection_lost' class='fnname'>connection_lost</a>(&amp;mut self, _: Self::<a class="type" href="../ws/trait.Factory.html#associatedtype.Handler" title="type ws::Factory::Handler">Handler</a>) { ... }
+}</pre></div><div class='docblock'><p>A trait for creating new WebSocket handlers.</p>
+</div>
+            <h2 id='associated-types' class='small-section-header'>Associated Types<a href='#associated-types' class='anchor'></a></h2><div class='methods'><h3 id='associatedtype.Handler' class='method'><code id='Handler.t'>type <a href='#associatedtype.Handler' class="type">Handler</a>: <a class="trait" href="../ws/trait.Handler.html" title="trait ws::Handler">Handler</a></code></h3></div><span class='loading-content'>Loading content...</span>
+            <h2 id='required-methods' class='small-section-header'>Required methods<a href='#required-methods' class='anchor'></a></h2><div class='methods'><h3 id='tymethod.connection_made' class='method'><code id='connection_made.v'>fn <a href='#tymethod.connection_made' class='fnname'>connection_made</a>(&amp;mut self, _: <a class="struct" href="../ws/struct.Sender.html" title="struct ws::Sender">Sender</a>) -&gt; Self::<a class="type" href="../ws/trait.Factory.html#associatedtype.Handler" title="type ws::Factory::Handler">Handler</a></code></h3><div class='docblock'><p>Called when a TCP connection is made.</p>
+</div></div><span class='loading-content'>Loading content...</span>
+            <h2 id='provided-methods' class='small-section-header'>Provided methods<a href='#provided-methods' class='anchor'></a></h2><div class='methods'><h3 id='method.on_shutdown' class='method'><code id='on_shutdown.v'>fn <a href='#method.on_shutdown' class='fnname'>on_shutdown</a>(&amp;mut self)</code></h3><div class='docblock'><p>Called when the WebSocket is shutting down.</p>
+</div><h3 id='method.client_connected' class='method'><code id='client_connected.v'>fn <a href='#method.client_connected' class='fnname'>client_connected</a>(&amp;mut self, ws: <a class="struct" href="../ws/struct.Sender.html" title="struct ws::Sender">Sender</a>) -&gt; Self::<a class="type" href="../ws/trait.Factory.html#associatedtype.Handler" title="type ws::Factory::Handler">Handler</a></code></h3><div class='docblock'><p>Called when a new connection is established for a client endpoint.
+This method can be used to differentiate a client aspect for a handler.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">ws</span>::{<span class="ident">Sender</span>, <span class="ident">Factory</span>, <span class="ident">Handler</span>};
+
+<span class="kw">struct</span> <span class="ident">MyHandler</span> {
+    <span class="ident">ws</span>: <span class="ident">Sender</span>,
+    <span class="ident">is_client</span>: <span class="ident">bool</span>,
+}
+
+<span class="kw">impl</span> <span class="ident">Handler</span> <span class="kw">for</span> <span class="ident">MyHandler</span> {}
+
+<span class="kw">struct</span> <span class="ident">MyFactory</span>;
+
+<span class="kw">impl</span> <span class="ident">Factory</span> <span class="kw">for</span> <span class="ident">MyFactory</span> {
+    <span class="kw">type</span> <span class="ident">Handler</span> <span class="op">=</span> <span class="ident">MyHandler</span>;
+
+    <span class="kw">fn</span> <span class="ident">connection_made</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">ws</span>: <span class="ident">Sender</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">MyHandler</span> {
+        <span class="ident">MyHandler</span> {
+            <span class="ident">ws</span>: <span class="ident">ws</span>,
+            <span class="comment">// default to server</span>
+            <span class="ident">is_client</span>: <span class="bool-val">false</span>,
+        }
+    }
+
+    <span class="kw">fn</span> <span class="ident">client_connected</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">ws</span>: <span class="ident">Sender</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">MyHandler</span> {
+        <span class="ident">MyHandler</span> {
+            <span class="ident">ws</span>: <span class="ident">ws</span>,
+            <span class="ident">is_client</span>: <span class="bool-val">true</span>,
+        }
+    }
+}</pre></div>
+</div><h3 id='method.server_connected' class='method'><code id='server_connected.v'>fn <a href='#method.server_connected' class='fnname'>server_connected</a>(&amp;mut self, ws: <a class="struct" href="../ws/struct.Sender.html" title="struct ws::Sender">Sender</a>) -&gt; Self::<a class="type" href="../ws/trait.Factory.html#associatedtype.Handler" title="type ws::Factory::Handler">Handler</a></code></h3><div class='docblock'><p>Called when a new connection is established for a server endpoint.
+This method can be used to differentiate a server aspect for a handler.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">ws</span>::{<span class="ident">Sender</span>, <span class="ident">Factory</span>, <span class="ident">Handler</span>};
+
+<span class="kw">struct</span> <span class="ident">MyHandler</span> {
+    <span class="ident">ws</span>: <span class="ident">Sender</span>,
+    <span class="ident">is_server</span>: <span class="ident">bool</span>,
+}
+
+<span class="kw">impl</span> <span class="ident">Handler</span> <span class="kw">for</span> <span class="ident">MyHandler</span> {}
+
+<span class="kw">struct</span> <span class="ident">MyFactory</span>;
+
+<span class="kw">impl</span> <span class="ident">Factory</span> <span class="kw">for</span> <span class="ident">MyFactory</span> {
+    <span class="kw">type</span> <span class="ident">Handler</span> <span class="op">=</span> <span class="ident">MyHandler</span>;
+
+    <span class="kw">fn</span> <span class="ident">connection_made</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">ws</span>: <span class="ident">Sender</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">MyHandler</span> {
+        <span class="ident">MyHandler</span> {
+            <span class="ident">ws</span>: <span class="ident">ws</span>,
+            <span class="comment">// default to client</span>
+            <span class="ident">is_server</span>: <span class="bool-val">false</span>,
+        }
+    }
+
+    <span class="kw">fn</span> <span class="ident">server_connected</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">ws</span>: <span class="ident">Sender</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">MyHandler</span> {
+        <span class="ident">MyHandler</span> {
+            <span class="ident">ws</span>: <span class="ident">ws</span>,
+            <span class="ident">is_server</span>: <span class="bool-val">true</span>,
+        }
+    }
+}</pre></div>
+</div><h3 id='method.connection_lost' class='method'><code id='connection_lost.v'>fn <a href='#method.connection_lost' class='fnname'>connection_lost</a>(&amp;mut self, _: Self::<a class="type" href="../ws/trait.Factory.html#associatedtype.Handler" title="type ws::Factory::Handler">Handler</a>)</code></h3><div class='docblock'><p>Called when a TCP connection is lost with the handler that was
+setup for that connection.</p>
+<p>The default implementation is a noop that simply drops the handler.
+You can use this to track connections being destroyed or to finalize
+state that was not internally tracked by the handler.</p>
+</div></div><span class='loading-content'>Loading content...</span>
+            <h2 id='implementors' class='small-section-header'>Implementors<a href='#implementors' class='anchor'></a></h2><div class='item-list' id='implementors-list'><h3 id='impl-Factory' class='impl'><code class='in-band'>impl&lt;F, H&gt; Factory for F <span class="where fmt-newline">where<br>&nbsp;&nbsp;&nbsp;&nbsp;H: <a class="trait" href="../ws/trait.Handler.html" title="trait ws::Handler">Handler</a>,<br>&nbsp;&nbsp;&nbsp;&nbsp;F: <a class="trait" href="https://doc.rust-lang.org/nightly/core/ops/function/trait.FnMut.html" title="trait core::ops::function::FnMut">FnMut</a>(<a class="struct" href="../ws/struct.Sender.html" title="struct ws::Sender">Sender</a>) -&gt; H,&nbsp;</span></code><a href='#impl-Factory' class='anchor'></a><a class='srclink' href='../src/ws/factory.rs.html#104-114' title='goto source code'>[src]</a></h3><div class='impl-items'><h4 id='associatedtype.Handler-1' class="type"><code id='Handler.t-1'>type <a href='#associatedtype.Handler-1' class="type">Handler</a> = H</code></h4><h4 id='method.connection_made' class="method hidden"><code id='connection_made.v-1'>fn <a href='#method.connection_made' class='fnname'>connection_made</a>(&amp;mut self, out: <a class="struct" href="../ws/struct.Sender.html" title="struct ws::Sender">Sender</a>) -&gt; H</code><a class='srclink' href='../src/ws/factory.rs.html#111-113' title='goto source code'>[src]</a></h4></div></div><span class='loading-content'>Loading content...</span><script type="text/javascript">window.inlined_types=new Set([]);</script><script type="text/javascript" async
+                         src="../implementors/ws/trait.Factory.js">
+                 </script></section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../";window.currentCrate = "ws";</script><script src="../aliases.js"></script><script src="../main.js"></script><script defer src="../search-index.js"></script></body></html>

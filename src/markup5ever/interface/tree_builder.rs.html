@@ -1,0 +1,559 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `/home/travis/.cargo/registry/src/github.com-1ecc6299db9ec823/markup5ever-0.9.0/interface/tree_builder.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>tree_builder.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css"><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="shortcut icon" href="../../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../markup5ever/index.html'><div class='logo-container'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
+<span id="2">  2</span>
+<span id="3">  3</span>
+<span id="4">  4</span>
+<span id="5">  5</span>
+<span id="6">  6</span>
+<span id="7">  7</span>
+<span id="8">  8</span>
+<span id="9">  9</span>
+<span id="10"> 10</span>
+<span id="11"> 11</span>
+<span id="12"> 12</span>
+<span id="13"> 13</span>
+<span id="14"> 14</span>
+<span id="15"> 15</span>
+<span id="16"> 16</span>
+<span id="17"> 17</span>
+<span id="18"> 18</span>
+<span id="19"> 19</span>
+<span id="20"> 20</span>
+<span id="21"> 21</span>
+<span id="22"> 22</span>
+<span id="23"> 23</span>
+<span id="24"> 24</span>
+<span id="25"> 25</span>
+<span id="26"> 26</span>
+<span id="27"> 27</span>
+<span id="28"> 28</span>
+<span id="29"> 29</span>
+<span id="30"> 30</span>
+<span id="31"> 31</span>
+<span id="32"> 32</span>
+<span id="33"> 33</span>
+<span id="34"> 34</span>
+<span id="35"> 35</span>
+<span id="36"> 36</span>
+<span id="37"> 37</span>
+<span id="38"> 38</span>
+<span id="39"> 39</span>
+<span id="40"> 40</span>
+<span id="41"> 41</span>
+<span id="42"> 42</span>
+<span id="43"> 43</span>
+<span id="44"> 44</span>
+<span id="45"> 45</span>
+<span id="46"> 46</span>
+<span id="47"> 47</span>
+<span id="48"> 48</span>
+<span id="49"> 49</span>
+<span id="50"> 50</span>
+<span id="51"> 51</span>
+<span id="52"> 52</span>
+<span id="53"> 53</span>
+<span id="54"> 54</span>
+<span id="55"> 55</span>
+<span id="56"> 56</span>
+<span id="57"> 57</span>
+<span id="58"> 58</span>
+<span id="59"> 59</span>
+<span id="60"> 60</span>
+<span id="61"> 61</span>
+<span id="62"> 62</span>
+<span id="63"> 63</span>
+<span id="64"> 64</span>
+<span id="65"> 65</span>
+<span id="66"> 66</span>
+<span id="67"> 67</span>
+<span id="68"> 68</span>
+<span id="69"> 69</span>
+<span id="70"> 70</span>
+<span id="71"> 71</span>
+<span id="72"> 72</span>
+<span id="73"> 73</span>
+<span id="74"> 74</span>
+<span id="75"> 75</span>
+<span id="76"> 76</span>
+<span id="77"> 77</span>
+<span id="78"> 78</span>
+<span id="79"> 79</span>
+<span id="80"> 80</span>
+<span id="81"> 81</span>
+<span id="82"> 82</span>
+<span id="83"> 83</span>
+<span id="84"> 84</span>
+<span id="85"> 85</span>
+<span id="86"> 86</span>
+<span id="87"> 87</span>
+<span id="88"> 88</span>
+<span id="89"> 89</span>
+<span id="90"> 90</span>
+<span id="91"> 91</span>
+<span id="92"> 92</span>
+<span id="93"> 93</span>
+<span id="94"> 94</span>
+<span id="95"> 95</span>
+<span id="96"> 96</span>
+<span id="97"> 97</span>
+<span id="98"> 98</span>
+<span id="99"> 99</span>
+<span id="100">100</span>
+<span id="101">101</span>
+<span id="102">102</span>
+<span id="103">103</span>
+<span id="104">104</span>
+<span id="105">105</span>
+<span id="106">106</span>
+<span id="107">107</span>
+<span id="108">108</span>
+<span id="109">109</span>
+<span id="110">110</span>
+<span id="111">111</span>
+<span id="112">112</span>
+<span id="113">113</span>
+<span id="114">114</span>
+<span id="115">115</span>
+<span id="116">116</span>
+<span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
+<span id="181">181</span>
+<span id="182">182</span>
+<span id="183">183</span>
+<span id="184">184</span>
+<span id="185">185</span>
+<span id="186">186</span>
+<span id="187">187</span>
+<span id="188">188</span>
+<span id="189">189</span>
+<span id="190">190</span>
+<span id="191">191</span>
+<span id="192">192</span>
+<span id="193">193</span>
+<span id="194">194</span>
+<span id="195">195</span>
+<span id="196">196</span>
+<span id="197">197</span>
+<span id="198">198</span>
+<span id="199">199</span>
+<span id="200">200</span>
+<span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
+<span id="208">208</span>
+<span id="209">209</span>
+<span id="210">210</span>
+<span id="211">211</span>
+<span id="212">212</span>
+<span id="213">213</span>
+<span id="214">214</span>
+<span id="215">215</span>
+<span id="216">216</span>
+<span id="217">217</span>
+<span id="218">218</span>
+<span id="219">219</span>
+<span id="220">220</span>
+<span id="221">221</span>
+<span id="222">222</span>
+<span id="223">223</span>
+<span id="224">224</span>
+<span id="225">225</span>
+<span id="226">226</span>
+<span id="227">227</span>
+<span id="228">228</span>
+<span id="229">229</span>
+<span id="230">230</span>
+<span id="231">231</span>
+<span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
+<span id="236">236</span>
+<span id="237">237</span>
+<span id="238">238</span>
+<span id="239">239</span>
+<span id="240">240</span>
+<span id="241">241</span>
+<span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
+<span id="247">247</span>
+<span id="248">248</span>
+<span id="249">249</span>
+<span id="250">250</span>
+<span id="251">251</span>
+<span id="252">252</span>
+<span id="253">253</span>
+<span id="254">254</span>
+<span id="255">255</span>
+<span id="256">256</span>
+<span id="257">257</span>
+<span id="258">258</span>
+<span id="259">259</span>
+<span id="260">260</span>
+<span id="261">261</span>
+<span id="262">262</span>
+<span id="263">263</span>
+<span id="264">264</span>
+<span id="265">265</span>
+<span id="266">266</span>
+<span id="267">267</span>
+<span id="268">268</span>
+<span id="269">269</span>
+<span id="270">270</span>
+<span id="271">271</span>
+<span id="272">272</span>
+<span id="273">273</span>
+<span id="274">274</span>
+<span id="275">275</span>
+<span id="276">276</span>
+<span id="277">277</span>
+<span id="278">278</span>
+</pre><div class="example-wrap"><pre class="rust ">
+<span class="comment">// Copyright 2014-2017 The html5ever Project Developers. See the</span>
+<span class="comment">// COPYRIGHT file at the top-level directory of this distribution.</span>
+<span class="comment">//</span>
+<span class="comment">// Licensed under the Apache License, Version 2.0 &lt;LICENSE-APACHE or</span>
+<span class="comment">// http://www.apache.org/licenses/LICENSE-2.0&gt; or the MIT license</span>
+<span class="comment">// &lt;LICENSE-MIT or http://opensource.org/licenses/MIT&gt;, at your</span>
+<span class="comment">// option. This file may not be copied, modified, or distributed</span>
+<span class="comment">// except according to those terms.</span>
+
+<span class="doccomment">//! This module contains functionality for managing the DOM, including adding/removing nodes.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! It can be used by a parser to create the DOM graph structure in memory.</span>
+
+<span class="kw">use</span> <span class="ident">interface</span>::{<span class="ident">Attribute</span>, <span class="ident">ExpandedName</span>, <span class="ident">QualName</span>};
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">borrow</span>::<span class="ident">Cow</span>;
+<span class="kw">use</span> <span class="ident">tendril</span>::<span class="ident">StrTendril</span>;
+
+<span class="kw">pub</span> <span class="kw">use</span> <span class="self">self</span>::<span class="ident">NodeOrText</span>::{<span class="ident">AppendNode</span>, <span class="ident">AppendText</span>};
+<span class="kw">pub</span> <span class="kw">use</span> <span class="self">self</span>::<span class="ident">QuirksMode</span>::{<span class="ident">LimitedQuirks</span>, <span class="ident">NoQuirks</span>, <span class="ident">Quirks</span>};
+
+<span class="doccomment">/// Something which can be inserted into the DOM.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Adjacent sibling text nodes are merged into a single node, so</span>
+<span class="doccomment">/// the sink may not want to allocate a `Handle` for each.</span>
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">NodeOrText</span><span class="op">&lt;</span><span class="ident">Handle</span><span class="op">&gt;</span> {
+    <span class="ident">AppendNode</span>(<span class="ident">Handle</span>),
+    <span class="ident">AppendText</span>(<span class="ident">StrTendril</span>),
+}
+
+<span class="doccomment">/// A document&#39;s quirks mode, for compatibility with old browsers. See [quirks mode on wikipedia]</span>
+<span class="doccomment">/// for more information.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// [quirks mode on wikipedia]: https://en.wikipedia.org/wiki/Quirks_mode</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Hash</span>, <span class="ident">Debug</span>)]</span>
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">QuirksMode</span> {
+    <span class="doccomment">/// Full quirks mode</span>
+    <span class="ident">Quirks</span>,
+    <span class="doccomment">/// Almost standards mode</span>
+    <span class="ident">LimitedQuirks</span>,
+    <span class="doccomment">/// Standards mode</span>
+    <span class="ident">NoQuirks</span>,
+}
+
+<span class="doccomment">/// Whether to interrupt further parsing of the current input until</span>
+<span class="doccomment">/// the next explicit resumption of the tokenizer, or continue without</span>
+<span class="doccomment">/// any interruption.</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Hash</span>, <span class="ident">Debug</span>)]</span>
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">NextParserState</span> {
+    <span class="doccomment">/// Stop further parsing.</span>
+    <span class="ident">Suspend</span>,
+    <span class="doccomment">/// Continue without interruptions.</span>
+    <span class="ident">Continue</span>,
+}
+
+<span class="doccomment">/// Special properties of an element, useful for tagging elements with this information.</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ElementFlags</span> {
+    <span class="doccomment">/// A document fragment should be created, associated with the element,</span>
+    <span class="doccomment">/// and returned in TreeSink::get_template_contents.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// See [template-contents in the whatwg spec][whatwg template-contents].</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// [whatwg template-contents]: https://html.spec.whatwg.org/multipage/#template-contents</span>
+    <span class="kw">pub</span> <span class="ident">template</span>: <span class="ident">bool</span>,
+
+    <span class="doccomment">/// This boolean should be recorded with the element and returned</span>
+    <span class="doccomment">/// in TreeSink::is_mathml_annotation_xml_integration_point</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// See [html-integration-point in the whatwg spec][whatwg integration-point].</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// [whatwg integration-point]: https://html.spec.whatwg.org/multipage/#html-integration-point</span>
+    <span class="kw">pub</span> <span class="ident">mathml_annotation_xml_integration_point</span>: <span class="ident">bool</span>,
+
+    <span class="comment">// Prevent construction from outside module</span>
+    <span class="ident">_private</span>: (),
+}
+
+<span class="doccomment">/// A constructor for an element.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// # Examples</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Create an element like `&lt;div class=&quot;test-class-name&quot;&gt;&lt;/div&gt;`:</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// ```</span>
+<span class="doccomment">/// # #[macro_use] extern crate markup5ever;</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// # fn main() {</span>
+<span class="doccomment">/// use markup5ever::{rcdom, QualName, Attribute};</span>
+<span class="doccomment">/// use markup5ever::interface::create_element;</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// let mut dom = rcdom::RcDom::default();</span>
+<span class="doccomment">/// let el = create_element(&amp;mut dom,</span>
+<span class="doccomment">///     // Namespaces and localnames use precomputed interned strings for</span>
+<span class="doccomment">///     // speed. Use the macros ns! and local_name! to fetch them.</span>
+<span class="doccomment">///     QualName::new(None, ns!(), local_name!(&quot;div&quot;)),</span>
+<span class="doccomment">///     vec![</span>
+<span class="doccomment">///         Attribute {</span>
+<span class="doccomment">///             name: QualName::new(None, ns!(), local_name!(&quot;class&quot;)),</span>
+<span class="doccomment">///             // In real scenarios, you would use a view onto an existing</span>
+<span class="doccomment">///             // string if possible to avoid allocation. Tendrils have utilities</span>
+<span class="doccomment">///             // for avoiding allocation &amp; copying wherever possible.</span>
+<span class="doccomment">///             value: String::from(&quot;test-class-name&quot;).into()</span>
+<span class="doccomment">///         }</span>
+<span class="doccomment">///     ]);</span>
+<span class="doccomment">/// # }</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// ```</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">create_element</span><span class="op">&lt;</span><span class="ident">Sink</span><span class="op">&gt;</span>(<span class="ident">sink</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Sink</span>, <span class="ident">name</span>: <span class="ident">QualName</span>, <span class="ident">attrs</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Attribute</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Sink</span>::<span class="ident">Handle</span>
+<span class="kw">where</span>
+    <span class="ident">Sink</span>: <span class="ident">TreeSink</span>,
+{
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">flags</span> <span class="op">=</span> <span class="ident">ElementFlags</span>::<span class="ident">default</span>();
+    <span class="kw">match</span> <span class="ident">name</span>.<span class="ident">expanded</span>() {
+        <span class="macro">expanded_name</span><span class="macro">!</span>(<span class="ident">html</span> <span class="string">&quot;template&quot;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">flags</span>.<span class="ident">template</span> <span class="op">=</span> <span class="bool-val">true</span>,
+        <span class="macro">expanded_name</span><span class="macro">!</span>(<span class="ident">mathml</span> <span class="string">&quot;annotation-xml&quot;</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">flags</span>.<span class="ident">mathml_annotation_xml_integration_point</span> <span class="op">=</span> <span class="ident">attrs</span>.<span class="ident">iter</span>().<span class="ident">any</span>(<span class="op">|</span><span class="ident">attr</span><span class="op">|</span> {
+                <span class="ident">attr</span>.<span class="ident">name</span>.<span class="ident">expanded</span>() <span class="op">=</span><span class="op">=</span> <span class="macro">expanded_name</span><span class="macro">!</span>(<span class="string">&quot;&quot;</span>, <span class="string">&quot;encoding&quot;</span>) <span class="kw-2">&amp;</span><span class="op">&amp;</span>
+                    (<span class="ident">attr</span>.<span class="ident">value</span>.<span class="ident">eq_ignore_ascii_case</span>(<span class="string">&quot;text/html&quot;</span>) <span class="op">|</span><span class="op">|</span>
+                        <span class="ident">attr</span>.<span class="ident">value</span>.<span class="ident">eq_ignore_ascii_case</span>(<span class="string">&quot;application/xhtml+xml&quot;</span>))
+            })
+        },
+        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {},
+    }
+    <span class="ident">sink</span>.<span class="ident">create_element</span>(<span class="ident">name</span>, <span class="ident">attrs</span>, <span class="ident">flags</span>)
+}
+
+<span class="doccomment">/// Methods a parser can use to create the DOM. The DOM provider implements this trait.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Having this as a trait potentially allows multiple implementations of the DOM to be used with</span>
+<span class="doccomment">/// the same parser.</span>
+<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">TreeSink</span> {
+    <span class="doccomment">/// `Handle` is a reference to a DOM node.  The tree builder requires</span>
+    <span class="doccomment">/// that a `Handle` implements `Clone` to get another reference to</span>
+    <span class="doccomment">/// the same node.</span>
+    <span class="kw">type</span> <span class="ident">Handle</span>: <span class="ident">Clone</span>;
+
+    <span class="doccomment">/// The overall result of parsing.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// This should default to Self, but default associated types are not stable yet.</span>
+    <span class="doccomment">/// [rust-lang/rust#29661](https://github.com/rust-lang/rust/issues/29661)</span>
+    <span class="kw">type</span> <span class="ident">Output</span>;
+
+    <span class="doccomment">/// Consume this sink and return the overall result of parsing.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// TODO:This should default to `fn finish(self) -&gt; Self::Output { self }`,</span>
+    <span class="doccomment">/// but default associated types are not stable yet.</span>
+    <span class="doccomment">/// [rust-lang/rust#29661](https://github.com/rust-lang/rust/issues/29661)</span>
+    <span class="kw">fn</span> <span class="ident">finish</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Output</span>;
+
+    <span class="doccomment">/// Signal a parse error.</span>
+    <span class="kw">fn</span> <span class="ident">parse_error</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">msg</span>: <span class="ident">Cow</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">str</span><span class="op">&gt;</span>);
+
+    <span class="doccomment">/// Get a handle to the `Document` node.</span>
+    <span class="kw">fn</span> <span class="ident">get_document</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Handle</span>;
+
+    <span class="doccomment">/// What is the name of this element?</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Should never be called on a non-element node;</span>
+    <span class="doccomment">/// feel free to `panic!`.</span>
+    <span class="kw">fn</span> <span class="ident">elem_name</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="self">self</span>, <span class="ident">target</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="self">Self</span>::<span class="ident">Handle</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ExpandedName</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>;
+
+    <span class="doccomment">/// Create an element.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// When creating a template element (`name.ns.expanded() == expanded_name!(html &quot;template&quot;)`),</span>
+    <span class="doccomment">/// an associated document fragment called the &quot;template contents&quot; should</span>
+    <span class="doccomment">/// also be created. Later calls to self.get_template_contents() with that</span>
+    <span class="doccomment">/// given element return it.</span>
+    <span class="doccomment">/// See [the template element in the whatwg spec][whatwg template].</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// [whatwg template]: https://html.spec.whatwg.org/multipage/#the-template-element</span>
+    <span class="kw">fn</span> <span class="ident">create_element</span>(
+        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="ident">name</span>: <span class="ident">QualName</span>,
+        <span class="ident">attrs</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Attribute</span><span class="op">&gt;</span>,
+        <span class="ident">flags</span>: <span class="ident">ElementFlags</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Handle</span>;
+
+    <span class="doccomment">/// Create a comment node.</span>
+    <span class="kw">fn</span> <span class="ident">create_comment</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">text</span>: <span class="ident">StrTendril</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Handle</span>;
+
+    <span class="doccomment">/// Create a Processing Instruction node.</span>
+    <span class="kw">fn</span> <span class="ident">create_pi</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">target</span>: <span class="ident">StrTendril</span>, <span class="ident">data</span>: <span class="ident">StrTendril</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Handle</span>;
+
+    <span class="doccomment">/// Append a node as the last child of the given node.  If this would</span>
+    <span class="doccomment">/// produce adjacent sibling text nodes, it should concatenate the text</span>
+    <span class="doccomment">/// instead.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// The child node will not already have a parent.</span>
+    <span class="kw">fn</span> <span class="ident">append</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">parent</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">Handle</span>, <span class="ident">child</span>: <span class="ident">NodeOrText</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Handle</span><span class="op">&gt;</span>);
+
+    <span class="doccomment">/// When the insertion point is decided by the existence of a parent node of the</span>
+    <span class="doccomment">/// element, we consider both possibilities and send the element which will be used</span>
+    <span class="doccomment">/// if a parent node exists, along with the element to be used if there isn&#39;t one.</span>
+    <span class="kw">fn</span> <span class="ident">append_based_on_parent_node</span>(
+        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="ident">element</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">Handle</span>,
+        <span class="ident">prev_element</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">Handle</span>,
+        <span class="ident">child</span>: <span class="ident">NodeOrText</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Handle</span><span class="op">&gt;</span>,
+    );
+
+    <span class="doccomment">/// Append a `DOCTYPE` element to the `Document` node.</span>
+    <span class="kw">fn</span> <span class="ident">append_doctype_to_document</span>(
+        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="ident">name</span>: <span class="ident">StrTendril</span>,
+        <span class="ident">public_id</span>: <span class="ident">StrTendril</span>,
+        <span class="ident">system_id</span>: <span class="ident">StrTendril</span>,
+    );
+
+    <span class="doccomment">/// Mark a HTML `&lt;script&gt;` as &quot;already started&quot;.</span>
+    <span class="kw">fn</span> <span class="ident">mark_script_already_started</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_node</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">Handle</span>) {}
+
+    <span class="doccomment">/// Indicate that a node was popped off the stack of open elements.</span>
+    <span class="kw">fn</span> <span class="ident">pop</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_node</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">Handle</span>) {}
+
+    <span class="doccomment">/// Get a handle to a template&#39;s template contents. The tree builder</span>
+    <span class="doccomment">/// promises this will never be called with something else than</span>
+    <span class="doccomment">/// a template element.</span>
+    <span class="kw">fn</span> <span class="ident">get_template_contents</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">target</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">Handle</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Handle</span>;
+
+    <span class="doccomment">/// Do two handles refer to the same node?</span>
+    <span class="kw">fn</span> <span class="ident">same_node</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">Handle</span>, <span class="ident">y</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">Handle</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span>;
+
+    <span class="doccomment">/// Set the document&#39;s quirks mode.</span>
+    <span class="kw">fn</span> <span class="ident">set_quirks_mode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">mode</span>: <span class="ident">QuirksMode</span>);
+
+    <span class="doccomment">/// Append a node as the sibling immediately before the given node.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// The tree builder promises that `sibling` is not a text node.  However its</span>
+    <span class="doccomment">/// old previous sibling, which would become the new node&#39;s previous sibling,</span>
+    <span class="doccomment">/// could be a text node.  If the new node is also a text node, the two should</span>
+    <span class="doccomment">/// be merged, as in the behavior of `append`.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// NB: `new_node` may have an old parent, from which it should be removed.</span>
+    <span class="kw">fn</span> <span class="ident">append_before_sibling</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">sibling</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">Handle</span>, <span class="ident">new_node</span>: <span class="ident">NodeOrText</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Handle</span><span class="op">&gt;</span>);
+
+    <span class="doccomment">/// Add each attribute to the given element, if no attribute with that name</span>
+    <span class="doccomment">/// already exists. The tree builder promises this will never be called</span>
+    <span class="doccomment">/// with something else than an element.</span>
+    <span class="kw">fn</span> <span class="ident">add_attrs_if_missing</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">target</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">Handle</span>, <span class="ident">attrs</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Attribute</span><span class="op">&gt;</span>);
+
+    <span class="doccomment">/// Associate the given form-associatable element with the form element</span>
+    <span class="kw">fn</span> <span class="ident">associate_with_form</span>(
+        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="ident">_target</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">Handle</span>,
+        <span class="ident">_form</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">Handle</span>,
+        <span class="ident">_nodes</span>: (<span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">Handle</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">Handle</span><span class="op">&gt;</span>),
+    ) {
+    }
+
+    <span class="doccomment">/// Detach the given node from its parent.</span>
+    <span class="kw">fn</span> <span class="ident">remove_from_parent</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">target</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">Handle</span>);
+
+    <span class="doccomment">/// Remove all the children from node and append them to new_parent.</span>
+    <span class="kw">fn</span> <span class="ident">reparent_children</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">node</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">Handle</span>, <span class="ident">new_parent</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">Handle</span>);
+
+    <span class="doccomment">/// Returns true if the adjusted current node is an HTML integration point</span>
+    <span class="doccomment">/// and the token is a start tag.</span>
+    <span class="kw">fn</span> <span class="ident">is_mathml_annotation_xml_integration_point</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_handle</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">Handle</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+        <span class="bool-val">false</span>
+    }
+
+    <span class="doccomment">/// Called whenever the line number changes.</span>
+    <span class="kw">fn</span> <span class="ident">set_current_line</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_line_number</span>: <span class="ident">u64</span>) {}
+
+    <span class="doccomment">/// Indicate that a `script` element is complete.</span>
+    <span class="kw">fn</span> <span class="ident">complete_script</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_node</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">Handle</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">NextParserState</span> {
+        <span class="ident">NextParserState</span>::<span class="ident">Continue</span>
+    }
+}
+
+<span class="doccomment">/// Trace hooks for a garbage-collected DOM.</span>
+<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Tracer</span> {
+    <span class="kw">type</span> <span class="ident">Handle</span>;
+
+    <span class="doccomment">/// Upon a call to `trace_handles`, the tree builder will call this method</span>
+    <span class="doccomment">/// for each handle in its internal state.</span>
+    <span class="kw">fn</span> <span class="ident">trace_handle</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">node</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">Handle</span>);
+}
+</pre></div>
+</section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../../";window.currentCrate = "markup5ever";</script><script src="../../../aliases.js"></script><script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script><script defer src="../../../search-index.js"></script></body></html>

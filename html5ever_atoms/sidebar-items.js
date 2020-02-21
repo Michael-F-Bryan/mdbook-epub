@@ -1,0 +1,1 @@
+initSidebarItems({"macro":[["local_name",""],["namespace_prefix",""],["namespace_url",""],["ns",""],["qualname",""]],"struct":[["LocalNameStaticSet",""],["NamespaceStaticSet",""],["PrefixStaticSet",""],["QualName","A name with a namespace."]],"type":[["LocalName",""],["Namespace",""],["Prefix",""]]});

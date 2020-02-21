@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Mount","`Mount` is a simple mounting middleware."],["NoMatch","The error returned by `Mount` when a request doesn't match any mounted handlers."],["OriginalUrl","Exposes the original, unmodified path to be stored in `Request::extensions`."]]});

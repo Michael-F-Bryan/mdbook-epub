@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["SmallCharSet","Represents a set of \"small characters\", those with Unicode scalar values less than 64."]]});

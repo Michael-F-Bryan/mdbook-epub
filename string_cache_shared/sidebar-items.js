@@ -1,0 +1,1 @@
+initSidebarItems({"constant":[["DYNAMIC_TAG",""],["ENTRY_ALIGNMENT",""],["INLINE_TAG",""],["MAX_INLINE_LEN",""],["STATIC_SHIFT_BITS",""],["STATIC_TAG",""],["TAG_MASK",""]],"fn":[["pack_static",""]]});

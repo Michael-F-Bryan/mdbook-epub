@@ -1,0 +1,664 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="API documentation for the Rust `Builder` struct in crate `ammonia`."><meta name="keywords" content="rust, rustlang, rust-lang, Builder"><title>ammonia::Builder - Rust</title><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../dark.css"><link rel="stylesheet" type="text/css" href="../light.css" id="themeStyle"><script src="../storage.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="shortcut icon" href="../favicon.ico"><style type="text/css">#crate-search{background-image:url("../down-arrow.svg");}</style></head><body class="rustdoc struct"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../ammonia/index.html'><div class='logo-container'><img src='../rust-logo.png' alt='logo'></div></a><p class='location'>Struct Builder</p><div class="sidebar-elems"><div class="block items"><a class="sidebar-title" href="#methods">Methods</a><div class="sidebar-links"><a href="#method.add_allowed_classes">add_allowed_classes</a><a href="#method.add_clean_content_tags">add_clean_content_tags</a><a href="#method.add_generic_attributes">add_generic_attributes</a><a href="#method.add_tag_attribute_values">add_tag_attribute_values</a><a href="#method.add_tag_attributes">add_tag_attributes</a><a href="#method.add_tags">add_tags</a><a href="#method.add_url_schemes">add_url_schemes</a><a href="#method.allowed_classes">allowed_classes</a><a href="#method.attribute_filter">attribute_filter</a><a href="#method.clean">clean</a><a href="#method.clean_content_tags">clean_content_tags</a><a href="#method.clean_from_reader">clean_from_reader</a><a href="#method.clone_allowed_classes">clone_allowed_classes</a><a href="#method.clone_clean_content_tags">clone_clean_content_tags</a><a href="#method.clone_generic_attributes">clone_generic_attributes</a><a href="#method.clone_tag_attribute_values">clone_tag_attribute_values</a><a href="#method.clone_tag_attributes">clone_tag_attributes</a><a href="#method.clone_tags">clone_tags</a><a href="#method.clone_url_schemes">clone_url_schemes</a><a href="#method.generic_attributes">generic_attributes</a><a href="#method.get_link_rel">get_link_rel</a><a href="#method.id_prefix">id_prefix</a><a href="#method.is_url_relative_custom">is_url_relative_custom</a><a href="#method.is_url_relative_deny">is_url_relative_deny</a><a href="#method.is_url_relative_pass_through">is_url_relative_pass_through</a><a href="#method.link_rel">link_rel</a><a href="#method.new">new</a><a href="#method.rm_allowed_classes">rm_allowed_classes</a><a href="#method.rm_clean_content_tags">rm_clean_content_tags</a><a href="#method.rm_generic_attributes">rm_generic_attributes</a><a href="#method.rm_tag_attribute_values">rm_tag_attribute_values</a><a href="#method.rm_tag_attributes">rm_tag_attributes</a><a href="#method.rm_tags">rm_tags</a><a href="#method.rm_url_schemes">rm_url_schemes</a><a href="#method.strip_comments">strip_comments</a><a href="#method.tag_attribute_values">tag_attribute_values</a><a href="#method.tag_attributes">tag_attributes</a><a href="#method.tags">tags</a><a href="#method.url_relative">url_relative</a><a href="#method.url_schemes">url_schemes</a><a href="#method.will_strip_comments">will_strip_comments</a></div><a class="sidebar-title" href="#implementations">Trait Implementations</a><div class="sidebar-links"><a href="#impl-Debug">Debug</a><a href="#impl-Default">Default</a></div><a class="sidebar-title" href="#synthetic-implementations">Auto Trait Implementations</a><div class="sidebar-links"><a href="#impl-RefUnwindSafe">!RefUnwindSafe</a><a href="#impl-Send">Send</a><a href="#impl-Sync">Sync</a><a href="#impl-Unpin">Unpin</a><a href="#impl-UnwindSafe">!UnwindSafe</a></div><a class="sidebar-title" href="#blanket-implementations">Blanket Implementations</a><div class="sidebar-links"><a href="#impl-Any">Any</a><a href="#impl-Borrow%3CT%3E">Borrow&lt;T&gt;</a><a href="#impl-BorrowMut%3CT%3E">BorrowMut&lt;T&gt;</a><a href="#impl-From%3CT%3E">From&lt;T&gt;</a><a href="#impl-Into%3CU%3E">Into&lt;U&gt;</a><a href="#impl-TryFrom%3CU%3E">TryFrom&lt;U&gt;</a><a href="#impl-TryInto%3CU%3E">TryInto&lt;U&gt;</a></div></div><p class='location'><a href='index.html'>ammonia</a></p><script>window.sidebarCurrent = {name: 'Builder', ty: 'struct', relpath: ''};</script><script defer src="sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../settings.html"><img src="../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class='fqn'><span class='out-of-band'><span id='render-detail'><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class='inner'>&#x2212;</span>]</a></span><a class='srclink' href='../src/ammonia/lib.rs.html#268-281' title='goto source code'>[src]</a></span><span class='in-band'>Struct <a href='index.html'>ammonia</a>::<wbr><a class="struct" href=''>Builder</a></span></h1><div class="docblock type-decl hidden-by-usual-hider"><pre class='rust struct'>pub struct Builder&lt;'a&gt; { /* fields omitted */ }</pre></div><div class='docblock'><p>An HTML sanitizer.</p>
+<p>Given a fragment of HTML, Ammonia will parse it according to the HTML5
+parsing algorithm and sanitize any disallowed tags or attributes. This
+algorithm also takes care of things like unclosed and (some) misnested
+tags.</p>
+<h1 id="examples" class="section-header"><a href="#examples">Examples</a></h1>
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">ammonia</span>::{<span class="ident">Builder</span>, <span class="ident">UrlRelative</span>};
+
+<span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">Builder</span>::<span class="ident">default</span>()
+    .<span class="ident">link_rel</span>(<span class="prelude-val">None</span>)
+    .<span class="ident">url_relative</span>(<span class="ident">UrlRelative</span>::<span class="ident">PassThrough</span>)
+    .<span class="ident">clean</span>(<span class="string">&quot;&lt;a href=/&gt;test&quot;</span>)
+    .<span class="ident">to_string</span>();
+<span class="macro">assert_eq</span><span class="macro">!</span>(
+    <span class="ident">a</span>,
+    <span class="string">&quot;&lt;a href=\&quot;/\&quot;&gt;test&lt;/a&gt;&quot;</span>);</pre></div>
+<h1 id="panics" class="section-header"><a href="#panics">Panics</a></h1>
+<p>Running <a href="#method.clean"><code>clean</code></a> or <a href="#method.clean_from_reader"><code>clean_from_reader</code></a> may cause a panic if the builder is
+configured with any of these (contradictory) settings:</p>
+<ul>
+<li>
+<p>The <code>rel</code> attribute is added to <a href="#method.generic_attributes"><code>generic_attributes</code></a> or the
+<a href="#method.tag_attributes"><code>tag_attributes</code></a> for the <code>&lt;a&gt;</code> tag, and <a href="#method.link_rel"><code>link_rel</code></a> is not set to <code>None</code>.</p>
+<p>For example, this is going to panic, since <a href="#method.link_rel"><code>link_rel</code></a> is set  to
+<code>Some(&quot;noopener noreferrer&quot;)</code> by default,
+and it makes no sense to simultaneously say that the user is allowed to
+set their own <code>rel</code> attribute while saying that every link shall be set to
+a particular value:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">ammonia</span>::<span class="ident">Builder</span>;
+<span class="kw">use</span> <span class="ident">maplit</span>::<span class="ident">hashset</span>;
+
+<span class="ident">Builder</span>::<span class="ident">default</span>()
+    .<span class="ident">generic_attributes</span>(<span class="macro">hashset</span><span class="macro">!</span>[<span class="string">&quot;rel&quot;</span>])
+    .<span class="ident">clean</span>(<span class="string">&quot;&quot;</span>);</pre></div>
+<p>This, however, is perfectly valid:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">ammonia</span>::<span class="ident">Builder</span>;
+<span class="kw">use</span> <span class="ident">maplit</span>::<span class="ident">hashset</span>;
+
+<span class="ident">Builder</span>::<span class="ident">default</span>()
+    .<span class="ident">generic_attributes</span>(<span class="macro">hashset</span><span class="macro">!</span>[<span class="string">&quot;rel&quot;</span>])
+    .<span class="ident">link_rel</span>(<span class="prelude-val">None</span>)
+    .<span class="ident">clean</span>(<span class="string">&quot;&quot;</span>);</pre></div>
+</li>
+<li>
+<p>The <code>class</code> attribute is in <a href="#method.allowed_classes"><code>allowed_classes</code></a> and is in the
+corresponding <a href="#method.tag_attributes"><code>tag_attributes</code></a> or in <a href="#method.generic_attributes"><code>generic_attributes</code></a>.</p>
+<p>This is done both to line up with the treatment of <code>rel</code>,
+and to prevent people from accidentally allowing arbitrary
+classes on a particular element.</p>
+<p>This will panic:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">ammonia</span>::<span class="ident">Builder</span>;
+<span class="kw">use</span> <span class="ident">maplit</span>::{<span class="ident">hashmap</span>, <span class="ident">hashset</span>};
+
+<span class="ident">Builder</span>::<span class="ident">default</span>()
+    .<span class="ident">generic_attributes</span>(<span class="macro">hashset</span><span class="macro">!</span>[<span class="string">&quot;class&quot;</span>])
+    .<span class="ident">allowed_classes</span>(<span class="macro">hashmap</span><span class="macro">!</span>[<span class="string">&quot;span&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">hashset</span><span class="macro">!</span>[<span class="string">&quot;hidden&quot;</span>]])
+    .<span class="ident">clean</span>(<span class="string">&quot;&quot;</span>);</pre></div>
+<p>This, however, is perfectly valid:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">ammonia</span>::<span class="ident">Builder</span>;
+<span class="kw">use</span> <span class="ident">maplit</span>::{<span class="ident">hashmap</span>, <span class="ident">hashset</span>};
+
+<span class="ident">Builder</span>::<span class="ident">default</span>()
+    .<span class="ident">allowed_classes</span>(<span class="macro">hashmap</span><span class="macro">!</span>[<span class="string">&quot;span&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">hashset</span><span class="macro">!</span>[<span class="string">&quot;hidden&quot;</span>]])
+    .<span class="ident">clean</span>(<span class="string">&quot;&quot;</span>);</pre></div>
+</li>
+<li>
+<p>A tag is in either <a href="#method.tags"><code>tags</code></a> or <a href="#method.tag_attributes"><code>tag_attributes</code></a> while also
+being in <a href="#method.clean_content_tags"><code>clean_content_tags</code></a>.</p>
+<p>Both <a href="#method.tags"><code>tags</code></a> and <a href="#method.tag_attributes"><code>tag_attributes</code></a> are whitelists but
+<a href="#method.clean_content_tags"><code>clean_content_tags</code></a> is a blacklist, so it doesn't make sense
+to have the same tag in both.</p>
+<p>For example, this will panic, since the <code>aside</code> tag is in
+<a href="#method.tags"><code>tags</code></a> by default:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">ammonia</span>::<span class="ident">Builder</span>;
+<span class="kw">use</span> <span class="ident">maplit</span>::<span class="ident">hashset</span>;
+
+<span class="ident">Builder</span>::<span class="ident">default</span>()
+    .<span class="ident">clean_content_tags</span>(<span class="macro">hashset</span><span class="macro">!</span>[<span class="string">&quot;aside&quot;</span>])
+    .<span class="ident">clean</span>(<span class="string">&quot;&quot;</span>);</pre></div>
+<p>This, however, is valid:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">ammonia</span>::<span class="ident">Builder</span>;
+<span class="kw">use</span> <span class="ident">maplit</span>::<span class="ident">hashset</span>;
+
+<span class="ident">Builder</span>::<span class="ident">default</span>()
+    .<span class="ident">rm_tags</span>(<span class="kw-2">&amp;</span>[<span class="string">&quot;aside&quot;</span>])
+    .<span class="ident">clean_content_tags</span>(<span class="macro">hashset</span><span class="macro">!</span>[<span class="string">&quot;aside&quot;</span>])
+    .<span class="ident">clean</span>(<span class="string">&quot;&quot;</span>);</pre></div>
+</li>
+</ul>
+</div><h2 id='methods' class='small-section-header'>Methods<a href='#methods' class='anchor'></a></h2><h3 id='impl' class='impl'><code class='in-band'>impl&lt;'a&gt; <a class="struct" href="../ammonia/struct.Builder.html" title="struct ammonia::Builder">Builder</a>&lt;'a&gt;</code><a href='#impl' class='anchor'></a><a class='srclink' href='../src/ammonia/lib.rs.html#402-1704' title='goto source code'>[src]</a></h3><div class='impl-items'><h4 id='method.tags' class="method"><code id='tags.v'>pub fn <a href='#method.tags' class='fnname'>tags</a>(&amp;mut self, value: <a class="struct" href="https://doc.rust-lang.org/nightly/std/collections/hash/set/struct.HashSet.html" title="struct std::collections::hash::set::HashSet">HashSet</a>&lt;&amp;'a <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a>&gt;) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;mut </a>Self</code><a class='srclink' href='../src/ammonia/lib.rs.html#432-435' title='goto source code'>[src]</a></h4><div class='docblock'><p>Sets the tags that are allowed.</p>
+<h1 id="examples-1" class="section-header"><a href="#examples-1">Examples</a></h1>
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">ammonia</span>::<span class="ident">Builder</span>;
+<span class="kw">use</span> <span class="ident">maplit</span>::<span class="ident">hashset</span>;
+
+<span class="kw">let</span> <span class="ident">tags</span> <span class="op">=</span> <span class="macro">hashset</span><span class="macro">!</span>[<span class="string">&quot;my-tag&quot;</span>];
+<span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">Builder</span>::<span class="ident">new</span>()
+    .<span class="ident">tags</span>(<span class="ident">tags</span>)
+    .<span class="ident">clean</span>(<span class="string">&quot;&lt;my-tag&gt;&quot;</span>)
+    .<span class="ident">to_string</span>();
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">a</span>, <span class="string">&quot;&lt;my-tag&gt;&lt;/my-tag&gt;&quot;</span>);</pre></div>
+<h1 id="defaults" class="section-header"><a href="#defaults">Defaults</a></h1>
+<pre><code class="language-notest">a, abbr, acronym, area, article, aside, b, bdi,
+bdo, blockquote, br, caption, center, cite, code,
+col, colgroup, data, dd, del, details, dfn, div,
+dl, dt, em, figcaption, figure, footer, h1, h2,
+h3, h4, h5, h6, header, hgroup, hr, i, img,
+ins, kbd, kbd, li, map, mark, nav, ol, p, pre,
+q, rp, rt, rtc, ruby, s, samp, small, span,
+strike, strong, sub, summary, sup, table, tbody,
+td, th, thead, time, tr, tt, u, ul, var, wbr
+</code></pre>
+</div><h4 id='method.add_tags' class="method"><code id='add_tags.v'>pub fn <a href='#method.add_tags' class='fnname'>add_tags</a>&lt;T:&nbsp;'a + ?<a class="trait" href="https://doc.rust-lang.org/nightly/core/marker/trait.Sized.html" title="trait core::marker::Sized">Sized</a> + <a class="trait" href="https://doc.rust-lang.org/nightly/core/borrow/trait.Borrow.html" title="trait core::borrow::Borrow">Borrow</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a>&gt;, I:&nbsp;<a class="trait" href="https://doc.rust-lang.org/nightly/core/iter/traits/collect/trait.IntoIterator.html" title="trait core::iter::traits::collect::IntoIterator">IntoIter</a>&lt;Item = <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;'a </a>T&gt;&gt;(<br>&nbsp;&nbsp;&nbsp;&nbsp;&amp;mut self, <br>&nbsp;&nbsp;&nbsp;&nbsp;it: I<br>) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;mut </a>Self</code><a class='srclink' href='../src/ammonia/lib.rs.html#447-453' title='goto source code'>[src]</a></h4><div class='docblock'><p>Add additonal whitelisted tags without overwriting old ones.</p>
+<p>Does nothing if the tag is already there.</p>
+<h1 id="examples-2" class="section-header"><a href="#examples-2">Examples</a></h1>
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">ammonia</span>::<span class="ident">Builder</span>::<span class="ident">default</span>()
+    .<span class="ident">add_tags</span>(<span class="kw-2">&amp;</span>[<span class="string">&quot;my-tag&quot;</span>])
+    .<span class="ident">clean</span>(<span class="string">&quot;&lt;my-tag&gt;test&lt;/my-tag&gt; &lt;span&gt;mess&lt;/span&gt;&quot;</span>).<span class="ident">to_string</span>();
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="string">&quot;&lt;my-tag&gt;test&lt;/my-tag&gt; &lt;span&gt;mess&lt;/span&gt;&quot;</span>, <span class="ident">a</span>);</pre></div>
+</div><h4 id='method.rm_tags' class="method"><code id='rm_tags.v'>pub fn <a href='#method.rm_tags' class='fnname'>rm_tags</a>&lt;'b, T:&nbsp;'b + ?<a class="trait" href="https://doc.rust-lang.org/nightly/core/marker/trait.Sized.html" title="trait core::marker::Sized">Sized</a> + <a class="trait" href="https://doc.rust-lang.org/nightly/core/borrow/trait.Borrow.html" title="trait core::borrow::Borrow">Borrow</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a>&gt;, I:&nbsp;<a class="trait" href="https://doc.rust-lang.org/nightly/core/iter/traits/collect/trait.IntoIterator.html" title="trait core::iter::traits::collect::IntoIterator">IntoIter</a>&lt;Item = <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;'b </a>T&gt;&gt;(<br>&nbsp;&nbsp;&nbsp;&nbsp;&amp;mut self, <br>&nbsp;&nbsp;&nbsp;&nbsp;it: I<br>) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;mut </a>Self</code><a class='srclink' href='../src/ammonia/lib.rs.html#465-473' title='goto source code'>[src]</a></h4><div class='docblock'><p>Remove already-whitelisted tags.</p>
+<p>Does nothing if the tags is already gone.</p>
+<h1 id="examples-3" class="section-header"><a href="#examples-3">Examples</a></h1>
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">ammonia</span>::<span class="ident">Builder</span>::<span class="ident">default</span>()
+    .<span class="ident">rm_tags</span>(<span class="kw-2">&amp;</span>[<span class="string">&quot;span&quot;</span>])
+    .<span class="ident">clean</span>(<span class="string">&quot;&lt;span&gt;&lt;/span&gt;&quot;</span>).<span class="ident">to_string</span>();
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="string">&quot;&quot;</span>, <span class="ident">a</span>);</pre></div>
+</div><h4 id='method.clone_tags' class="method"><code id='clone_tags.v'>pub fn <a href='#method.clone_tags' class='fnname'>clone_tags</a>(&amp;self) -&gt; <a class="struct" href="https://doc.rust-lang.org/nightly/std/collections/hash/set/struct.HashSet.html" title="struct std::collections::hash::set::HashSet">HashSet</a>&lt;&amp;'a <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a>&gt;</code><a class='srclink' href='../src/ammonia/lib.rs.html#486-488' title='goto source code'>[src]</a></h4><div class='docblock'><p>Returns a copy of the set of whitelisted tags.</p>
+<h1 id="examples-4" class="section-header"><a href="#examples-4">Examples</a></h1>
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">maplit</span>::<span class="ident">hashset</span>;
+
+<span class="kw">let</span> <span class="ident">tags</span> <span class="op">=</span> <span class="macro">hashset</span><span class="macro">!</span>[<span class="string">&quot;my-tag-1&quot;</span>, <span class="string">&quot;my-tag-2&quot;</span>];
+
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">ammonia</span>::<span class="ident">Builder</span>::<span class="ident">default</span>();
+<span class="ident">b</span>.<span class="ident">tags</span>(<span class="ident">Clone</span>::<span class="ident">clone</span>(<span class="kw-2">&amp;</span><span class="ident">tags</span>));
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">tags</span>, <span class="ident">b</span>.<span class="ident">clone_tags</span>());</pre></div>
+</div><h4 id='method.clean_content_tags' class="method"><code id='clean_content_tags.v'>pub fn <a href='#method.clean_content_tags' class='fnname'>clean_content_tags</a>(&amp;mut self, value: <a class="struct" href="https://doc.rust-lang.org/nightly/std/collections/hash/set/struct.HashSet.html" title="struct std::collections::hash::set::HashSet">HashSet</a>&lt;&amp;'a <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a>&gt;) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;mut </a>Self</code><a class='srclink' href='../src/ammonia/lib.rs.html#512-515' title='goto source code'>[src]</a></h4><div class='docblock'><p>Sets the tags whose contents will be completely removed from the output.</p>
+<p>Adding tags which are whitelisted in <code>tags</code> or <code>tag_attributes</code> will cause
+a panic.</p>
+<h1 id="examples-5" class="section-header"><a href="#examples-5">Examples</a></h1>
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">ammonia</span>::<span class="ident">Builder</span>;
+<span class="kw">use</span> <span class="ident">maplit</span>::<span class="ident">hashset</span>;
+
+<span class="kw">let</span> <span class="ident">tag_blacklist</span> <span class="op">=</span> <span class="macro">hashset</span><span class="macro">!</span>[<span class="string">&quot;script&quot;</span>, <span class="string">&quot;style&quot;</span>];
+<span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">Builder</span>::<span class="ident">new</span>()
+    .<span class="ident">clean_content_tags</span>(<span class="ident">tag_blacklist</span>)
+    .<span class="ident">clean</span>(<span class="string">&quot;&lt;script&gt;alert(&#39;hello&#39;)&lt;/script&gt;&lt;style&gt;a { background: #fff }&lt;/style&gt;&quot;</span>)
+    .<span class="ident">to_string</span>();
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">a</span>, <span class="string">&quot;&quot;</span>);</pre></div>
+<h1 id="defaults-1" class="section-header"><a href="#defaults-1">Defaults</a></h1>
+<p>No tags have content removed by default.</p>
+</div><h4 id='method.add_clean_content_tags' class="method"><code id='add_clean_content_tags.v'>pub fn <a href='#method.add_clean_content_tags' class='fnname'>add_clean_content_tags</a>&lt;T:&nbsp;'a + ?<a class="trait" href="https://doc.rust-lang.org/nightly/core/marker/trait.Sized.html" title="trait core::marker::Sized">Sized</a> + <a class="trait" href="https://doc.rust-lang.org/nightly/core/borrow/trait.Borrow.html" title="trait core::borrow::Borrow">Borrow</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a>&gt;, I:&nbsp;<a class="trait" href="https://doc.rust-lang.org/nightly/core/iter/traits/collect/trait.IntoIterator.html" title="trait core::iter::traits::collect::IntoIterator">IntoIter</a>&lt;Item = <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;'a </a>T&gt;&gt;(<br>&nbsp;&nbsp;&nbsp;&nbsp;&amp;mut self, <br>&nbsp;&nbsp;&nbsp;&nbsp;it: I<br>) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;mut </a>Self</code><a class='srclink' href='../src/ammonia/lib.rs.html#530-537' title='goto source code'>[src]</a></h4><div class='docblock'><p>Add additonal blacklisted clean-content tags without overwriting old ones.</p>
+<p>Does nothing if the tag is already there.</p>
+<p>Adding tags which are whitelisted in <code>tags</code> or <code>tag_attributes</code> will cause
+a panic.</p>
+<h1 id="examples-6" class="section-header"><a href="#examples-6">Examples</a></h1>
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">ammonia</span>::<span class="ident">Builder</span>::<span class="ident">default</span>()
+    .<span class="ident">add_clean_content_tags</span>(<span class="kw-2">&amp;</span>[<span class="string">&quot;my-tag&quot;</span>])
+    .<span class="ident">clean</span>(<span class="string">&quot;&lt;my-tag&gt;test&lt;/my-tag&gt;&lt;span&gt;mess&lt;/span&gt;&quot;</span>).<span class="ident">to_string</span>();
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="string">&quot;&lt;span&gt;mess&lt;/span&gt;&quot;</span>, <span class="ident">a</span>);</pre></div>
+</div><h4 id='method.rm_clean_content_tags' class="method"><code id='rm_clean_content_tags.v'>pub fn <a href='#method.rm_clean_content_tags' class='fnname'>rm_clean_content_tags</a>&lt;'b, T:&nbsp;'b + ?<a class="trait" href="https://doc.rust-lang.org/nightly/core/marker/trait.Sized.html" title="trait core::marker::Sized">Sized</a> + <a class="trait" href="https://doc.rust-lang.org/nightly/core/borrow/trait.Borrow.html" title="trait core::borrow::Borrow">Borrow</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a>&gt;, I:&nbsp;<a class="trait" href="https://doc.rust-lang.org/nightly/core/iter/traits/collect/trait.IntoIterator.html" title="trait core::iter::traits::collect::IntoIterator">IntoIter</a>&lt;Item = <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;'b </a>T&gt;&gt;(<br>&nbsp;&nbsp;&nbsp;&nbsp;&amp;mut self, <br>&nbsp;&nbsp;&nbsp;&nbsp;it: I<br>) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;mut </a>Self</code><a class='srclink' href='../src/ammonia/lib.rs.html#555-563' title='goto source code'>[src]</a></h4><div class='docblock'><p>Remove already-blacklisted clean-content tags.</p>
+<p>Does nothing if the tags aren't blacklisted.</p>
+<h1 id="examples-7" class="section-header"><a href="#examples-7">Examples</a></h1>
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">ammonia</span>::<span class="ident">Builder</span>;
+<span class="kw">use</span> <span class="ident">maplit</span>::<span class="ident">hashset</span>;
+
+<span class="kw">let</span> <span class="ident">tag_blacklist</span> <span class="op">=</span> <span class="macro">hashset</span><span class="macro">!</span>[<span class="string">&quot;script&quot;</span>];
+<span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">ammonia</span>::<span class="ident">Builder</span>::<span class="ident">default</span>()
+    .<span class="ident">clean_content_tags</span>(<span class="ident">tag_blacklist</span>)
+    .<span class="ident">rm_clean_content_tags</span>(<span class="kw-2">&amp;</span>[<span class="string">&quot;script&quot;</span>])
+    .<span class="ident">clean</span>(<span class="string">&quot;&lt;script&gt;XSS&lt;/script&gt;&quot;</span>).<span class="ident">to_string</span>();
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="string">&quot;XSS&quot;</span>, <span class="ident">a</span>);</pre></div>
+</div><h4 id='method.clone_clean_content_tags' class="method"><code id='clone_clean_content_tags.v'>pub fn <a href='#method.clone_clean_content_tags' class='fnname'>clone_clean_content_tags</a>(&amp;self) -&gt; <a class="struct" href="https://doc.rust-lang.org/nightly/std/collections/hash/set/struct.HashSet.html" title="struct std::collections::hash::set::HashSet">HashSet</a>&lt;&amp;'a <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a>&gt;</code><a class='srclink' href='../src/ammonia/lib.rs.html#575-577' title='goto source code'>[src]</a></h4><div class='docblock'><p>Returns a copy of the set of blacklisted clean-content tags.</p>
+<h1 id="examples-8" class="section-header"><a href="#examples-8">Examples</a></h1>
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+
+<span class="kw">let</span> <span class="ident">tags</span> <span class="op">=</span> <span class="macro">hashset</span><span class="macro">!</span>[<span class="string">&quot;my-tag-1&quot;</span>, <span class="string">&quot;my-tag-2&quot;</span>];
+
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">ammonia</span>::<span class="ident">Builder</span>::<span class="ident">default</span>();
+<span class="ident">b</span>.<span class="ident">clean_content_tags</span>(<span class="ident">Clone</span>::<span class="ident">clone</span>(<span class="kw-2">&amp;</span><span class="ident">tags</span>));
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">tags</span>, <span class="ident">b</span>.<span class="ident">clone_clean_content_tags</span>());</pre></div>
+</div><h4 id='method.tag_attributes' class="method"><code id='tag_attributes.v'>pub fn <a href='#method.tag_attributes' class='fnname'>tag_attributes</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;&amp;mut self, <br>&nbsp;&nbsp;&nbsp;&nbsp;value: <a class="struct" href="https://doc.rust-lang.org/nightly/std/collections/hash/map/struct.HashMap.html" title="struct std::collections::hash::map::HashMap">HashMap</a>&lt;&amp;'a <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a>, <a class="struct" href="https://doc.rust-lang.org/nightly/std/collections/hash/set/struct.HashSet.html" title="struct std::collections::hash::set::HashSet">HashSet</a>&lt;&amp;'a <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a>&gt;&gt;<br>) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;mut </a>Self</code><a class='srclink' href='../src/ammonia/lib.rs.html#641-644' title='goto source code'>[src]</a></h4><div class='docblock'><p>Sets the HTML attributes that are allowed on specific tags.</p>
+<p>The value is structured as a map from tag names to a set of attribute names.</p>
+<p>If a tag is not itself whitelisted, adding entries to this map will do nothing.</p>
+<h1 id="examples-9" class="section-header"><a href="#examples-9">Examples</a></h1>
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">ammonia</span>::<span class="ident">Builder</span>;
+<span class="kw">use</span> <span class="ident">maplit</span>::{<span class="ident">hashmap</span>, <span class="ident">hashset</span>};
+
+<span class="kw">let</span> <span class="ident">tags</span> <span class="op">=</span> <span class="macro">hashset</span><span class="macro">!</span>[<span class="string">&quot;my-tag&quot;</span>];
+<span class="kw">let</span> <span class="ident">tag_attributes</span> <span class="op">=</span> <span class="macro">hashmap</span><span class="macro">!</span>[
+    <span class="string">&quot;my-tag&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">hashset</span><span class="macro">!</span>[<span class="string">&quot;val&quot;</span>]
+];
+<span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">Builder</span>::<span class="ident">new</span>().<span class="ident">tags</span>(<span class="ident">tags</span>).<span class="ident">tag_attributes</span>(<span class="ident">tag_attributes</span>)
+    .<span class="ident">clean</span>(<span class="string">&quot;&lt;my-tag val=1&gt;&quot;</span>)
+    .<span class="ident">to_string</span>();
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">a</span>, <span class="string">&quot;&lt;my-tag val=\&quot;1\&quot;&gt;&lt;/my-tag&gt;&quot;</span>);</pre></div>
+<h1 id="defaults-2" class="section-header"><a href="#defaults-2">Defaults</a></h1>
+<pre><code class="language-notest">a =&gt;
+    href, hreflang
+bdo =&gt;
+    dir
+blockquote =&gt;
+    cite
+col =&gt;
+    align, char, charoff, span
+colgroup =&gt;
+    align, char, charoff, span
+del =&gt;
+    cite, datetime
+hr =&gt;
+    align, size, width
+img =&gt;
+    align, alt, height, src, width
+ins =&gt;
+    cite, datetime
+ol =&gt;
+    start
+q =&gt;
+    cite
+table =&gt;
+    align, char, charoff, summary
+tbody =&gt;
+    align, char, charoff
+td =&gt;
+    align, char, charoff, colspan, headers, rowspan
+tfoot =&gt;
+    align, char, charoff
+th =&gt;
+    align, char, charoff, colspan, headers, rowspan, scope
+thead =&gt;
+    align, char, charoff
+tr =&gt;
+    align, char, charoff
+</code></pre>
+</div><h4 id='method.add_tag_attributes' class="method"><code id='add_tag_attributes.v'>pub fn <a href='#method.add_tag_attributes' class='fnname'>add_tag_attributes</a>&lt;T:&nbsp;'a + ?<a class="trait" href="https://doc.rust-lang.org/nightly/core/marker/trait.Sized.html" title="trait core::marker::Sized">Sized</a> + <a class="trait" href="https://doc.rust-lang.org/nightly/core/borrow/trait.Borrow.html" title="trait core::borrow::Borrow">Borrow</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a>&gt;, U:&nbsp;'a + ?<a class="trait" href="https://doc.rust-lang.org/nightly/core/marker/trait.Sized.html" title="trait core::marker::Sized">Sized</a> + <a class="trait" href="https://doc.rust-lang.org/nightly/core/borrow/trait.Borrow.html" title="trait core::borrow::Borrow">Borrow</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a>&gt;, I:&nbsp;<a class="trait" href="https://doc.rust-lang.org/nightly/core/iter/traits/collect/trait.IntoIterator.html" title="trait core::iter::traits::collect::IntoIterator">IntoIter</a>&lt;Item = <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;'a </a>T&gt;&gt;(<br>&nbsp;&nbsp;&nbsp;&nbsp;&amp;mut self, <br>&nbsp;&nbsp;&nbsp;&nbsp;tag: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;'a </a>U, <br>&nbsp;&nbsp;&nbsp;&nbsp;it: I<br>) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;mut </a>Self</code><a class='srclink' href='../src/ammonia/lib.rs.html#655-669' title='goto source code'>[src]</a></h4><div class='docblock'><p>Add additonal whitelisted tag-specific attributes without overwriting old ones.</p>
+<h1 id="examples-10" class="section-header"><a href="#examples-10">Examples</a></h1>
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">ammonia</span>::<span class="ident">Builder</span>::<span class="ident">default</span>()
+    .<span class="ident">add_tags</span>(<span class="kw-2">&amp;</span>[<span class="string">&quot;my-tag&quot;</span>])
+    .<span class="ident">add_tag_attributes</span>(<span class="string">&quot;my-tag&quot;</span>, <span class="kw-2">&amp;</span>[<span class="string">&quot;my-attr&quot;</span>])
+    .<span class="ident">clean</span>(<span class="string">&quot;&lt;my-tag my-attr&gt;test&lt;/my-tag&gt; &lt;span&gt;mess&lt;/span&gt;&quot;</span>).<span class="ident">to_string</span>();
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="string">&quot;&lt;my-tag my-attr=\&quot;\&quot;&gt;test&lt;/my-tag&gt; &lt;span&gt;mess&lt;/span&gt;&quot;</span>, <span class="ident">a</span>);</pre></div>
+</div><h4 id='method.rm_tag_attributes' class="method"><code id='rm_tag_attributes.v'>pub fn <a href='#method.rm_tag_attributes' class='fnname'>rm_tag_attributes</a>&lt;'b, 'c, T:&nbsp;'b + ?<a class="trait" href="https://doc.rust-lang.org/nightly/core/marker/trait.Sized.html" title="trait core::marker::Sized">Sized</a> + <a class="trait" href="https://doc.rust-lang.org/nightly/core/borrow/trait.Borrow.html" title="trait core::borrow::Borrow">Borrow</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a>&gt;, U:&nbsp;'c + ?<a class="trait" href="https://doc.rust-lang.org/nightly/core/marker/trait.Sized.html" title="trait core::marker::Sized">Sized</a> + <a class="trait" href="https://doc.rust-lang.org/nightly/core/borrow/trait.Borrow.html" title="trait core::borrow::Borrow">Borrow</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a>&gt;, I:&nbsp;<a class="trait" href="https://doc.rust-lang.org/nightly/core/iter/traits/collect/trait.IntoIterator.html" title="trait core::iter::traits::collect::IntoIterator">IntoIter</a>&lt;Item = <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;'b </a>T&gt;&gt;(<br>&nbsp;&nbsp;&nbsp;&nbsp;&amp;mut self, <br>&nbsp;&nbsp;&nbsp;&nbsp;tag: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;'c </a>U, <br>&nbsp;&nbsp;&nbsp;&nbsp;it: I<br>) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;mut </a>Self</code><a class='srclink' href='../src/ammonia/lib.rs.html#681-698' title='goto source code'>[src]</a></h4><div class='docblock'><p>Remove already-whitelisted tag-specific attributes.</p>
+<p>Does nothing if the attribute is already gone.</p>
+<h1 id="examples-11" class="section-header"><a href="#examples-11">Examples</a></h1>
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">ammonia</span>::<span class="ident">Builder</span>::<span class="ident">default</span>()
+    .<span class="ident">rm_tag_attributes</span>(<span class="string">&quot;a&quot;</span>, <span class="kw-2">&amp;</span>[<span class="string">&quot;href&quot;</span>])
+    .<span class="ident">clean</span>(<span class="string">&quot;&lt;a href=\&quot;/\&quot;&gt;&lt;/a&gt;&quot;</span>).<span class="ident">to_string</span>();
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="string">&quot;&lt;a rel=\&quot;noopener noreferrer\&quot;&gt;&lt;/a&gt;&quot;</span>, <span class="ident">a</span>);</pre></div>
+</div><h4 id='method.clone_tag_attributes' class="method"><code id='clone_tag_attributes.v'>pub fn <a href='#method.clone_tag_attributes' class='fnname'>clone_tag_attributes</a>(&amp;self) -&gt; <a class="struct" href="https://doc.rust-lang.org/nightly/std/collections/hash/map/struct.HashMap.html" title="struct std::collections::hash::map::HashMap">HashMap</a>&lt;&amp;'a <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a>, <a class="struct" href="https://doc.rust-lang.org/nightly/std/collections/hash/set/struct.HashSet.html" title="struct std::collections::hash::set::HashSet">HashSet</a>&lt;&amp;'a <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a>&gt;&gt;</code><a class='srclink' href='../src/ammonia/lib.rs.html#712-714' title='goto source code'>[src]</a></h4><div class='docblock'><p>Returns a copy of the set of whitelisted tag-specific attributes.</p>
+<h1 id="examples-12" class="section-header"><a href="#examples-12">Examples</a></h1>
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">maplit</span>::{<span class="ident">hashmap</span>, <span class="ident">hashset</span>};
+
+<span class="kw">let</span> <span class="ident">tag_attributes</span> <span class="op">=</span> <span class="macro">hashmap</span><span class="macro">!</span>[
+    <span class="string">&quot;my-tag&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">hashset</span><span class="macro">!</span>[<span class="string">&quot;my-attr-1&quot;</span>, <span class="string">&quot;my-attr-2&quot;</span>]
+];
+
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">ammonia</span>::<span class="ident">Builder</span>::<span class="ident">default</span>();
+<span class="ident">b</span>.<span class="ident">tag_attributes</span>(<span class="ident">Clone</span>::<span class="ident">clone</span>(<span class="kw-2">&amp;</span><span class="ident">tag_attributes</span>));
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">tag_attributes</span>, <span class="ident">b</span>.<span class="ident">clone_tag_attributes</span>());</pre></div>
+</div><h4 id='method.tag_attribute_values' class="method"><code id='tag_attribute_values.v'>pub fn <a href='#method.tag_attribute_values' class='fnname'>tag_attribute_values</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;&amp;mut self, <br>&nbsp;&nbsp;&nbsp;&nbsp;value: <a class="struct" href="https://doc.rust-lang.org/nightly/std/collections/hash/map/struct.HashMap.html" title="struct std::collections::hash::map::HashMap">HashMap</a>&lt;&amp;'a <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a>, <a class="struct" href="https://doc.rust-lang.org/nightly/std/collections/hash/map/struct.HashMap.html" title="struct std::collections::hash::map::HashMap">HashMap</a>&lt;&amp;'a <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a>, <a class="struct" href="https://doc.rust-lang.org/nightly/std/collections/hash/set/struct.HashSet.html" title="struct std::collections::hash::set::HashSet">HashSet</a>&lt;&amp;'a <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a>&gt;&gt;&gt;<br>) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;mut </a>Self</code><a class='srclink' href='../src/ammonia/lib.rs.html#744-750' title='goto source code'>[src]</a></h4><div class='docblock'><p>Sets the values of HTML attributes that are allowed on specific tags.</p>
+<p>The value is structured as a map from tag names to a map from attribute names to a set of
+attribute values.</p>
+<p>If a tag is not itself whitelisted, adding entries to this map will do nothing.</p>
+<h1 id="examples-13" class="section-header"><a href="#examples-13">Examples</a></h1>
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">ammonia</span>::<span class="ident">Builder</span>;
+<span class="kw">use</span> <span class="ident">maplit</span>::{<span class="ident">hashmap</span>, <span class="ident">hashset</span>};
+
+<span class="kw">let</span> <span class="ident">tags</span> <span class="op">=</span> <span class="macro">hashset</span><span class="macro">!</span>[<span class="string">&quot;my-tag&quot;</span>];
+<span class="kw">let</span> <span class="ident">tag_attribute_values</span> <span class="op">=</span> <span class="macro">hashmap</span><span class="macro">!</span>[
+    <span class="string">&quot;my-tag&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">hashmap</span><span class="macro">!</span>[
+        <span class="string">&quot;my-attr&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">hashset</span><span class="macro">!</span>[<span class="string">&quot;val&quot;</span>],
+    ],
+];
+<span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">Builder</span>::<span class="ident">new</span>().<span class="ident">tags</span>(<span class="ident">tags</span>).<span class="ident">tag_attribute_values</span>(<span class="ident">tag_attribute_values</span>)
+    .<span class="ident">clean</span>(<span class="string">&quot;&lt;my-tag my-attr=val&gt;&quot;</span>)
+    .<span class="ident">to_string</span>();
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">a</span>, <span class="string">&quot;&lt;my-tag my-attr=\&quot;val\&quot;&gt;&lt;/my-tag&gt;&quot;</span>);</pre></div>
+<h1 id="defaults-3" class="section-header"><a href="#defaults-3">Defaults</a></h1>
+<p>None.</p>
+</div><h4 id='method.add_tag_attribute_values' class="method"><code id='add_tag_attribute_values.v'>pub fn <a href='#method.add_tag_attribute_values' class='fnname'>add_tag_attribute_values</a>&lt;T:&nbsp;'a + ?<a class="trait" href="https://doc.rust-lang.org/nightly/core/marker/trait.Sized.html" title="trait core::marker::Sized">Sized</a> + <a class="trait" href="https://doc.rust-lang.org/nightly/core/borrow/trait.Borrow.html" title="trait core::borrow::Borrow">Borrow</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a>&gt;, U:&nbsp;'a + ?<a class="trait" href="https://doc.rust-lang.org/nightly/core/marker/trait.Sized.html" title="trait core::marker::Sized">Sized</a> + <a class="trait" href="https://doc.rust-lang.org/nightly/core/borrow/trait.Borrow.html" title="trait core::borrow::Borrow">Borrow</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a>&gt;, V:&nbsp;'a + ?<a class="trait" href="https://doc.rust-lang.org/nightly/core/marker/trait.Sized.html" title="trait core::marker::Sized">Sized</a> + <a class="trait" href="https://doc.rust-lang.org/nightly/core/borrow/trait.Borrow.html" title="trait core::borrow::Borrow">Borrow</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a>&gt;, I:&nbsp;<a class="trait" href="https://doc.rust-lang.org/nightly/core/iter/traits/collect/trait.IntoIterator.html" title="trait core::iter::traits::collect::IntoIterator">IntoIter</a>&lt;Item = <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;'a </a>T&gt;&gt;(<br>&nbsp;&nbsp;&nbsp;&nbsp;&amp;mut self, <br>&nbsp;&nbsp;&nbsp;&nbsp;tag: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;'a </a>U, <br>&nbsp;&nbsp;&nbsp;&nbsp;attribute: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;'a </a>V, <br>&nbsp;&nbsp;&nbsp;&nbsp;it: I<br>) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;mut </a>Self</code><a class='srclink' href='../src/ammonia/lib.rs.html#761-780' title='goto source code'>[src]</a></h4><div class='docblock'><p>Add additonal whitelisted tag-specific attribute values without overwriting old ones.</p>
+<h1 id="examples-14" class="section-header"><a href="#examples-14">Examples</a></h1>
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">ammonia</span>::<span class="ident">Builder</span>::<span class="ident">default</span>()
+    .<span class="ident">add_tags</span>(<span class="kw-2">&amp;</span>[<span class="string">&quot;my-tag&quot;</span>])
+    .<span class="ident">add_tag_attribute_values</span>(<span class="string">&quot;my-tag&quot;</span>, <span class="string">&quot;my-attr&quot;</span>, <span class="kw-2">&amp;</span>[<span class="string">&quot;&quot;</span>])
+    .<span class="ident">clean</span>(<span class="string">&quot;&lt;my-tag my-attr&gt;test&lt;/my-tag&gt; &lt;span&gt;mess&lt;/span&gt;&quot;</span>).<span class="ident">to_string</span>();
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="string">&quot;&lt;my-tag my-attr=\&quot;\&quot;&gt;test&lt;/my-tag&gt; &lt;span&gt;mess&lt;/span&gt;&quot;</span>, <span class="ident">a</span>);</pre></div>
+</div><h4 id='method.rm_tag_attribute_values' class="method"><code id='rm_tag_attribute_values.v'>pub fn <a href='#method.rm_tag_attribute_values' class='fnname'>rm_tag_attribute_values</a>&lt;'b, 'c, T:&nbsp;'b + ?<a class="trait" href="https://doc.rust-lang.org/nightly/core/marker/trait.Sized.html" title="trait core::marker::Sized">Sized</a> + <a class="trait" href="https://doc.rust-lang.org/nightly/core/borrow/trait.Borrow.html" title="trait core::borrow::Borrow">Borrow</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a>&gt;, U:&nbsp;'c + ?<a class="trait" href="https://doc.rust-lang.org/nightly/core/marker/trait.Sized.html" title="trait core::marker::Sized">Sized</a> + <a class="trait" href="https://doc.rust-lang.org/nightly/core/borrow/trait.Borrow.html" title="trait core::borrow::Borrow">Borrow</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a>&gt;, V:&nbsp;'c + ?<a class="trait" href="https://doc.rust-lang.org/nightly/core/marker/trait.Sized.html" title="trait core::marker::Sized">Sized</a> + <a class="trait" href="https://doc.rust-lang.org/nightly/core/borrow/trait.Borrow.html" title="trait core::borrow::Borrow">Borrow</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a>&gt;, I:&nbsp;<a class="trait" href="https://doc.rust-lang.org/nightly/core/iter/traits/collect/trait.IntoIterator.html" title="trait core::iter::traits::collect::IntoIterator">IntoIter</a>&lt;Item = <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;'b </a>T&gt;&gt;(<br>&nbsp;&nbsp;&nbsp;&nbsp;&amp;mut self, <br>&nbsp;&nbsp;&nbsp;&nbsp;tag: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;'c </a>U, <br>&nbsp;&nbsp;&nbsp;&nbsp;attribute: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;'c </a>V, <br>&nbsp;&nbsp;&nbsp;&nbsp;it: I<br>) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;mut </a>Self</code><a class='srclink' href='../src/ammonia/lib.rs.html#794-817' title='goto source code'>[src]</a></h4><div class='docblock'><p>Remove already-whitelisted tag-specific attribute values.</p>
+<p>Does nothing if the attribute or the value is already gone.</p>
+<h1 id="examples-15" class="section-header"><a href="#examples-15">Examples</a></h1>
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">ammonia</span>::<span class="ident">Builder</span>::<span class="ident">default</span>()
+    .<span class="ident">rm_tag_attributes</span>(<span class="string">&quot;a&quot;</span>, <span class="kw-2">&amp;</span>[<span class="string">&quot;href&quot;</span>])
+    .<span class="ident">add_tag_attribute_values</span>(<span class="string">&quot;a&quot;</span>, <span class="string">&quot;href&quot;</span>, <span class="kw-2">&amp;</span>[<span class="string">&quot;/&quot;</span>])
+    .<span class="ident">rm_tag_attribute_values</span>(<span class="string">&quot;a&quot;</span>, <span class="string">&quot;href&quot;</span>, <span class="kw-2">&amp;</span>[<span class="string">&quot;/&quot;</span>])
+    .<span class="ident">clean</span>(<span class="string">&quot;&lt;a href=\&quot;/\&quot;&gt;&lt;/a&gt;&quot;</span>).<span class="ident">to_string</span>();
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="string">&quot;&lt;a rel=\&quot;noopener noreferrer\&quot;&gt;&lt;/a&gt;&quot;</span>, <span class="ident">a</span>);</pre></div>
+</div><h4 id='method.clone_tag_attribute_values' class="method"><code id='clone_tag_attribute_values.v'>pub fn <a href='#method.clone_tag_attribute_values' class='fnname'>clone_tag_attribute_values</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;&amp;self<br>) -&gt; <a class="struct" href="https://doc.rust-lang.org/nightly/std/collections/hash/map/struct.HashMap.html" title="struct std::collections::hash::map::HashMap">HashMap</a>&lt;&amp;'a <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a>, <a class="struct" href="https://doc.rust-lang.org/nightly/std/collections/hash/map/struct.HashMap.html" title="struct std::collections::hash::map::HashMap">HashMap</a>&lt;&amp;'a <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a>, <a class="struct" href="https://doc.rust-lang.org/nightly/std/collections/hash/set/struct.HashSet.html" title="struct std::collections::hash::set::HashSet">HashSet</a>&lt;&amp;'a <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a>&gt;&gt;&gt;</code><a class='srclink' href='../src/ammonia/lib.rs.html#836-840' title='goto source code'>[src]</a></h4><div class='docblock'><p>Returns a copy of the set of whitelisted tag-specific attribute values.</p>
+<h1 id="examples-16" class="section-header"><a href="#examples-16">Examples</a></h1>
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">maplit</span>::{<span class="ident">hashmap</span>, <span class="ident">hashset</span>};
+
+<span class="kw">let</span> <span class="ident">attribute_values</span> <span class="op">=</span> <span class="macro">hashmap</span><span class="macro">!</span>[
+    <span class="string">&quot;my-attr-1&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">hashset</span><span class="macro">!</span>[<span class="string">&quot;foo&quot;</span>],
+    <span class="string">&quot;my-attr-2&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">hashset</span><span class="macro">!</span>[<span class="string">&quot;baz&quot;</span>, <span class="string">&quot;bar&quot;</span>],
+];
+<span class="kw">let</span> <span class="ident">tag_attribute_values</span> <span class="op">=</span> <span class="macro">hashmap</span><span class="macro">!</span>[
+    <span class="string">&quot;my-tag&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">attribute_values</span>
+];
+
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">ammonia</span>::<span class="ident">Builder</span>::<span class="ident">default</span>();
+<span class="ident">b</span>.<span class="ident">tag_attribute_values</span>(<span class="ident">Clone</span>::<span class="ident">clone</span>(<span class="kw-2">&amp;</span><span class="ident">tag_attribute_values</span>));
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">tag_attribute_values</span>, <span class="ident">b</span>.<span class="ident">clone_tag_attribute_values</span>());</pre></div>
+</div><h4 id='method.generic_attributes' class="method"><code id='generic_attributes.v'>pub fn <a href='#method.generic_attributes' class='fnname'>generic_attributes</a>(&amp;mut self, value: <a class="struct" href="https://doc.rust-lang.org/nightly/std/collections/hash/set/struct.HashSet.html" title="struct std::collections::hash::set::HashSet">HashSet</a>&lt;&amp;'a <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a>&gt;) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;mut </a>Self</code><a class='srclink' href='../src/ammonia/lib.rs.html#863-866' title='goto source code'>[src]</a></h4><div class='docblock'><p>Sets the attributes that are allowed on any tag.</p>
+<h1 id="examples-17" class="section-header"><a href="#examples-17">Examples</a></h1>
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">ammonia</span>::<span class="ident">Builder</span>;
+<span class="kw">use</span> <span class="ident">maplit</span>::<span class="ident">hashset</span>;
+
+<span class="kw">let</span> <span class="ident">attributes</span> <span class="op">=</span> <span class="macro">hashset</span><span class="macro">!</span>[<span class="string">&quot;data-val&quot;</span>];
+<span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">Builder</span>::<span class="ident">new</span>()
+    .<span class="ident">generic_attributes</span>(<span class="ident">attributes</span>)
+    .<span class="ident">clean</span>(<span class="string">&quot;&lt;b data-val=1&gt;&quot;</span>)
+    .<span class="ident">to_string</span>();
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">a</span>, <span class="string">&quot;&lt;b data-val=\&quot;1\&quot;&gt;&lt;/b&gt;&quot;</span>);</pre></div>
+<h1 id="defaults-4" class="section-header"><a href="#defaults-4">Defaults</a></h1>
+<pre><code class="language-notest">lang, title
+</code></pre>
+</div><h4 id='method.add_generic_attributes' class="method"><code id='add_generic_attributes.v'>pub fn <a href='#method.add_generic_attributes' class='fnname'>add_generic_attributes</a>&lt;T:&nbsp;'a + ?<a class="trait" href="https://doc.rust-lang.org/nightly/core/marker/trait.Sized.html" title="trait core::marker::Sized">Sized</a> + <a class="trait" href="https://doc.rust-lang.org/nightly/core/borrow/trait.Borrow.html" title="trait core::borrow::Borrow">Borrow</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a>&gt;, I:&nbsp;<a class="trait" href="https://doc.rust-lang.org/nightly/core/iter/traits/collect/trait.IntoIterator.html" title="trait core::iter::traits::collect::IntoIterator">IntoIter</a>&lt;Item = <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;'a </a>T&gt;&gt;(<br>&nbsp;&nbsp;&nbsp;&nbsp;&amp;mut self, <br>&nbsp;&nbsp;&nbsp;&nbsp;it: I<br>) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;mut </a>Self</code><a class='srclink' href='../src/ammonia/lib.rs.html#876-883' title='goto source code'>[src]</a></h4><div class='docblock'><p>Add additonal whitelisted attributes without overwriting old ones.</p>
+<h1 id="examples-18" class="section-header"><a href="#examples-18">Examples</a></h1>
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">ammonia</span>::<span class="ident">Builder</span>::<span class="ident">default</span>()
+    .<span class="ident">add_generic_attributes</span>(<span class="kw-2">&amp;</span>[<span class="string">&quot;my-attr&quot;</span>])
+    .<span class="ident">clean</span>(<span class="string">&quot;&lt;span my-attr&gt;mess&lt;/span&gt;&quot;</span>).<span class="ident">to_string</span>();
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="string">&quot;&lt;span my-attr=\&quot;\&quot;&gt;mess&lt;/span&gt;&quot;</span>, <span class="ident">a</span>);</pre></div>
+</div><h4 id='method.rm_generic_attributes' class="method"><code id='rm_generic_attributes.v'>pub fn <a href='#method.rm_generic_attributes' class='fnname'>rm_generic_attributes</a>&lt;'b, T:&nbsp;'b + ?<a class="trait" href="https://doc.rust-lang.org/nightly/core/marker/trait.Sized.html" title="trait core::marker::Sized">Sized</a> + <a class="trait" href="https://doc.rust-lang.org/nightly/core/borrow/trait.Borrow.html" title="trait core::borrow::Borrow">Borrow</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a>&gt;, I:&nbsp;<a class="trait" href="https://doc.rust-lang.org/nightly/core/iter/traits/collect/trait.IntoIterator.html" title="trait core::iter::traits::collect::IntoIterator">IntoIter</a>&lt;Item = <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;'b </a>T&gt;&gt;(<br>&nbsp;&nbsp;&nbsp;&nbsp;&amp;mut self, <br>&nbsp;&nbsp;&nbsp;&nbsp;it: I<br>) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;mut </a>Self</code><a class='srclink' href='../src/ammonia/lib.rs.html#895-903' title='goto source code'>[src]</a></h4><div class='docblock'><p>Remove already-whitelisted attributes.</p>
+<p>Does nothing if the attribute is already gone.</p>
+<h1 id="examples-19" class="section-header"><a href="#examples-19">Examples</a></h1>
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">ammonia</span>::<span class="ident">Builder</span>::<span class="ident">default</span>()
+    .<span class="ident">rm_generic_attributes</span>(<span class="kw-2">&amp;</span>[<span class="string">&quot;title&quot;</span>])
+    .<span class="ident">clean</span>(<span class="string">&quot;&lt;span title=\&quot;cool\&quot;&gt;&lt;/span&gt;&quot;</span>).<span class="ident">to_string</span>();
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="string">&quot;&lt;span&gt;&lt;/span&gt;&quot;</span>, <span class="ident">a</span>);</pre></div>
+</div><h4 id='method.clone_generic_attributes' class="method"><code id='clone_generic_attributes.v'>pub fn <a href='#method.clone_generic_attributes' class='fnname'>clone_generic_attributes</a>(&amp;self) -&gt; <a class="struct" href="https://doc.rust-lang.org/nightly/std/collections/hash/set/struct.HashSet.html" title="struct std::collections::hash::set::HashSet">HashSet</a>&lt;&amp;'a <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a>&gt;</code><a class='srclink' href='../src/ammonia/lib.rs.html#916-918' title='goto source code'>[src]</a></h4><div class='docblock'><p>Returns a copy of the set of whitelisted attributes.</p>
+<h1 id="examples-20" class="section-header"><a href="#examples-20">Examples</a></h1>
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">maplit</span>::<span class="ident">hashset</span>;
+
+<span class="kw">let</span> <span class="ident">generic_attributes</span> <span class="op">=</span> <span class="macro">hashset</span><span class="macro">!</span>[<span class="string">&quot;my-attr-1&quot;</span>, <span class="string">&quot;my-attr-2&quot;</span>];
+
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">ammonia</span>::<span class="ident">Builder</span>::<span class="ident">default</span>();
+<span class="ident">b</span>.<span class="ident">generic_attributes</span>(<span class="ident">Clone</span>::<span class="ident">clone</span>(<span class="kw-2">&amp;</span><span class="ident">generic_attributes</span>));
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">generic_attributes</span>, <span class="ident">b</span>.<span class="ident">clone_generic_attributes</span>());</pre></div>
+</div><h4 id='method.url_schemes' class="method"><code id='url_schemes.v'>pub fn <a href='#method.url_schemes' class='fnname'>url_schemes</a>(&amp;mut self, value: <a class="struct" href="https://doc.rust-lang.org/nightly/std/collections/hash/set/struct.HashSet.html" title="struct std::collections::hash::set::HashSet">HashSet</a>&lt;&amp;'a <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a>&gt;) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;mut </a>Self</code><a class='srclink' href='../src/ammonia/lib.rs.html#949-952' title='goto source code'>[src]</a></h4><div class='docblock'><p>Sets the URL schemes permitted on <code>href</code> and <code>src</code> attributes.</p>
+<h1 id="examples-21" class="section-header"><a href="#examples-21">Examples</a></h1>
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">ammonia</span>::<span class="ident">Builder</span>;
+<span class="kw">use</span> <span class="ident">maplit</span>::<span class="ident">hashset</span>;
+
+<span class="kw">let</span> <span class="ident">url_schemes</span> <span class="op">=</span> <span class="macro">hashset</span><span class="macro">!</span>[
+    <span class="string">&quot;http&quot;</span>, <span class="string">&quot;https&quot;</span>, <span class="string">&quot;mailto&quot;</span>, <span class="string">&quot;magnet&quot;</span>
+];
+<span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">Builder</span>::<span class="ident">new</span>().<span class="ident">url_schemes</span>(<span class="ident">url_schemes</span>)
+    .<span class="ident">clean</span>(<span class="string">&quot;&lt;a href=\&quot;magnet:?xt=urn:ed2k:31D6CFE0D16AE931B73C59D7E0C089C0&amp;xl=0&amp;dn=zero_len.fil&amp;xt=urn:bitprint:3I42H3S6NNFQ2MSVX7XZKYAYSCX5QBYJ.LWPNACQDBZRYXW3VHJVCJ64QBZNGHOHHHZWCLNQ&amp;xt=urn:md5:D41D8CD98F00B204E9800998ECF8427E\&quot;&gt;zero-length file&lt;/a&gt;&quot;</span>)
+    .<span class="ident">to_string</span>();
+
+<span class="comment">// See `link_rel` for information on the rel=&quot;noopener noreferrer&quot; attribute</span>
+<span class="comment">// in the cleaned HTML.</span>
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">a</span>,
+  <span class="string">&quot;&lt;a href=\&quot;magnet:?xt=urn:ed2k:31D6CFE0D16AE931B73C59D7E0C089C0&amp;amp;xl=0&amp;amp;dn=zero_len.fil&amp;amp;xt=urn:bitprint:3I42H3S6NNFQ2MSVX7XZKYAYSCX5QBYJ.LWPNACQDBZRYXW3VHJVCJ64QBZNGHOHHHZWCLNQ&amp;amp;xt=urn:md5:D41D8CD98F00B204E9800998ECF8427E\&quot; rel=\&quot;noopener noreferrer\&quot;&gt;zero-length file&lt;/a&gt;&quot;</span>);</pre></div>
+<h1 id="defaults-5" class="section-header"><a href="#defaults-5">Defaults</a></h1>
+<pre><code class="language-notest">bitcoin, ftp, ftps, geo, http, https, im, irc,
+ircs, magnet, mailto, mms, mx, news, nntp,
+openpgp4fpr, sip, sms, smsto, ssh, tel, url,
+webcal, wtai, xmpp
+</code></pre>
+</div><h4 id='method.add_url_schemes' class="method"><code id='add_url_schemes.v'>pub fn <a href='#method.add_url_schemes' class='fnname'>add_url_schemes</a>&lt;T:&nbsp;'a + ?<a class="trait" href="https://doc.rust-lang.org/nightly/core/marker/trait.Sized.html" title="trait core::marker::Sized">Sized</a> + <a class="trait" href="https://doc.rust-lang.org/nightly/core/borrow/trait.Borrow.html" title="trait core::borrow::Borrow">Borrow</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a>&gt;, I:&nbsp;<a class="trait" href="https://doc.rust-lang.org/nightly/core/iter/traits/collect/trait.IntoIterator.html" title="trait core::iter::traits::collect::IntoIterator">IntoIter</a>&lt;Item = <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;'a </a>T&gt;&gt;(<br>&nbsp;&nbsp;&nbsp;&nbsp;&amp;mut self, <br>&nbsp;&nbsp;&nbsp;&nbsp;it: I<br>) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;mut </a>Self</code><a class='srclink' href='../src/ammonia/lib.rs.html#962-968' title='goto source code'>[src]</a></h4><div class='docblock'><p>Add additonal whitelisted URL schemes without overwriting old ones.</p>
+<h1 id="examples-22" class="section-header"><a href="#examples-22">Examples</a></h1>
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">ammonia</span>::<span class="ident">Builder</span>::<span class="ident">default</span>()
+    .<span class="ident">add_url_schemes</span>(<span class="kw-2">&amp;</span>[<span class="string">&quot;my-scheme&quot;</span>])
+    .<span class="ident">clean</span>(<span class="string">&quot;&lt;a href=my-scheme:home&gt;mess&lt;/span&gt;&quot;</span>).<span class="ident">to_string</span>();
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="string">&quot;&lt;a href=\&quot;my-scheme:home\&quot; rel=\&quot;noopener noreferrer\&quot;&gt;mess&lt;/a&gt;&quot;</span>, <span class="ident">a</span>);</pre></div>
+</div><h4 id='method.rm_url_schemes' class="method"><code id='rm_url_schemes.v'>pub fn <a href='#method.rm_url_schemes' class='fnname'>rm_url_schemes</a>&lt;'b, T:&nbsp;'b + ?<a class="trait" href="https://doc.rust-lang.org/nightly/core/marker/trait.Sized.html" title="trait core::marker::Sized">Sized</a> + <a class="trait" href="https://doc.rust-lang.org/nightly/core/borrow/trait.Borrow.html" title="trait core::borrow::Borrow">Borrow</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a>&gt;, I:&nbsp;<a class="trait" href="https://doc.rust-lang.org/nightly/core/iter/traits/collect/trait.IntoIterator.html" title="trait core::iter::traits::collect::IntoIterator">IntoIter</a>&lt;Item = <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;'b </a>T&gt;&gt;(<br>&nbsp;&nbsp;&nbsp;&nbsp;&amp;mut self, <br>&nbsp;&nbsp;&nbsp;&nbsp;it: I<br>) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;mut </a>Self</code><a class='srclink' href='../src/ammonia/lib.rs.html#980-988' title='goto source code'>[src]</a></h4><div class='docblock'><p>Remove already-whitelisted attributes.</p>
+<p>Does nothing if the attribute is already gone.</p>
+<h1 id="examples-23" class="section-header"><a href="#examples-23">Examples</a></h1>
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">ammonia</span>::<span class="ident">Builder</span>::<span class="ident">default</span>()
+    .<span class="ident">rm_url_schemes</span>(<span class="kw-2">&amp;</span>[<span class="string">&quot;ftp&quot;</span>])
+    .<span class="ident">clean</span>(<span class="string">&quot;&lt;a href=\&quot;ftp://ftp.mozilla.org/\&quot;&gt;&lt;/a&gt;&quot;</span>).<span class="ident">to_string</span>();
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="string">&quot;&lt;a rel=\&quot;noopener noreferrer\&quot;&gt;&lt;/a&gt;&quot;</span>, <span class="ident">a</span>);</pre></div>
+</div><h4 id='method.clone_url_schemes' class="method"><code id='clone_url_schemes.v'>pub fn <a href='#method.clone_url_schemes' class='fnname'>clone_url_schemes</a>(&amp;self) -&gt; <a class="struct" href="https://doc.rust-lang.org/nightly/std/collections/hash/set/struct.HashSet.html" title="struct std::collections::hash::set::HashSet">HashSet</a>&lt;&amp;'a <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a>&gt;</code><a class='srclink' href='../src/ammonia/lib.rs.html#1000-1002' title='goto source code'>[src]</a></h4><div class='docblock'><p>Returns a copy of the set of whitelisted URL schemes.</p>
+<h1 id="examples-24" class="section-header"><a href="#examples-24">Examples</a></h1>
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">maplit</span>::<span class="ident">hashset</span>;
+
+<span class="kw">let</span> <span class="ident">url_schemes</span> <span class="op">=</span> <span class="macro">hashset</span><span class="macro">!</span>[<span class="string">&quot;my-scheme-1&quot;</span>, <span class="string">&quot;my-scheme-2&quot;</span>];
+
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">ammonia</span>::<span class="ident">Builder</span>::<span class="ident">default</span>();
+<span class="ident">b</span>.<span class="ident">url_schemes</span>(<span class="ident">Clone</span>::<span class="ident">clone</span>(<span class="kw-2">&amp;</span><span class="ident">url_schemes</span>));
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">url_schemes</span>, <span class="ident">b</span>.<span class="ident">clone_url_schemes</span>());</pre></div>
+</div><h4 id='method.url_relative' class="method"><code id='url_relative.v'>pub fn <a href='#method.url_relative' class='fnname'>url_relative</a>(&amp;mut self, value: <a class="enum" href="../ammonia/enum.UrlRelative.html" title="enum ammonia::UrlRelative">UrlRelative</a>) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;mut </a>Self</code><a class='srclink' href='../src/ammonia/lib.rs.html#1025-1028' title='goto source code'>[src]</a></h4><div class='docblock'><p>Configures the behavior for relative URLs: pass-through, resolve-with-base, or deny.</p>
+<h1 id="examples-25" class="section-header"><a href="#examples-25">Examples</a></h1>
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">ammonia</span>::{<span class="ident">Builder</span>, <span class="ident">UrlRelative</span>};
+
+<span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">Builder</span>::<span class="ident">new</span>().<span class="ident">url_relative</span>(<span class="ident">UrlRelative</span>::<span class="ident">PassThrough</span>)
+    .<span class="ident">clean</span>(<span class="string">&quot;&lt;a href=/&gt;Home&lt;/a&gt;&quot;</span>)
+    .<span class="ident">to_string</span>();
+
+<span class="comment">// See `link_rel` for information on the rel=&quot;noopener noreferrer&quot; attribute</span>
+<span class="comment">// in the cleaned HTML.</span>
+<span class="macro">assert_eq</span><span class="macro">!</span>(
+  <span class="ident">a</span>,
+  <span class="string">&quot;&lt;a href=\&quot;/\&quot; rel=\&quot;noopener noreferrer\&quot;&gt;Home&lt;/a&gt;&quot;</span>);</pre></div>
+<h1 id="defaults-6" class="section-header"><a href="#defaults-6">Defaults</a></h1>
+<pre><code class="language-notest">UrlRelative::PassThrough
+</code></pre>
+</div><h4 id='method.attribute_filter' class="method"><code id='attribute_filter.v'>pub fn <a href='#method.attribute_filter' class='fnname'>attribute_filter</a>&lt;'cb, CallbackFn&gt;(<br>&nbsp;&nbsp;&nbsp;&nbsp;&amp;mut self, <br>&nbsp;&nbsp;&nbsp;&nbsp;callback: CallbackFn<br>) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;mut </a>Self <span class="where fmt-newline">where<br>&nbsp;&nbsp;&nbsp;&nbsp;CallbackFn: for&lt;'u&gt; <a class="trait" href="https://doc.rust-lang.org/nightly/core/ops/function/trait.Fn.html" title="trait core::ops::function::Fn">Fn</a>(&amp;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a>, &amp;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a>, &amp;'u <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a>) -&gt; <a class="enum" href="https://doc.rust-lang.org/nightly/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="enum" href="https://doc.rust-lang.org/nightly/alloc/borrow/enum.Cow.html" title="enum alloc::borrow::Cow">Cow</a>&lt;'u, <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a>&gt;&gt; + <a class="trait" href="https://doc.rust-lang.org/nightly/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + <a class="trait" href="https://doc.rust-lang.org/nightly/core/marker/trait.Sync.html" title="trait core::marker::Sync">Sync</a> + 'static,&nbsp;</span></code><a class='srclink' href='../src/ammonia/lib.rs.html#1058-1068' title='goto source code'>[src]</a></h4><div class='docblock'><p>Allows rewriting of all attributes using a callback.</p>
+<p>The callback takes name of the element, attribute and its value.
+Returns <code>None</code> to remove the attribute, or a value to use.</p>
+<p>Rewriting of attributes with URLs is done before <code>url_relative()</code>.</p>
+<h1 id="panics-1" class="section-header"><a href="#panics-1">Panics</a></h1>
+<p>If more than one callback is set.</p>
+<h1 id="examples-26" class="section-header"><a href="#examples-26">Examples</a></h1>
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">ammonia</span>::<span class="ident">Builder</span>;
+<span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">Builder</span>::<span class="ident">new</span>()
+    .<span class="ident">attribute_filter</span>(<span class="op">|</span><span class="ident">element</span>, <span class="ident">attribute</span>, <span class="ident">value</span><span class="op">|</span> {
+        <span class="kw">match</span> (<span class="ident">element</span>, <span class="ident">attribute</span>) {
+            (<span class="string">&quot;img&quot;</span>, <span class="string">&quot;src&quot;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">value</span>.<span class="ident">into</span>())
+        }
+    })
+    .<span class="ident">link_rel</span>(<span class="prelude-val">None</span>)
+    .<span class="ident">clean</span>(<span class="string">&quot;&lt;a href=/&gt;&lt;img alt=Home src=foo&gt;&lt;/a&gt;&quot;</span>)
+    .<span class="ident">to_string</span>();
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">a</span>,
+    <span class="string">r#&quot;&lt;a href=&quot;/&quot;&gt;&lt;img alt=&quot;Home&quot;&gt;&lt;/a&gt;&quot;#</span>);</pre></div>
+</div><h4 id='method.is_url_relative_deny' class="method"><code id='is_url_relative_deny.v'>pub fn <a href='#method.is_url_relative_deny' class='fnname'>is_url_relative_deny</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.bool.html">bool</a></code><a class='srclink' href='../src/ammonia/lib.rs.html#1080-1082' title='goto source code'>[src]</a></h4><div class='docblock'><p>Returns <code>true</code> if the relative URL resolver is set to <code>Deny</code>.</p>
+<h1 id="examples-27" class="section-header"><a href="#examples-27">Examples</a></h1>
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">ammonia</span>::{<span class="ident">Builder</span>, <span class="ident">UrlRelative</span>};
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">Builder</span>::<span class="ident">default</span>();
+<span class="ident">a</span>.<span class="ident">url_relative</span>(<span class="ident">UrlRelative</span>::<span class="ident">Deny</span>);
+<span class="macro">assert</span><span class="macro">!</span>(<span class="ident">a</span>.<span class="ident">is_url_relative_deny</span>());
+<span class="ident">a</span>.<span class="ident">url_relative</span>(<span class="ident">UrlRelative</span>::<span class="ident">PassThrough</span>);
+<span class="macro">assert</span><span class="macro">!</span>(<span class="op">!</span><span class="ident">a</span>.<span class="ident">is_url_relative_deny</span>());</pre></div>
+</div><h4 id='method.is_url_relative_pass_through' class="method"><code id='is_url_relative_pass_through.v'>pub fn <a href='#method.is_url_relative_pass_through' class='fnname'>is_url_relative_pass_through</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.bool.html">bool</a></code><a class='srclink' href='../src/ammonia/lib.rs.html#1094-1096' title='goto source code'>[src]</a></h4><div class='docblock'><p>Returns <code>true</code> if the relative URL resolver is set to <code>PassThrough</code>.</p>
+<h1 id="examples-28" class="section-header"><a href="#examples-28">Examples</a></h1>
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">ammonia</span>::{<span class="ident">Builder</span>, <span class="ident">UrlRelative</span>};
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">Builder</span>::<span class="ident">default</span>();
+<span class="ident">a</span>.<span class="ident">url_relative</span>(<span class="ident">UrlRelative</span>::<span class="ident">Deny</span>);
+<span class="macro">assert</span><span class="macro">!</span>(<span class="op">!</span><span class="ident">a</span>.<span class="ident">is_url_relative_pass_through</span>());
+<span class="ident">a</span>.<span class="ident">url_relative</span>(<span class="ident">UrlRelative</span>::<span class="ident">PassThrough</span>);
+<span class="macro">assert</span><span class="macro">!</span>(<span class="ident">a</span>.<span class="ident">is_url_relative_pass_through</span>());</pre></div>
+</div><h4 id='method.is_url_relative_custom' class="method"><code id='is_url_relative_custom.v'>pub fn <a href='#method.is_url_relative_custom' class='fnname'>is_url_relative_custom</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.bool.html">bool</a></code><a class='srclink' href='../src/ammonia/lib.rs.html#1114-1116' title='goto source code'>[src]</a></h4><div class='docblock'><p>Returns <code>true</code> if the relative URL resolver is set to <code>Custom</code>.</p>
+<h1 id="examples-29" class="section-header"><a href="#examples-29">Examples</a></h1>
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">ammonia</span>::{<span class="ident">Builder</span>, <span class="ident">UrlRelative</span>};
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">borrow</span>::<span class="ident">Cow</span>;
+<span class="kw">fn</span> <span class="ident">test</span>(<span class="ident">a</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Cow</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span> { <span class="prelude-val">None</span> }
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">Builder</span>::<span class="ident">default</span>();
+<span class="ident">a</span>.<span class="ident">url_relative</span>(<span class="ident">UrlRelative</span>::<span class="ident">Custom</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">test</span>)));
+<span class="macro">assert</span><span class="macro">!</span>(<span class="ident">a</span>.<span class="ident">is_url_relative_custom</span>());
+<span class="ident">a</span>.<span class="ident">url_relative</span>(<span class="ident">UrlRelative</span>::<span class="ident">PassThrough</span>);
+<span class="macro">assert</span><span class="macro">!</span>(<span class="op">!</span><span class="ident">a</span>.<span class="ident">is_url_relative_custom</span>());
+<span class="ident">a</span>.<span class="ident">url_relative</span>(<span class="ident">UrlRelative</span>::<span class="ident">Deny</span>);
+<span class="macro">assert</span><span class="macro">!</span>(<span class="op">!</span><span class="ident">a</span>.<span class="ident">is_url_relative_custom</span>());</pre></div>
+</div><h4 id='method.link_rel' class="method"><code id='link_rel.v'>pub fn <a href='#method.link_rel' class='fnname'>link_rel</a>(&amp;mut self, value: <a class="enum" href="https://doc.rust-lang.org/nightly/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;&amp;'a <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a>&gt;) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;mut </a>Self</code><a class='srclink' href='../src/ammonia/lib.rs.html#1154-1157' title='goto source code'>[src]</a></h4><div class='docblock'><p>Configures a <code>rel</code> attribute that will be added on links.</p>
+<p>If <code>rel</code> is in the generic or tag attributes, this must be set to <code>None</code>.
+Common <code>rel</code> values to include:</p>
+<ul>
+<li><code>noopener</code>: This prevents <a href="https://mathiasbynens.github.io/rel-noopener/">a particular type of XSS attack</a>,
+and should usually be turned on for untrusted HTML.</li>
+<li><code>noreferrer</code>: This prevents the browser from <a href="https://en.wikipedia.org/wiki/HTTP_referer">sending the source URL</a>
+to the website that is linked to.</li>
+<li><code>nofollow</code>: This prevents search engines from <a href="https://en.wikipedia.org/wiki/Nofollow">using this link for
+ranking</a>, which disincentivizes spammers.</li>
+</ul>
+<p>To turn on rel-insertion, call this function with a space-separated list.
+Ammonia does not parse rel-attributes;
+it just puts the given string into the attribute directly.</p>
+<h1 id="examples-30" class="section-header"><a href="#examples-30">Examples</a></h1>
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">ammonia</span>::<span class="ident">Builder</span>;
+
+<span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">Builder</span>::<span class="ident">new</span>().<span class="ident">link_rel</span>(<span class="prelude-val">None</span>)
+    .<span class="ident">clean</span>(<span class="string">&quot;&lt;a href=https://rust-lang.org/&gt;Rust&lt;/a&gt;&quot;</span>)
+    .<span class="ident">to_string</span>();
+<span class="macro">assert_eq</span><span class="macro">!</span>(
+  <span class="ident">a</span>,
+  <span class="string">&quot;&lt;a href=\&quot;https://rust-lang.org/\&quot;&gt;Rust&lt;/a&gt;&quot;</span>);</pre></div>
+<h1 id="defaults-7" class="section-header"><a href="#defaults-7">Defaults</a></h1>
+<pre><code class="language-notest">Some(&quot;noopener noreferrer&quot;)
+</code></pre>
+</div><h4 id='method.get_link_rel' class="method"><code id='get_link_rel.v'>pub fn <a href='#method.get_link_rel' class='fnname'>get_link_rel</a>(&amp;self) -&gt; <a class="enum" href="https://doc.rust-lang.org/nightly/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;&amp;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a>&gt;</code><a class='srclink' href='../src/ammonia/lib.rs.html#1167-1169' title='goto source code'>[src]</a></h4><div class='docblock'><p>Returns the settings for links' <code>rel</code> attribute, if one is set.</p>
+<h1 id="examples-31" class="section-header"><a href="#examples-31">Examples</a></h1>
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">ammonia</span>::{<span class="ident">Builder</span>, <span class="ident">UrlRelative</span>};
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">Builder</span>::<span class="ident">default</span>();
+<span class="ident">a</span>.<span class="ident">link_rel</span>(<span class="prelude-val">Some</span>(<span class="string">&quot;a b&quot;</span>));
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">a</span>.<span class="ident">get_link_rel</span>(), <span class="prelude-val">Some</span>(<span class="string">&quot;a b&quot;</span>));</pre></div>
+</div><h4 id='method.allowed_classes' class="method"><code id='allowed_classes.v'>pub fn <a href='#method.allowed_classes' class='fnname'>allowed_classes</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;&amp;mut self, <br>&nbsp;&nbsp;&nbsp;&nbsp;value: <a class="struct" href="https://doc.rust-lang.org/nightly/std/collections/hash/map/struct.HashMap.html" title="struct std::collections::hash::map::HashMap">HashMap</a>&lt;&amp;'a <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a>, <a class="struct" href="https://doc.rust-lang.org/nightly/std/collections/hash/set/struct.HashSet.html" title="struct std::collections::hash::set::HashSet">HashSet</a>&lt;&amp;'a <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a>&gt;&gt;<br>) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;mut </a>Self</code><a class='srclink' href='../src/ammonia/lib.rs.html#1199-1202' title='goto source code'>[src]</a></h4><div class='docblock'><p>Sets the CSS classes that are allowed on specific tags.</p>
+<p>The values is structured as a map from tag names to a set of class names.</p>
+<p>If the <code>class</code> attribute is itself whitelisted for a tag, then adding entries to
+this map will cause a panic.</p>
+<h1 id="examples-32" class="section-header"><a href="#examples-32">Examples</a></h1>
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">ammonia</span>::<span class="ident">Builder</span>;
+<span class="kw">use</span> <span class="ident">maplit</span>::{<span class="ident">hashmap</span>, <span class="ident">hashset</span>};
+
+<span class="kw">let</span> <span class="ident">allowed_classes</span> <span class="op">=</span> <span class="macro">hashmap</span><span class="macro">!</span>[
+    <span class="string">&quot;code&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">hashset</span><span class="macro">!</span>[<span class="string">&quot;rs&quot;</span>, <span class="string">&quot;ex&quot;</span>, <span class="string">&quot;c&quot;</span>, <span class="string">&quot;cxx&quot;</span>, <span class="string">&quot;js&quot;</span>]
+];
+<span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">Builder</span>::<span class="ident">new</span>()
+    .<span class="ident">allowed_classes</span>(<span class="ident">allowed_classes</span>)
+    .<span class="ident">clean</span>(<span class="string">&quot;&lt;code class=rs&gt;fn main() {}&lt;/code&gt;&quot;</span>)
+    .<span class="ident">to_string</span>();
+<span class="macro">assert_eq</span><span class="macro">!</span>(
+  <span class="ident">a</span>,
+  <span class="string">&quot;&lt;code class=\&quot;rs\&quot;&gt;fn main() {}&lt;/code&gt;&quot;</span>);</pre></div>
+<h1 id="defaults-8" class="section-header"><a href="#defaults-8">Defaults</a></h1>
+<p>The set of allowed classes is empty by default.</p>
+</div><h4 id='method.add_allowed_classes' class="method"><code id='add_allowed_classes.v'>pub fn <a href='#method.add_allowed_classes' class='fnname'>add_allowed_classes</a>&lt;T:&nbsp;'a + ?<a class="trait" href="https://doc.rust-lang.org/nightly/core/marker/trait.Sized.html" title="trait core::marker::Sized">Sized</a> + <a class="trait" href="https://doc.rust-lang.org/nightly/core/borrow/trait.Borrow.html" title="trait core::borrow::Borrow">Borrow</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a>&gt;, U:&nbsp;'a + ?<a class="trait" href="https://doc.rust-lang.org/nightly/core/marker/trait.Sized.html" title="trait core::marker::Sized">Sized</a> + <a class="trait" href="https://doc.rust-lang.org/nightly/core/borrow/trait.Borrow.html" title="trait core::borrow::Borrow">Borrow</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a>&gt;, I:&nbsp;<a class="trait" href="https://doc.rust-lang.org/nightly/core/iter/traits/collect/trait.IntoIterator.html" title="trait core::iter::traits::collect::IntoIterator">IntoIter</a>&lt;Item = <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;'a </a>T&gt;&gt;(<br>&nbsp;&nbsp;&nbsp;&nbsp;&amp;mut self, <br>&nbsp;&nbsp;&nbsp;&nbsp;tag: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;'a </a>U, <br>&nbsp;&nbsp;&nbsp;&nbsp;it: I<br>) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;mut </a>Self</code><a class='srclink' href='../src/ammonia/lib.rs.html#1212-1226' title='goto source code'>[src]</a></h4><div class='docblock'><p>Add additonal whitelisted classes without overwriting old ones.</p>
+<h1 id="examples-33" class="section-header"><a href="#examples-33">Examples</a></h1>
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">ammonia</span>::<span class="ident">Builder</span>::<span class="ident">default</span>()
+    .<span class="ident">add_allowed_classes</span>(<span class="string">&quot;a&quot;</span>, <span class="kw-2">&amp;</span>[<span class="string">&quot;onebox&quot;</span>])
+    .<span class="ident">clean</span>(<span class="string">&quot;&lt;a href=/ class=onebox&gt;mess&lt;/span&gt;&quot;</span>).<span class="ident">to_string</span>();
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="string">&quot;&lt;a href=\&quot;/\&quot; class=\&quot;onebox\&quot; rel=\&quot;noopener noreferrer\&quot;&gt;mess&lt;/a&gt;&quot;</span>, <span class="ident">a</span>);</pre></div>
+</div><h4 id='method.rm_allowed_classes' class="method"><code id='rm_allowed_classes.v'>pub fn <a href='#method.rm_allowed_classes' class='fnname'>rm_allowed_classes</a>&lt;'b, 'c, T:&nbsp;'b + ?<a class="trait" href="https://doc.rust-lang.org/nightly/core/marker/trait.Sized.html" title="trait core::marker::Sized">Sized</a> + <a class="trait" href="https://doc.rust-lang.org/nightly/core/borrow/trait.Borrow.html" title="trait core::borrow::Borrow">Borrow</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a>&gt;, U:&nbsp;'c + ?<a class="trait" href="https://doc.rust-lang.org/nightly/core/marker/trait.Sized.html" title="trait core::marker::Sized">Sized</a> + <a class="trait" href="https://doc.rust-lang.org/nightly/core/borrow/trait.Borrow.html" title="trait core::borrow::Borrow">Borrow</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a>&gt;, I:&nbsp;<a class="trait" href="https://doc.rust-lang.org/nightly/core/iter/traits/collect/trait.IntoIterator.html" title="trait core::iter::traits::collect::IntoIterator">IntoIter</a>&lt;Item = <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;'b </a>T&gt;&gt;(<br>&nbsp;&nbsp;&nbsp;&nbsp;&amp;mut self, <br>&nbsp;&nbsp;&nbsp;&nbsp;tag: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;'c </a>U, <br>&nbsp;&nbsp;&nbsp;&nbsp;it: I<br>) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;mut </a>Self</code><a class='srclink' href='../src/ammonia/lib.rs.html#1239-1256' title='goto source code'>[src]</a></h4><div class='docblock'><p>Remove already-whitelisted attributes.</p>
+<p>Does nothing if the attribute is already gone.</p>
+<h1 id="examples-34" class="section-header"><a href="#examples-34">Examples</a></h1>
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">ammonia</span>::<span class="ident">Builder</span>::<span class="ident">default</span>()
+    .<span class="ident">add_allowed_classes</span>(<span class="string">&quot;span&quot;</span>, <span class="kw-2">&amp;</span>[<span class="string">&quot;active&quot;</span>])
+    .<span class="ident">rm_allowed_classes</span>(<span class="string">&quot;span&quot;</span>, <span class="kw-2">&amp;</span>[<span class="string">&quot;active&quot;</span>])
+    .<span class="ident">clean</span>(<span class="string">&quot;&lt;span class=active&gt;&quot;</span>).<span class="ident">to_string</span>();
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="string">&quot;&lt;span class=\&quot;\&quot;&gt;&lt;/span&gt;&quot;</span>, <span class="ident">a</span>);</pre></div>
+</div><h4 id='method.clone_allowed_classes' class="method"><code id='clone_allowed_classes.v'>pub fn <a href='#method.clone_allowed_classes' class='fnname'>clone_allowed_classes</a>(&amp;self) -&gt; <a class="struct" href="https://doc.rust-lang.org/nightly/std/collections/hash/map/struct.HashMap.html" title="struct std::collections::hash::map::HashMap">HashMap</a>&lt;&amp;'a <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a>, <a class="struct" href="https://doc.rust-lang.org/nightly/std/collections/hash/set/struct.HashSet.html" title="struct std::collections::hash::set::HashSet">HashSet</a>&lt;&amp;'a <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a>&gt;&gt;</code><a class='srclink' href='../src/ammonia/lib.rs.html#1271-1273' title='goto source code'>[src]</a></h4><div class='docblock'><p>Returns a copy of the set of whitelisted class attributes.</p>
+<h1 id="examples-35" class="section-header"><a href="#examples-35">Examples</a></h1>
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">maplit</span>::{<span class="ident">hashmap</span>, <span class="ident">hashset</span>};
+
+<span class="kw">let</span> <span class="ident">allowed_classes</span> <span class="op">=</span> <span class="macro">hashmap</span><span class="macro">!</span>[
+    <span class="string">&quot;my-tag&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">hashset</span><span class="macro">!</span>[<span class="string">&quot;my-class-1&quot;</span>, <span class="string">&quot;my-class-2&quot;</span>]
+];
+
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">ammonia</span>::<span class="ident">Builder</span>::<span class="ident">default</span>();
+<span class="ident">b</span>.<span class="ident">allowed_classes</span>(<span class="ident">Clone</span>::<span class="ident">clone</span>(<span class="kw-2">&amp;</span><span class="ident">allowed_classes</span>));
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">allowed_classes</span>, <span class="ident">b</span>.<span class="ident">clone_allowed_classes</span>());</pre></div>
+</div><h4 id='method.strip_comments' class="method"><code id='strip_comments.v'>pub fn <a href='#method.strip_comments' class='fnname'>strip_comments</a>(&amp;mut self, value: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.bool.html">bool</a>) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;mut </a>Self</code><a class='srclink' href='../src/ammonia/lib.rs.html#1293-1296' title='goto source code'>[src]</a></h4><div class='docblock'><p>Configures the handling of HTML comments.</p>
+<p>If this option is false, comments will be preserved.</p>
+<h1 id="examples-36" class="section-header"><a href="#examples-36">Examples</a></h1>
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">ammonia</span>::<span class="ident">Builder</span>;
+
+<span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">Builder</span>::<span class="ident">new</span>().<span class="ident">strip_comments</span>(<span class="bool-val">false</span>)
+    .<span class="ident">clean</span>(<span class="string">&quot;&lt;!-- yes --&gt;&quot;</span>)
+    .<span class="ident">to_string</span>();
+<span class="macro">assert_eq</span><span class="macro">!</span>(
+  <span class="ident">a</span>,
+  <span class="string">&quot;&lt;!-- yes --&gt;&quot;</span>);</pre></div>
+<h1 id="defaults-9" class="section-header"><a href="#defaults-9">Defaults</a></h1>
+<p><code>true</code></p>
+</div><h4 id='method.will_strip_comments' class="method"><code id='will_strip_comments.v'>pub fn <a href='#method.will_strip_comments' class='fnname'>will_strip_comments</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.bool.html">bool</a></code><a class='srclink' href='../src/ammonia/lib.rs.html#1307-1309' title='goto source code'>[src]</a></h4><div class='docblock'><p>Returns <code>true</code> if comment stripping is turned on.</p>
+<h1 id="examples-37" class="section-header"><a href="#examples-37">Examples</a></h1>
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">ammonia</span>::<span class="ident">Builder</span>::<span class="ident">new</span>();
+<span class="ident">a</span>.<span class="ident">strip_comments</span>(<span class="bool-val">true</span>);
+<span class="macro">assert</span><span class="macro">!</span>(<span class="ident">a</span>.<span class="ident">will_strip_comments</span>());
+<span class="ident">a</span>.<span class="ident">strip_comments</span>(<span class="bool-val">false</span>);
+<span class="macro">assert</span><span class="macro">!</span>(<span class="op">!</span><span class="ident">a</span>.<span class="ident">will_strip_comments</span>());</pre></div>
+</div><h4 id='method.id_prefix' class="method"><code id='id_prefix.v'>pub fn <a href='#method.id_prefix' class='fnname'>id_prefix</a>(&amp;mut self, value: <a class="enum" href="https://doc.rust-lang.org/nightly/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;&amp;'a <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a>&gt;) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;mut </a>Self</code><a class='srclink' href='../src/ammonia/lib.rs.html#1333-1336' title='goto source code'>[src]</a></h4><div class='docblock'><p>Prefixes all &quot;id&quot; attribute values with a given string.  Note that the tag and
+attribute themselves must still be whitelisted.</p>
+<h1 id="examples-38" class="section-header"><a href="#examples-38">Examples</a></h1>
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">ammonia</span>::<span class="ident">Builder</span>;
+<span class="kw">use</span> <span class="ident">maplit</span>::<span class="ident">hashset</span>;
+
+<span class="kw">let</span> <span class="ident">attributes</span> <span class="op">=</span> <span class="macro">hashset</span><span class="macro">!</span>[<span class="string">&quot;id&quot;</span>];
+<span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">Builder</span>::<span class="ident">new</span>()
+    .<span class="ident">generic_attributes</span>(<span class="ident">attributes</span>)
+    .<span class="ident">id_prefix</span>(<span class="prelude-val">Some</span>(<span class="string">&quot;safe-&quot;</span>))
+    .<span class="ident">clean</span>(<span class="string">&quot;&lt;b id=42&gt;&quot;</span>)
+    .<span class="ident">to_string</span>();
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">a</span>, <span class="string">&quot;&lt;b id=\&quot;safe-42\&quot;&gt;&lt;/b&gt;&quot;</span>);</pre></div>
+<h1 id="defaults-10" class="section-header"><a href="#defaults-10">Defaults</a></h1>
+<p><code>None</code></p>
+</div><h4 id='method.new' class="method"><code id='new.v'>pub fn <a href='#method.new' class='fnname'>new</a>() -&gt; Self</code><a class='srclink' href='../src/ammonia/lib.rs.html#1360-1362' title='goto source code'>[src]</a></h4><div class='docblock'><p>Constructs a <a href="struct.Builder.html"><code>Builder</code></a> instance configured with the <a href="fn.clean.html">default options</a>.</p>
+<h1 id="examples-39" class="section-header"><a href="#examples-39">Examples</a></h1>
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">ammonia</span>::{<span class="ident">Builder</span>, <span class="ident">Url</span>, <span class="ident">UrlRelative</span>};
+
+<span class="kw">let</span> <span class="ident">input</span> <span class="op">=</span> <span class="string">&quot;&lt;!-- comments will be stripped --&gt;This is an &lt;a href=.&gt;Ammonia&lt;/a&gt; example using &lt;a href=struct.Builder.html#method.new onclick=xss&gt;the &lt;code onmouseover=xss&gt;new()&lt;/code&gt; function&lt;/a&gt;.&quot;</span>;
+<span class="kw">let</span> <span class="ident">output</span> <span class="op">=</span> <span class="string">&quot;This is an &lt;a href=\&quot;https://docs.rs/ammonia/1.0/ammonia/\&quot; rel=\&quot;noopener noreferrer\&quot;&gt;Ammonia&lt;/a&gt; example using &lt;a href=\&quot;https://docs.rs/ammonia/1.0/ammonia/struct.Builder.html#method.new\&quot; rel=\&quot;noopener noreferrer\&quot;&gt;the &lt;code&gt;new()&lt;/code&gt; function&lt;/a&gt;.&quot;</span>;
+
+<span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Builder</span>::<span class="ident">new</span>() <span class="comment">// &lt;--</span>
+    .<span class="ident">url_relative</span>(<span class="ident">UrlRelative</span>::<span class="ident">RewriteWithBase</span>(<span class="ident">Url</span>::<span class="ident">parse</span>(<span class="string">&quot;https://docs.rs/ammonia/1.0/ammonia/&quot;</span>)<span class="question-mark">?</span>))
+    .<span class="ident">clean</span>(<span class="ident">input</span>)
+    .<span class="ident">to_string</span>();
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">result</span>, <span class="ident">output</span>);</pre></div>
+</div><h4 id='method.clean' class="method"><code id='clean.v'>pub fn <a href='#method.clean' class='fnname'>clean</a>(&amp;self, src: &amp;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a>) -&gt; <a class="struct" href="../ammonia/struct.Document.html" title="struct ammonia::Document">Document</a></code><a class='srclink' href='../src/ammonia/lib.rs.html#1383-1387' title='goto source code'>[src]</a></h4><div class='docblock'><p>Sanitizes an HTML fragment in a string according to the configured options.</p>
+<h1 id="examples-40" class="section-header"><a href="#examples-40">Examples</a></h1>
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">ammonia</span>::{<span class="ident">Builder</span>, <span class="ident">Url</span>, <span class="ident">UrlRelative</span>};
+
+<span class="kw">let</span> <span class="ident">input</span> <span class="op">=</span> <span class="string">&quot;&lt;!-- comments will be stripped --&gt;This is an &lt;a href=.&gt;Ammonia&lt;/a&gt; example using &lt;a href=struct.Builder.html#method.new onclick=xss&gt;the &lt;code onmouseover=xss&gt;new()&lt;/code&gt; function&lt;/a&gt;.&quot;</span>;
+<span class="kw">let</span> <span class="ident">output</span> <span class="op">=</span> <span class="string">&quot;This is an &lt;a href=\&quot;https://docs.rs/ammonia/1.0/ammonia/\&quot; rel=\&quot;noopener noreferrer\&quot;&gt;Ammonia&lt;/a&gt; example using &lt;a href=\&quot;https://docs.rs/ammonia/1.0/ammonia/struct.Builder.html#method.new\&quot; rel=\&quot;noopener noreferrer\&quot;&gt;the &lt;code&gt;new()&lt;/code&gt; function&lt;/a&gt;.&quot;</span>;
+
+<span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Builder</span>::<span class="ident">new</span>()
+    .<span class="ident">url_relative</span>(<span class="ident">UrlRelative</span>::<span class="ident">RewriteWithBase</span>(<span class="ident">Url</span>::<span class="ident">parse</span>(<span class="string">&quot;https://docs.rs/ammonia/1.0/ammonia/&quot;</span>)<span class="question-mark">?</span>))
+    .<span class="ident">clean</span>(<span class="ident">input</span>)
+    .<span class="ident">to_string</span>(); <span class="comment">// &lt;--</span>
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">result</span>, <span class="ident">output</span>);</pre></div>
+</div><h4 id='method.clean_from_reader' class="method"><code id='clean_from_reader.v'>pub fn <a href='#method.clean_from_reader' class='fnname'>clean_from_reader</a>&lt;R&gt;(&amp;self, src: R) -&gt; <a class="type" href="https://doc.rust-lang.org/nightly/std/io/error/type.Result.html" title="type std::io::error::Result">Result</a>&lt;<a class="struct" href="../ammonia/struct.Document.html" title="struct ammonia::Document">Document</a>&gt; <span class="where fmt-newline">where<br>&nbsp;&nbsp;&nbsp;&nbsp;R: <a class="trait" href="https://doc.rust-lang.org/nightly/std/io/trait.Read.html" title="trait std::io::Read">Read</a>,&nbsp;</span></code><a class='srclink' href='../src/ammonia/lib.rs.html#1410-1417' title='goto source code'>[src]</a></h4><div class='docblock'><p>Sanitizes an HTML fragment from a reader according to the configured options.</p>
+<p>The input should be in UTF-8 encoding, otherwise the decoding is lossy, just
+like when using <a href="https://doc.rust-lang.org/std/string/struct.String.html#method.from_utf8_lossy"><code>String::from_utf8_lossy</code></a>.</p>
+<p>To avoid consuming the reader, a mutable reference can be passed to this method.</p>
+<h1 id="examples-41" class="section-header"><a href="#examples-41">Examples</a></h1>
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">ammonia</span>::<span class="ident">Builder</span>;
+
+<span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">Builder</span>::<span class="ident">new</span>()
+    .<span class="ident">clean_from_reader</span>(<span class="kw-2">&amp;</span><span class="string">b&quot;&lt;!-- no --&gt;&quot;</span>[..])<span class="question-mark">?</span> <span class="comment">// notice the `b`</span>
+    .<span class="ident">to_string</span>();
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">a</span>, <span class="string">&quot;&quot;</span>);</pre></div>
+</div></div><h2 id='implementations' class='small-section-header'>Trait Implementations<a href='#implementations' class='anchor'></a></h2><div id='implementations-list'><h3 id='impl-Debug' class='impl'><code class='in-band'>impl&lt;'a&gt; <a class="trait" href="https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html" title="trait core::fmt::Debug">Debug</a> for <a class="struct" href="../ammonia/struct.Builder.html" title="struct ammonia::Builder">Builder</a>&lt;'a&gt;</code><a href='#impl-Debug' class='anchor'></a><a class='srclink' href='../src/ammonia/lib.rs.html#267' title='goto source code'>[src]</a></h3><div class='impl-items'><h4 id='method.fmt' class="method hidden"><code id='fmt.v'>fn <a href='https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html#tymethod.fmt' class='fnname'>fmt</a>(&amp;self, f: &amp;mut <a class="struct" href="https://doc.rust-lang.org/nightly/core/fmt/struct.Formatter.html" title="struct core::fmt::Formatter">Formatter</a>) -&gt; <a class="type" href="https://doc.rust-lang.org/nightly/core/fmt/type.Result.html" title="type core::fmt::Result">Result</a></code><a class='srclink' href='../src/ammonia/lib.rs.html#267' title='goto source code'>[src]</a></h4><div class='docblock hidden'><p>Formats the value using the given formatter. <a href="https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html#tymethod.fmt">Read more</a></p>
+</div></div><h3 id='impl-Default' class='impl'><code class='in-band'>impl&lt;'a&gt; <a class="trait" href="https://doc.rust-lang.org/nightly/core/default/trait.Default.html" title="trait core::default::Default">Default</a> for <a class="struct" href="../ammonia/struct.Builder.html" title="struct ammonia::Builder">Builder</a>&lt;'a&gt;</code><a href='#impl-Default' class='anchor'></a><a class='srclink' href='../src/ammonia/lib.rs.html#283-400' title='goto source code'>[src]</a></h3><div class='impl-items'><h4 id='method.default' class="method hidden"><code id='default.v'>fn <a href='https://doc.rust-lang.org/nightly/core/default/trait.Default.html#tymethod.default' class='fnname'>default</a>() -&gt; Self</code><a class='srclink' href='../src/ammonia/lib.rs.html#284-399' title='goto source code'>[src]</a></h4><div class='docblock hidden'><p>Returns the &quot;default value&quot; for a type. <a href="https://doc.rust-lang.org/nightly/core/default/trait.Default.html#tymethod.default">Read more</a></p>
+</div></div></div><h2 id='synthetic-implementations' class='small-section-header'>Auto Trait Implementations<a href='#synthetic-implementations' class='anchor'></a></h2><div id='synthetic-implementations-list'><h3 id='impl-RefUnwindSafe' class='impl'><code class='in-band'>impl&lt;'a&gt; !<a class="trait" href="https://doc.rust-lang.org/nightly/std/panic/trait.RefUnwindSafe.html" title="trait std::panic::RefUnwindSafe">RefUnwindSafe</a> for <a class="struct" href="../ammonia/struct.Builder.html" title="struct ammonia::Builder">Builder</a>&lt;'a&gt;</code><a href='#impl-RefUnwindSafe' class='anchor'></a></h3><div class='impl-items'></div><h3 id='impl-Send' class='impl'><code class='in-band'>impl&lt;'a&gt; <a class="trait" href="https://doc.rust-lang.org/nightly/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> for <a class="struct" href="../ammonia/struct.Builder.html" title="struct ammonia::Builder">Builder</a>&lt;'a&gt;</code><a href='#impl-Send' class='anchor'></a></h3><div class='impl-items'></div><h3 id='impl-Sync' class='impl'><code class='in-band'>impl&lt;'a&gt; <a class="trait" href="https://doc.rust-lang.org/nightly/core/marker/trait.Sync.html" title="trait core::marker::Sync">Sync</a> for <a class="struct" href="../ammonia/struct.Builder.html" title="struct ammonia::Builder">Builder</a>&lt;'a&gt;</code><a href='#impl-Sync' class='anchor'></a></h3><div class='impl-items'></div><h3 id='impl-Unpin' class='impl'><code class='in-band'>impl&lt;'a&gt; <a class="trait" href="https://doc.rust-lang.org/nightly/core/marker/trait.Unpin.html" title="trait core::marker::Unpin">Unpin</a> for <a class="struct" href="../ammonia/struct.Builder.html" title="struct ammonia::Builder">Builder</a>&lt;'a&gt;</code><a href='#impl-Unpin' class='anchor'></a></h3><div class='impl-items'></div><h3 id='impl-UnwindSafe' class='impl'><code class='in-band'>impl&lt;'a&gt; !<a class="trait" href="https://doc.rust-lang.org/nightly/std/panic/trait.UnwindSafe.html" title="trait std::panic::UnwindSafe">UnwindSafe</a> for <a class="struct" href="../ammonia/struct.Builder.html" title="struct ammonia::Builder">Builder</a>&lt;'a&gt;</code><a href='#impl-UnwindSafe' class='anchor'></a></h3><div class='impl-items'></div></div><h2 id='blanket-implementations' class='small-section-header'>Blanket Implementations<a href='#blanket-implementations' class='anchor'></a></h2><div id='blanket-implementations-list'><h3 id='impl-Any' class='impl'><code class='in-band'>impl&lt;T&gt; <a class="trait" href="https://doc.rust-lang.org/nightly/core/any/trait.Any.html" title="trait core::any::Any">Any</a> for T <span class="where fmt-newline">where<br>&nbsp;&nbsp;&nbsp;&nbsp;T: 'static + ?<a class="trait" href="https://doc.rust-lang.org/nightly/core/marker/trait.Sized.html" title="trait core::marker::Sized">Sized</a>,&nbsp;</span></code><a href='#impl-Any' class='anchor'></a><a class='srclink' href='https://doc.rust-lang.org/nightly/src/core/any.rs.html#98-100' title='goto source code'>[src]</a></h3><div class='impl-items'><h4 id='method.type_id' class="method hidden"><code id='type_id.v'>fn <a href='https://doc.rust-lang.org/nightly/core/any/trait.Any.html#tymethod.type_id' class='fnname'>type_id</a>(&amp;self) -&gt; <a class="struct" href="https://doc.rust-lang.org/nightly/core/any/struct.TypeId.html" title="struct core::any::TypeId">TypeId</a></code><a class='srclink' href='https://doc.rust-lang.org/nightly/src/core/any.rs.html#99' title='goto source code'>[src]</a></h4><div class='docblock hidden'><p>Gets the <code>TypeId</code> of <code>self</code>. <a href="https://doc.rust-lang.org/nightly/core/any/trait.Any.html#tymethod.type_id">Read more</a></p>
+</div></div><h3 id='impl-Borrow%3CT%3E' class='impl'><code class='in-band'>impl&lt;T&gt; <a class="trait" href="https://doc.rust-lang.org/nightly/core/borrow/trait.Borrow.html" title="trait core::borrow::Borrow">Borrow</a>&lt;T&gt; for T <span class="where fmt-newline">where<br>&nbsp;&nbsp;&nbsp;&nbsp;T: ?<a class="trait" href="https://doc.rust-lang.org/nightly/core/marker/trait.Sized.html" title="trait core::marker::Sized">Sized</a>,&nbsp;</span></code><a href='#impl-Borrow%3CT%3E' class='anchor'></a><a class='srclink' href='https://doc.rust-lang.org/nightly/src/core/borrow.rs.html#213-215' title='goto source code'>[src]</a></h3><div class='impl-items'><h4 id='method.borrow' class="method hidden"><code id='borrow.v'>fn <a href='https://doc.rust-lang.org/nightly/core/borrow/trait.Borrow.html#tymethod.borrow' class='fnname'>borrow</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;</a>T</code><a class='srclink' href='https://doc.rust-lang.org/nightly/src/core/borrow.rs.html#214' title='goto source code'>[src]</a></h4><div class='docblock hidden'><p>Immutably borrows from an owned value. <a href="https://doc.rust-lang.org/nightly/core/borrow/trait.Borrow.html#tymethod.borrow">Read more</a></p>
+</div></div><h3 id='impl-BorrowMut%3CT%3E' class='impl'><code class='in-band'>impl&lt;T&gt; <a class="trait" href="https://doc.rust-lang.org/nightly/core/borrow/trait.BorrowMut.html" title="trait core::borrow::BorrowMut">BorrowMut</a>&lt;T&gt; for T <span class="where fmt-newline">where<br>&nbsp;&nbsp;&nbsp;&nbsp;T: ?<a class="trait" href="https://doc.rust-lang.org/nightly/core/marker/trait.Sized.html" title="trait core::marker::Sized">Sized</a>,&nbsp;</span></code><a href='#impl-BorrowMut%3CT%3E' class='anchor'></a><a class='srclink' href='https://doc.rust-lang.org/nightly/src/core/borrow.rs.html#218-220' title='goto source code'>[src]</a></h3><div class='impl-items'><h4 id='method.borrow_mut' class="method hidden"><code id='borrow_mut.v'>fn <a href='https://doc.rust-lang.org/nightly/core/borrow/trait.BorrowMut.html#tymethod.borrow_mut' class='fnname'>borrow_mut</a>(&amp;mut self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;mut </a>T</code><a class='srclink' href='https://doc.rust-lang.org/nightly/src/core/borrow.rs.html#219' title='goto source code'>[src]</a></h4><div class='docblock hidden'><p>Mutably borrows from an owned value. <a href="https://doc.rust-lang.org/nightly/core/borrow/trait.BorrowMut.html#tymethod.borrow_mut">Read more</a></p>
+</div></div><h3 id='impl-From%3CT%3E' class='impl'><code class='in-band'>impl&lt;T&gt; <a class="trait" href="https://doc.rust-lang.org/nightly/core/convert/trait.From.html" title="trait core::convert::From">From</a>&lt;T&gt; for T</code><a href='#impl-From%3CT%3E' class='anchor'></a><a class='srclink' href='https://doc.rust-lang.org/nightly/src/core/convert/mod.rs.html#564-568' title='goto source code'>[src]</a></h3><div class='impl-items'><h4 id='method.from' class="method hidden"><code id='from.v'>fn <a href='https://doc.rust-lang.org/nightly/core/convert/trait.From.html#tymethod.from' class='fnname'>from</a>(t: T) -&gt; T</code><a class='srclink' href='https://doc.rust-lang.org/nightly/src/core/convert/mod.rs.html#565-567' title='goto source code'>[src]</a></h4><div class='docblock hidden'><p>Performs the conversion.</p>
+</div></div><h3 id='impl-Into%3CU%3E' class='impl'><code class='in-band'>impl&lt;T, U&gt; <a class="trait" href="https://doc.rust-lang.org/nightly/core/convert/trait.Into.html" title="trait core::convert::Into">Into</a>&lt;U&gt; for T <span class="where fmt-newline">where<br>&nbsp;&nbsp;&nbsp;&nbsp;U: <a class="trait" href="https://doc.rust-lang.org/nightly/core/convert/trait.From.html" title="trait core::convert::From">From</a>&lt;T&gt;,&nbsp;</span></code><a href='#impl-Into%3CU%3E' class='anchor'></a><a class='srclink' href='https://doc.rust-lang.org/nightly/src/core/convert/mod.rs.html#553-560' title='goto source code'>[src]</a></h3><div class='impl-items'><h4 id='method.into' class="method hidden"><code id='into.v'>fn <a href='https://doc.rust-lang.org/nightly/core/convert/trait.Into.html#tymethod.into' class='fnname'>into</a>(self) -&gt; U</code><a class='srclink' href='https://doc.rust-lang.org/nightly/src/core/convert/mod.rs.html#557-559' title='goto source code'>[src]</a></h4><div class='docblock hidden'><p>Performs the conversion.</p>
+</div></div><h3 id='impl-TryFrom%3CU%3E' class='impl'><code class='in-band'>impl&lt;T, U&gt; <a class="trait" href="https://doc.rust-lang.org/nightly/core/convert/trait.TryFrom.html" title="trait core::convert::TryFrom">TryFrom</a>&lt;U&gt; for T <span class="where fmt-newline">where<br>&nbsp;&nbsp;&nbsp;&nbsp;U: <a class="trait" href="https://doc.rust-lang.org/nightly/core/convert/trait.Into.html" title="trait core::convert::Into">Into</a>&lt;T&gt;,&nbsp;</span></code><a href='#impl-TryFrom%3CU%3E' class='anchor'></a><a class='srclink' href='https://doc.rust-lang.org/nightly/src/core/convert/mod.rs.html#601-610' title='goto source code'>[src]</a></h3><div class='impl-items'><h4 id='associatedtype.Error' class="type"><code id='Error.t'>type <a href='https://doc.rust-lang.org/nightly/core/convert/trait.TryFrom.html#associatedtype.Error' class="type">Error</a> = <a class="enum" href="https://doc.rust-lang.org/nightly/core/convert/enum.Infallible.html" title="enum core::convert::Infallible">Infallible</a></code></h4><div class='docblock'><p>The type returned in the event of a conversion error.</p>
+</div><h4 id='method.try_from' class="method hidden"><code id='try_from.v'>fn <a href='https://doc.rust-lang.org/nightly/core/convert/trait.TryFrom.html#tymethod.try_from' class='fnname'>try_from</a>(value: U) -&gt; <a class="enum" href="https://doc.rust-lang.org/nightly/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;T, &lt;T as <a class="trait" href="https://doc.rust-lang.org/nightly/core/convert/trait.TryFrom.html" title="trait core::convert::TryFrom">TryFrom</a>&lt;U&gt;&gt;::<a class="type" href="https://doc.rust-lang.org/nightly/core/convert/trait.TryFrom.html#associatedtype.Error" title="type core::convert::TryFrom::Error">Error</a>&gt;</code><a class='srclink' href='https://doc.rust-lang.org/nightly/src/core/convert/mod.rs.html#607-609' title='goto source code'>[src]</a></h4><div class='docblock hidden'><p>Performs the conversion.</p>
+</div></div><h3 id='impl-TryInto%3CU%3E' class='impl'><code class='in-band'>impl&lt;T, U&gt; <a class="trait" href="https://doc.rust-lang.org/nightly/core/convert/trait.TryInto.html" title="trait core::convert::TryInto">TryInto</a>&lt;U&gt; for T <span class="where fmt-newline">where<br>&nbsp;&nbsp;&nbsp;&nbsp;U: <a class="trait" href="https://doc.rust-lang.org/nightly/core/convert/trait.TryFrom.html" title="trait core::convert::TryFrom">TryFrom</a>&lt;T&gt;,&nbsp;</span></code><a href='#impl-TryInto%3CU%3E' class='anchor'></a><a class='srclink' href='https://doc.rust-lang.org/nightly/src/core/convert/mod.rs.html#587-596' title='goto source code'>[src]</a></h3><div class='impl-items'><h4 id='associatedtype.Error-1' class="type"><code id='Error.t-1'>type <a href='https://doc.rust-lang.org/nightly/core/convert/trait.TryInto.html#associatedtype.Error' class="type">Error</a> = &lt;U as <a class="trait" href="https://doc.rust-lang.org/nightly/core/convert/trait.TryFrom.html" title="trait core::convert::TryFrom">TryFrom</a>&lt;T&gt;&gt;::<a class="type" href="https://doc.rust-lang.org/nightly/core/convert/trait.TryFrom.html#associatedtype.Error" title="type core::convert::TryFrom::Error">Error</a></code></h4><div class='docblock'><p>The type returned in the event of a conversion error.</p>
+</div><h4 id='method.try_into' class="method hidden"><code id='try_into.v'>fn <a href='https://doc.rust-lang.org/nightly/core/convert/trait.TryInto.html#tymethod.try_into' class='fnname'>try_into</a>(self) -&gt; <a class="enum" href="https://doc.rust-lang.org/nightly/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;U, &lt;U as <a class="trait" href="https://doc.rust-lang.org/nightly/core/convert/trait.TryFrom.html" title="trait core::convert::TryFrom">TryFrom</a>&lt;T&gt;&gt;::<a class="type" href="https://doc.rust-lang.org/nightly/core/convert/trait.TryFrom.html#associatedtype.Error" title="type core::convert::TryFrom::Error">Error</a>&gt;</code><a class='srclink' href='https://doc.rust-lang.org/nightly/src/core/convert/mod.rs.html#593-595' title='goto source code'>[src]</a></h4><div class='docblock hidden'><p>Performs the conversion.</p>
+</div></div></div></section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../";window.currentCrate = "ammonia";</script><script src="../aliases.js"></script><script src="../main.js"></script><script defer src="../search-index.js"></script></body></html>

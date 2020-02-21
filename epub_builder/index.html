@@ -1,0 +1,134 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="API documentation for the Rust `epub_builder` crate."><meta name="keywords" content="rust, rustlang, rust-lang, epub_builder"><title>epub_builder - Rust</title><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../dark.css"><link rel="stylesheet" type="text/css" href="../light.css" id="themeStyle"><script src="../storage.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="shortcut icon" href="../favicon.ico"><style type="text/css">#crate-search{background-image:url("../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../epub_builder/index.html'><div class='logo-container'><img src='../rust-logo.png' alt='logo'></div></a><p class='location'>Crate epub_builder</p><div class="sidebar-elems"><a id='all-types' href='all.html'><p>See all epub_builder's items</p></a><div class="block items"><ul><li><a href="#structs">Structs</a></li><li><a href="#enums">Enums</a></li><li><a href="#traits">Traits</a></li><li><a href="#types">Type Definitions</a></li></ul></div><p class='location'></p><script>window.sidebarCurrent = {name: 'epub_builder', ty: 'mod', relpath: '../'};</script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../settings.html"><img src="../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class='fqn'><span class='out-of-band'><span id='render-detail'><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class='inner'>&#x2212;</span>]</a></span><a class='srclink' href='../src/epub_builder/lib.rs.html#6-185' title='goto source code'>[src]</a></span><span class='in-band'>Crate <a class="mod" href=''>epub_builder</a></span></h1><div class='docblock'><p>A library to generate EPUB files.</p>
+<p>The purpose for this library is to make it easier to generate EPUB files:
+it should take care of most of the boilerplate for you, leaving you only
+with the task of filling the actual content.</p>
+<h1 id="usage" class="section-header"><a href="#usage">Usage</a></h1>
+<p>Add this in your <code>Cargo.toml</code> file:</p>
+<pre><code class="language-toml">[dependencies]
+epub-builder = &quot;0.4&quot;
+</code></pre>
+<h1 id="example" class="section-header"><a href="#example">Example</a></h1>
+<div class='information'><div class='tooltip ignore'>ⓘ<span class='tooltiptext'>This example is not tested</span></div></div><div class="example-wrap"><pre class="rust rust-example-rendered ignore">
+<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">epub_builder</span>;
+
+<span class="kw">use</span> <span class="ident">epub_builder</span>::<span class="ident">EpubBuilder</span>;
+<span class="kw">use</span> <span class="ident">epub_builder</span>::<span class="prelude-ty">Result</span>;
+<span class="kw">use</span> <span class="ident">epub_builder</span>::<span class="ident">ZipLibrary</span>;
+<span class="kw">use</span> <span class="ident">epub_builder</span>::<span class="ident">EpubContent</span>;
+<span class="kw">use</span> <span class="ident">epub_builder</span>::<span class="ident">ReferenceType</span>;
+<span class="kw">use</span> <span class="ident">epub_builder</span>::<span class="ident">TocElement</span>;
+
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">io</span>;
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">io</span>::<span class="ident">Write</span>;
+
+<span class="comment">// Try to print Zip file to stdout</span>
+<span class="kw">fn</span> <span class="ident">run</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="comment">// Some dummy content to fill our books</span>
+    <span class="kw">let</span> <span class="ident">dummy_content</span> <span class="op">=</span> <span class="string">&quot;Dummy content. This should be valid XHTML if you want a valid EPUB!&quot;</span>;
+    <span class="kw">let</span> <span class="ident">dummy_image</span> <span class="op">=</span> <span class="string">&quot;Not really a PNG image&quot;</span>;
+    <span class="kw">let</span> <span class="ident">dummy_css</span> <span class="op">=</span> <span class="string">&quot;body { background-color: pink }&quot;</span>;
+
+    <span class="comment">// Create a new EpubBuilder using the zip library</span>
+    <span class="ident">EpubBuilder</span>::<span class="ident">new</span>(<span class="ident">ZipLibrary</span>::<span class="ident">new</span>())<span class="question-mark">?</span>
+    <span class="comment">// Set some metadata</span>
+        .<span class="ident">metadata</span>(<span class="string">&quot;author&quot;</span>, <span class="string">&quot;Joan Doe&quot;</span>)<span class="question-mark">?</span>
+        .<span class="ident">metadata</span>(<span class="string">&quot;title&quot;</span>, <span class="string">&quot;Dummy Book&quot;</span>)<span class="question-mark">?</span>
+    <span class="comment">// Set the stylesheet (create a &quot;stylesheet.css&quot; file in EPUB that is used by some generated files)</span>
+        .<span class="ident">stylesheet</span>(<span class="ident">dummy_css</span>.<span class="ident">as_bytes</span>())<span class="question-mark">?</span>
+    <span class="comment">// Add a image cover file</span>
+        .<span class="ident">add_cover_image</span>(<span class="string">&quot;cover.png&quot;</span>, <span class="ident">dummy_image</span>.<span class="ident">as_bytes</span>(), <span class="string">&quot;image/png&quot;</span>)<span class="question-mark">?</span>
+    <span class="comment">// Add a resource that is not part of the linear document structure</span>
+        .<span class="ident">add_resource</span>(<span class="string">&quot;some_image.png&quot;</span>, <span class="ident">dummy_image</span>.<span class="ident">as_bytes</span>(), <span class="string">&quot;image/png&quot;</span>)<span class="question-mark">?</span>
+    <span class="comment">// Add a cover page</span>
+        .<span class="ident">add_content</span>(<span class="ident">EpubContent</span>::<span class="ident">new</span>(<span class="string">&quot;cover.xhtml&quot;</span>, <span class="ident">dummy_content</span>.<span class="ident">as_bytes</span>())
+                     .<span class="ident">title</span>(<span class="string">&quot;Cover&quot;</span>)
+                     .<span class="ident">reftype</span>(<span class="ident">ReferenceType</span>::<span class="ident">Cover</span>))<span class="question-mark">?</span>
+    <span class="comment">// Add a title page</span>
+        .<span class="ident">add_content</span>(<span class="ident">EpubContent</span>::<span class="ident">new</span>(<span class="string">&quot;title.xhtml&quot;</span>, <span class="ident">dummy_content</span>.<span class="ident">as_bytes</span>())
+                     .<span class="ident">title</span>(<span class="string">&quot;Title&quot;</span>)
+                     .<span class="ident">reftype</span>(<span class="ident">ReferenceType</span>::<span class="ident">TitlePage</span>))<span class="question-mark">?</span>
+    <span class="comment">// Add a chapter, mark it as beginning of the &quot;real content&quot;</span>
+        .<span class="ident">add_content</span>(<span class="ident">EpubContent</span>::<span class="ident">new</span>(<span class="string">&quot;chapter_1.xhtml&quot;</span>, <span class="ident">dummy_content</span>.<span class="ident">as_bytes</span>())
+                     .<span class="ident">title</span>(<span class="string">&quot;Chapter 1&quot;</span>)
+                     .<span class="ident">reftype</span>(<span class="ident">ReferenceType</span>::<span class="ident">Text</span>))<span class="question-mark">?</span>
+    <span class="comment">// Add a second chapter; this one has more toc information about its internal structure</span>
+        .<span class="ident">add_content</span>(<span class="ident">EpubContent</span>::<span class="ident">new</span>(<span class="string">&quot;chapter_2.xhtml&quot;</span>, <span class="ident">dummy_content</span>.<span class="ident">as_bytes</span>())
+                     .<span class="ident">title</span>(<span class="string">&quot;Chapter 2&quot;</span>)
+                     .<span class="ident">child</span>(<span class="ident">TocElement</span>::<span class="ident">new</span>(<span class="string">&quot;chapter_2.xhtml#1&quot;</span>, <span class="string">&quot;Chapter 2, section 1&quot;</span>)))<span class="question-mark">?</span>
+    <span class="comment">// Add a section. Since its level is set to 2, it will be attached to the previous chapter.</span>
+        .<span class="ident">add_content</span>(<span class="ident">EpubContent</span>::<span class="ident">new</span>(<span class="string">&quot;section.xhtml&quot;</span>, <span class="ident">dummy_content</span>.<span class="ident">as_bytes</span>())
+                     .<span class="ident">title</span>(<span class="string">&quot;Chapter 2, section 2&quot;</span>)
+                     .<span class="ident">level</span>(<span class="number">2</span>))<span class="question-mark">?</span>
+    <span class="comment">// Add a chapter without a title, which will thus not appear in the TOC.</span>
+        .<span class="ident">add_content</span>(<span class="ident">EpubContent</span>::<span class="ident">new</span>(<span class="string">&quot;notes.xhtml&quot;</span>, <span class="ident">dummy_content</span>.<span class="ident">as_bytes</span>()))<span class="question-mark">?</span>
+    <span class="comment">// Generate a toc inside of the document, that will be part of the linear structure.</span>
+        .<span class="ident">inline_toc</span>()
+    <span class="comment">// Finally, write the EPUB file to stdout</span>
+        .<span class="ident">generate</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">io</span>::<span class="ident">stdout</span>())<span class="question-mark">?</span>;
+    <span class="prelude-val">Ok</span>(())
+}
+
+<span class="kw">fn</span> <span class="ident">main</span>() {
+    <span class="kw">match</span> <span class="ident">run</span>() {
+        <span class="prelude-val">Ok</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="macro">writeln</span><span class="macro">!</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">io</span>::<span class="ident">stderr</span>(),
+                     <span class="string">&quot;Successfully wrote epub document to stdout!&quot;</span>)
+                .<span class="ident">unwrap</span>()
+        }
+        <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">writeln</span><span class="macro">!</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">io</span>::<span class="ident">stderr</span>(), <span class="string">&quot;Error: {}&quot;</span>, <span class="ident">err</span>).<span class="ident">unwrap</span>(),
+    };
+}</pre></div>
+<h1 id="features" class="section-header"><a href="#features">Features</a></h1>
+<p><code>epub-builder</code>'s aim is to make EPUB generation simpler. It takes care of zipping
+the files and generate the following ones:</p>
+<ul>
+<li><code>mimetype</code></li>
+<li><code>toc.ncx</code></li>
+<li><code>nav.xhtml</code></li>
+<li><code>manifest.xml</code></li>
+<li><code>content.opf</code></li>
+<li><code>com.apple.ibooks.display-options.xml</code>.</li>
+</ul>
+<p>It also tries to make it easier to have a correct table of contents, and optionally
+generate an inline one in the document.</p>
+<p>Supported EPUB versions:</p>
+<ul>
+<li>2.0.1 (default)</li>
+<li>3.0.1</li>
+</ul>
+<h2 id="missing-features" class="section-header"><a href="#missing-features">Missing features</a></h2>
+<p>There are various EPUB features that <code>epub-builder</code> doesn't handle. Particularly,
+there are some metadata that could be better
+handled (e.g. support multiple authors, multiple languages in the document and so on).</p>
+<p>There are also various things that aren't in the scope of this library: it doesn't
+provide a default CSS, templates for your XHTML content and so on. This is left to
+libraries or applications using it.</p>
+<h1 id="conditional-compilation" class="section-header"><a href="#conditional-compilation">Conditional compilation</a></h1>
+<p>EPUB files are Zip files, so we need to zip. By default, this library provides
+wrappers around both the <a href="https://crates.io/crates/zip">Rust zip library</a> and calls
+to the <code>zip</code> command that may (or may not) be installed on your system.</p>
+<p>It is possible to disable the compilation (and the dependencies) of either of these
+wrappers, using <code>no-default-features</code>. (If you don't enable at least one of them this
+library will be pretty useless).</p>
+<h1 id="license" class="section-header"><a href="#license">License</a></h1>
+<p>This is free software, published under the <a href="https://www.mozilla.org/en-US/MPL/2.0/">Mozilla Public License,
+version 2.0</a>.</p>
+</div><h2 id='structs' class='section-header'><a href="#structs">Structs</a></h2>
+<table><tr class='module-item'><td><a class="struct" href="struct.EpubBuilder.html" title='epub_builder::EpubBuilder struct'>EpubBuilder</a></td><td class='docblock-short'><p>Epub Builder</p>
+</td></tr><tr class='module-item'><td><a class="struct" href="struct.EpubContent.html" title='epub_builder::EpubContent struct'>EpubContent</a></td><td class='docblock-short'><p>Represents a XHTML file that can be added to an EPUB document.</p>
+</td></tr><tr class='module-item'><td><a class="struct" href="struct.Error.html" title='epub_builder::Error struct'>Error</a></td><td class='docblock-short'><p>The Error type.</p>
+</td></tr><tr class='module-item'><td><a class="struct" href="struct.Toc.html" title='epub_builder::Toc struct'>Toc</a></td><td class='docblock-short'><p>A Table Of Contents</p>
+</td></tr><tr class='module-item'><td><a class="struct" href="struct.TocElement.html" title='epub_builder::TocElement struct'>TocElement</a></td><td class='docblock-short'><p>An element of the <a href="struct.Toc.html">Table of contents</a></p>
+</td></tr><tr class='module-item'><td><a class="struct" href="struct.ZipCommand.html" title='epub_builder::ZipCommand struct'>ZipCommand</a></td><td class='docblock-short'><p>Zip files using the system <code>zip</code> command.</p>
+</td></tr><tr class='module-item'><td><a class="struct" href="struct.ZipLibrary.html" title='epub_builder::ZipLibrary struct'>ZipLibrary</a></td><td class='docblock-short'><p>Zip files using the <a href="https://crates.io/crates/zip">Rust <code>zip</code></a> library.</p>
+</td></tr></table><h2 id='enums' class='section-header'><a href="#enums">Enums</a></h2>
+<table><tr class='module-item'><td><a class="enum" href="enum.EpubVersion.html" title='epub_builder::EpubVersion enum'>EpubVersion</a></td><td class='docblock-short'><p>Represents the EPUB version.</p>
+</td></tr><tr class='module-item'><td><a class="enum" href="enum.ErrorKind.html" title='epub_builder::ErrorKind enum'>ErrorKind</a></td><td class='docblock-short'><p>The kind of an error.</p>
+</td></tr><tr class='module-item'><td><a class="enum" href="enum.ReferenceType.html" title='epub_builder::ReferenceType enum'>ReferenceType</a></td><td class='docblock-short'><p>Represents the possible reference type of an EPUB page.</p>
+</td></tr><tr class='module-item'><td><a class="enum" href="enum.ZipCommandOrLibrary.html" title='epub_builder::ZipCommandOrLibrary enum'>ZipCommandOrLibrary</a></td><td class='docblock-short'><p>Wrapper around either a ZipCommand or a ZipLibrary</p>
+</td></tr></table><h2 id='traits' class='section-header'><a href="#traits">Traits</a></h2>
+<table><tr class='module-item'><td><a class="trait" href="trait.ResultExt.html" title='epub_builder::ResultExt trait'>ResultExt</a></td><td class='docblock-short'><p>Additional methods for <code>Result</code>, for easy interaction with this crate.</p>
+</td></tr><tr class='module-item'><td><a class="trait" href="trait.Zip.html" title='epub_builder::Zip trait'>Zip</a></td><td class='docblock-short'><p>An abstraction over possible Zip implementations.</p>
+</td></tr></table><h2 id='types' class='section-header'><a href="#types">Type Definitions</a></h2>
+<table><tr class='module-item'><td><a class="type" href="type.Result.html" title='epub_builder::Result type'>Result</a></td><td class='docblock-short'><p>Convenient wrapper around <code>std::Result</code>.</p>
+</td></tr></table></section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../";window.currentCrate = "epub_builder";</script><script src="../aliases.js"></script><script src="../main.js"></script><script defer src="../search-index.js"></script></body></html>

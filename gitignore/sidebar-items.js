@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Error","Encapsulates all the types of errors this crate can produce."],["File","Represents a `.gitignore` file. Use this to load the `.gitignore` file, parse the patterns, and then check if a given path would be excluded by any rules contained therein."],["Pattern","A pattern as found in a `.gitignore` file."]]});

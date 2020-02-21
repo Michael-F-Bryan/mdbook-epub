@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["make_pipeline",""],["stemmer",""],["stop_word_filter",""],["trimmer",""]]});

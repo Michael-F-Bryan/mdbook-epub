@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["NodeData","The different kinds of nodes in the DOM."]],"struct":[["Node","A DOM node."],["RcDom","The DOM itself; the result of parsing."]],"type":[["Handle","Reference to a DOM node."],["WeakHandle","Weak reference to a DOM node, used for parent pointers."]]});

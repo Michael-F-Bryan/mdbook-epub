@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Atom",""],["EmptyStaticAtomSet",""],["PhfStrSet",""]],"trait":[["StaticAtomSet",""]],"type":[["DefaultAtom","Use this if you don’t care about static atoms."]]});

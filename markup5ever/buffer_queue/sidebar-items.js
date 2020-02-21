@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["SetResult","Result from [`pop_except_from`] containing either a character from a [`SmallCharSet`], or a string buffer of characters not from the set."]],"struct":[["BufferQueue","A queue of owned string buffers, which supports incrementally consuming characters."]]});

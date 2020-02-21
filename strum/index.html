@@ -1,0 +1,54 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="API documentation for the Rust `strum` crate."><meta name="keywords" content="rust, rustlang, rust-lang, strum"><title>strum - Rust</title><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../dark.css"><link rel="stylesheet" type="text/css" href="../light.css" id="themeStyle"><script src="../storage.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="shortcut icon" href="../favicon.ico"><style type="text/css">#crate-search{background-image:url("../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../strum/index.html'><div class='logo-container'><img src='../rust-logo.png' alt='logo'></div></a><p class='location'>Crate strum</p><div class="sidebar-elems"><a id='all-types' href='all.html'><p>See all strum's items</p></a><div class="block items"><ul><li><a href="#enums">Enums</a></li><li><a href="#traits">Traits</a></li></ul></div><p class='location'></p><script>window.sidebarCurrent = {name: 'strum', ty: 'mod', relpath: '../'};</script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../settings.html"><img src="../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class='fqn'><span class='out-of-band'><span id='render-detail'><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class='inner'>&#x2212;</span>]</a></span><a class='srclink' href='../src/strum/lib.rs.html#1-208' title='goto source code'>[src]</a></span><span class='in-band'>Crate <a class="mod" href=''>strum</a></span></h1><div class='docblock'><h1 id="strum" class="section-header"><a href="#strum">Strum</a></h1>
+<p><a href="https://travis-ci.org/Peternator7/strum"><img src="https://travis-ci.org/Peternator7/strum.svg?branch=master" alt="Build Status" /></a>
+<a href="https://crates.io/crates/strum"><img src="https://img.shields.io/crates/v/strum.svg" alt="Latest Version" /></a>
+<a href="https://docs.rs/strum"><img src="https://docs.rs/strum/badge.svg" alt="Rust Documentation" /></a></p>
+<p>Strum is a set of macros and traits for working with
+enums and strings easier in Rust.</p>
+<p>The full version of the README can be found on <a href="https://github.com/Peternator7/strum">Github</a>.</p>
+<h1 id="including-strum-in-your-project" class="section-header"><a href="#including-strum-in-your-project">Including Strum in Your Project</a></h1>
+<p>Import strum and strum_macros into your project by adding the following lines to your
+Cargo.toml. Strum_macros contains the macros needed to derive all the traits in Strum.</p>
+<pre><code class="language-toml">[dependencies]
+strum = &quot;0.15.0&quot;
+strum_macros = &quot;0.15.0&quot;
+</code></pre>
+<p>And add these lines to the root of your project, either lib.rs or main.rs.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="comment">// Strum contains all the trait definitions</span>
+<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">strum</span>;
+<span class="attribute">#[<span class="ident">macro_use</span>]</span>
+<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">strum_macros</span>;</pre></div>
+<h1 id="strum-macros" class="section-header"><a href="#strum-macros">Strum Macros</a></h1>
+<p>Strum has implemented the following macros:</p>
+<table><thead><tr><th>Macro</th><th>Description</th></tr></thead><tbody>
+<tr><td><a href="https://github.com/Peternator7/strum#EnumString">EnumString</a></td><td>Converts strings to enum variants based on their name</td></tr>
+<tr><td><a href="https://github.com/Peternator7/strum#Display">Display</a></td><td>Converts enum variants to strings</td></tr>
+<tr><td><a href="https://github.com/Peternator7/strum#AsRefStr">AsRefStr</a></td><td>Converts enum variants to <code>&amp;'static str</code></td></tr>
+<tr><td><a href="https://github.com/Peternator7/strum#IntoStaticStr">IntoStaticStr</a></td><td>Implements <code>From&lt;MyEnum&gt; for &amp;'static str</code> on an enum</td></tr>
+<tr><td><a href="https://github.com/Peternator7/strum#EnumIter">EnumIter</a></td><td>Creates a new type that iterates of the variants of an enum.</td></tr>
+<tr><td><a href="https://github.com/Peternator7/strum#EnumProperty">EnumProperty</a></td><td>Add custom properties to enum variants.</td></tr>
+<tr><td><a href="https://github.com/Peternator7/strum#EnumMessage">EnumMessage</a></td><td>Add a verbose message to an enum variant.</td></tr>
+<tr><td><a href="https://github.com/Peternator7/strum#EnumDiscriminants">EnumDiscriminants</a></td><td>Generate a new type with only the discriminant names.</td></tr>
+<tr><td><a href="https://github.com/Peternator7/strum#EnumCount">EnumCount</a></td><td>Add a constant <code>usize</code> equal to the number of variantes.</td></tr>
+</tbody></table>
+</div><h2 id='enums' class='section-header'><a href="#enums">Enums</a></h2>
+<table><tr class='module-item'><td><a class="enum" href="enum.ParseError.html" title='strum::ParseError enum'>ParseError</a></td><td class='docblock-short'><p>The ParseError enum is a collection of all the possible reasons
+an enum can fail to parse from a string.</p>
+</td></tr></table><h2 id='traits' class='section-header'><a href="#traits">Traits</a></h2>
+<table><tr class='module-item'><td><a class="trait" href="trait.AsStaticRef.html" title='strum::AsStaticRef trait'>AsStaticRef</a></td><td class='docblock-short'><p>A cheap reference-to-reference conversion. Used to convert a value to a
+reference value with <code>'static</code> lifetime within generic code.
+#[deprecated(since=&quot;0.13.0&quot;, note=&quot;please use <code>#[derive(IntoStaticStr)]</code> instead&quot;)]</p>
+</td></tr><tr class='module-item'><td><a class="trait" href="trait.EnumCount.html" title='strum::EnumCount trait'>EnumCount</a></td><td class='docblock-short'><p>A trait for capturing the number of variants in Enum. This trait can be autoderived by
+<code>strum_macros</code>.</p>
+</td></tr><tr class='module-item'><td><a class="trait" href="trait.EnumMessage.html" title='strum::EnumMessage trait'>EnumMessage</a></td><td class='docblock-short'><p>Associates additional pieces of information with an Enum. This can be
+autoimplemented by deriving <code>EnumMessage</code> and annotating your variants with
+`#[strum(message=&quot;...&quot;)].</p>
+</td></tr><tr class='module-item'><td><a class="trait" href="trait.EnumProperty.html" title='strum::EnumProperty trait'>EnumProperty</a></td><td class='docblock-short'><p>EnumProperty is a trait that makes it possible to store additional information
+with enum variants. This trait is designed to be used with the macro of the same
+name in the <code>strum_macros</code> crate. Currently, the only string literals are supported
+in attributes, the other methods will be implemented as additional attribute types
+become stabilized.</p>
+</td></tr><tr class='module-item'><td><a class="trait" href="trait.IntoEnumIterator.html" title='strum::IntoEnumIterator trait'>IntoEnumIterator</a></td><td class='docblock-short'><p>This trait designates that an <code>Enum</code> can be iterated over. It can
+be auto generated using <code>strum_macros</code> on your behalf.</p>
+</td></tr></table></section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../";window.currentCrate = "strum";</script><script src="../aliases.js"></script><script src="../main.js"></script><script defer src="../search-index.js"></script></body></html>

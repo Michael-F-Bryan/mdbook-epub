@@ -1,0 +1,227 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="API documentation for the Rust `process` macro in crate `pest`."><meta name="keywords" content="rust, rustlang, rust-lang, process"><title>pest::process - Rust</title><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../dark.css"><link rel="stylesheet" type="text/css" href="../light.css" id="themeStyle"><script src="../storage.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="shortcut icon" href="../favicon.ico"><style type="text/css">#crate-search{background-image:url("../down-arrow.svg");}</style></head><body class="rustdoc macro"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../pest/index.html'><div class='logo-container'><img src='../rust-logo.png' alt='logo'></div></a><div class="sidebar-elems"><p class='location'><a href='index.html'>pest</a></p><script>window.sidebarCurrent = {name: 'process', ty: 'macro', relpath: ''};</script><script defer src="sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../settings.html"><img src="../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class='fqn'><span class='out-of-band'><span id='render-detail'><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class='inner'>&#x2212;</span>]</a></span><a class='srclink' href='../src/pest/process.rs.html#275-533' title='goto source code'>[src]</a></span><span class='in-band'>Macro <a href='index.html'>pest</a>::<wbr><a class="macro" href=''>process</a></span></h1><div class="docblock type-decl hidden-by-usual-hider"><div class="example-wrap"><pre class="rust macro">
+<span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">process</span> {
+    ( @<span class="ident">pattern</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">slf</span>:<span class="ident">ident</span> (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">block</span>:<span class="ident">expr</span>) <span class="kw">_</span> : <span class="macro-nonterminal">$</span><span class="macro-nonterminal">typ</span>:<span class="ident">ident</span> ) <span class="op">=</span><span class="op">&gt;</span> { ... };
+    ( @<span class="ident">pattern</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">slf</span>:<span class="ident">ident</span> (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">block</span>:<span class="ident">expr</span>) <span class="kw">_</span> : <span class="macro-nonterminal">$</span><span class="macro-nonterminal">typ</span>:<span class="ident">ident</span>, $( <span class="macro-nonterminal">$</span><span class="macro-nonterminal">tail</span>:<span class="ident">tt</span> )<span class="op">*</span> ) <span class="op">=</span><span class="op">&gt;</span> { ... };
+    ( @<span class="ident">pattern</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">slf</span>:<span class="ident">ident</span> (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">block</span>:<span class="ident">expr</span>) <span class="kw">_</span> ) <span class="op">=</span><span class="op">&gt;</span> { ... };
+    ( @<span class="ident">pattern</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">slf</span>:<span class="ident">ident</span> (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">block</span>:<span class="ident">expr</span>) <span class="kw">_</span>, $( <span class="macro-nonterminal">$</span><span class="macro-nonterminal">tail</span>:<span class="ident">tt</span> )<span class="op">*</span> ) <span class="op">=</span><span class="op">&gt;</span> { ... };
+    ( @<span class="ident">pattern</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">slf</span>:<span class="ident">ident</span> (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">block</span>:<span class="ident">expr</span>) <span class="kw-2">&amp;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">head</span>:<span class="ident">ident</span> : <span class="macro-nonterminal">$</span><span class="macro-nonterminal">typ</span>:<span class="ident">ident</span> ) <span class="op">=</span><span class="op">&gt;</span> { ... };
+    ( @<span class="ident">pattern</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">slf</span>:<span class="ident">ident</span> (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">block</span>:<span class="ident">expr</span>) <span class="kw-2">&amp;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">head</span>:<span class="ident">ident</span> : <span class="macro-nonterminal">$</span><span class="macro-nonterminal">typ</span>:<span class="ident">ident</span>, $( <span class="macro-nonterminal">$</span><span class="macro-nonterminal">tail</span>:<span class="ident">tt</span> )<span class="op">*</span> ) <span class="op">=</span><span class="op">&gt;</span> { ... };
+    ( @<span class="ident">pattern</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">slf</span>:<span class="ident">ident</span> (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">block</span>:<span class="ident">expr</span>) <span class="kw-2">&amp;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">head</span>:<span class="ident">ident</span> ) <span class="op">=</span><span class="op">&gt;</span> { ... };
+    ( @<span class="ident">pattern</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">slf</span>:<span class="ident">ident</span> (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">block</span>:<span class="ident">expr</span>) <span class="kw-2">&amp;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">head</span>:<span class="ident">ident</span>, $( <span class="macro-nonterminal">$</span><span class="macro-nonterminal">tail</span>:<span class="ident">tt</span> )<span class="op">*</span> ) <span class="op">=</span><span class="op">&gt;</span> { ... };
+    ( @<span class="ident">pattern</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">slf</span>:<span class="ident">ident</span> (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">block</span>:<span class="ident">expr</span>) <span class="kw-2">mut</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">head</span>:<span class="ident">ident</span> : <span class="macro-nonterminal">$</span><span class="macro-nonterminal">call</span>:<span class="ident">ident</span>() ) <span class="op">=</span><span class="op">&gt;</span> { ... };
+    ( @<span class="ident">pattern</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">slf</span>:<span class="ident">ident</span> (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">block</span>:<span class="ident">expr</span>) <span class="kw-2">mut</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">head</span>:<span class="ident">ident</span> : <span class="macro-nonterminal">$</span><span class="macro-nonterminal">call</span>:<span class="ident">ident</span>(), $( <span class="macro-nonterminal">$</span><span class="macro-nonterminal">tail</span>:<span class="ident">tt</span> )<span class="op">*</span> ) <span class="op">=</span><span class="op">&gt;</span> { ... };
+    ( @<span class="ident">pattern</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">slf</span>:<span class="ident">ident</span> (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">block</span>:<span class="ident">expr</span>) <span class="macro-nonterminal">$</span><span class="macro-nonterminal">head</span>:<span class="ident">ident</span> : <span class="macro-nonterminal">$</span><span class="macro-nonterminal">call</span>:<span class="ident">ident</span>() ) <span class="op">=</span><span class="op">&gt;</span> { ... };
+    ( @<span class="ident">pattern</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">slf</span>:<span class="ident">ident</span> (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">block</span>:<span class="ident">expr</span>) <span class="macro-nonterminal">$</span><span class="macro-nonterminal">head</span>:<span class="ident">ident</span> : <span class="macro-nonterminal">$</span><span class="macro-nonterminal">call</span>:<span class="ident">ident</span>(), $( <span class="macro-nonterminal">$</span><span class="macro-nonterminal">tail</span>:<span class="ident">tt</span> )<span class="op">*</span> ) <span class="op">=</span><span class="op">&gt;</span> { ... };
+    ( @<span class="ident">pattern</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">slf</span>:<span class="ident">ident</span> (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">block</span>:<span class="ident">expr</span>) <span class="macro-nonterminal">$</span><span class="macro-nonterminal">head</span>:<span class="ident">ident</span> : <span class="macro-nonterminal">$</span><span class="macro-nonterminal">typ</span>:<span class="ident">ident</span> ) <span class="op">=</span><span class="op">&gt;</span> { ... };
+    ( @<span class="ident">pattern</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">slf</span>:<span class="ident">ident</span> (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">block</span>:<span class="ident">expr</span>) <span class="macro-nonterminal">$</span><span class="macro-nonterminal">head</span>:<span class="ident">ident</span> : <span class="macro-nonterminal">$</span><span class="macro-nonterminal">typ</span>:<span class="ident">ident</span>, $( <span class="macro-nonterminal">$</span><span class="macro-nonterminal">tail</span>:<span class="ident">tt</span> )<span class="op">*</span> ) <span class="op">=</span><span class="op">&gt;</span> { ... };
+    ( @<span class="ident">pattern</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">slf</span>:<span class="ident">ident</span> (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">block</span>:<span class="ident">expr</span>) <span class="macro-nonterminal">$</span><span class="macro-nonterminal">head</span>:<span class="ident">ident</span> ) <span class="op">=</span><span class="op">&gt;</span> { ... };
+    ( @<span class="ident">pattern</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">slf</span>:<span class="ident">ident</span> (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">block</span>:<span class="ident">expr</span>) <span class="macro-nonterminal">$</span><span class="macro-nonterminal">head</span>:<span class="ident">ident</span>, $( <span class="macro-nonterminal">$</span><span class="macro-nonterminal">tail</span>:<span class="ident">tt</span> )<span class="op">*</span> ) <span class="op">=</span><span class="op">&gt;</span> { ... };
+    ( @<span class="ident">pattern</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">slf</span>:<span class="ident">ident</span> (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">block</span>:<span class="ident">expr</span>) ) <span class="op">=</span><span class="op">&gt;</span> { ... };
+    ( @<span class="ident">branches</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">slf</span>:<span class="ident">ident</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>:<span class="ident">ident</span> ( $( <span class="macro-nonterminal">$</span><span class="macro-nonterminal">pattern</span>:<span class="ident">tt</span> )<span class="op">*</span> ) <span class="op">=</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">block</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> { ... };
+    ( @<span class="ident">branches</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">slf</span>:<span class="ident">ident</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>:<span class="ident">ident</span> ( $( <span class="macro-nonterminal">$</span><span class="macro-nonterminal">pattern</span>:<span class="ident">tt</span> )<span class="op">*</span> ) <span class="op">=</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">block</span>:<span class="ident">expr</span>,) <span class="op">=</span><span class="op">&gt;</span> { ... };
+    ( @<span class="ident">branches</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">slf</span>:<span class="ident">ident</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>:<span class="ident">ident</span> ( $( <span class="macro-nonterminal">$</span><span class="macro-nonterminal">pattern</span>:<span class="ident">tt</span> )<span class="op">*</span> ) <span class="op">=</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">block</span>:<span class="ident">expr</span>, $( <span class="macro-nonterminal">$</span><span class="macro-nonterminal">tail</span>:<span class="ident">tt</span> )<span class="op">*</span> ) <span class="op">=</span><span class="op">&gt;</span> { ... };
+    ( $( <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>:<span class="ident">ident</span> (<span class="kw-2">&amp;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">slf</span>:<span class="ident">ident</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">typ</span>:<span class="ident">ty</span> { $( <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ts</span>:<span class="ident">tt</span> )<span class="op">*</span> } )<span class="op">*</span> ) <span class="op">=</span><span class="op">&gt;</span> { ... };
+}</pre></div>
+</div><div class='docblock'><p>A <code>macro</code> for pattern-matching queued <code>Token</code>s generated by a <code>Parser</code>. It generates a method
+<code>process</code> on <code>&amp;self</code> that processes the whole queue of <code>Token</code>s, reducing it to one single
+result.</p>
+<p>The <code>process</code> is populated with callable methods, called <em>matchers</em>, that match patterns and
+return results. A pattern is constructed from the following comma-separated items:</p>
+<table><thead><tr><th>Item</th><th>What it does</th></tr></thead><tbody>
+<tr><td><code>item</code></td><td>matches any <code>Token</code></td></tr>
+<tr><td><code>item: R</code></td><td>matches a <code>Token</code> of rule <code>R</code></td></tr>
+<tr><td><code>&amp;item</code></td><td>captures a <code>Token</code></td></tr>
+<tr><td><code>&amp;item: R</code></td><td>captures a <code>Token</code> of rule <code>R</code></td></tr>
+<tr><td><code>_</code></td><td>skips a <code>Token</code></td></tr>
+<tr><td><code>_: R</code></td><td>skips a <code>Token</code> of rule <code>R</code></td></tr>
+<tr><td><code>item: fn()</code></td><td>call matcher <code>fn</code> and store result in <code>item</code></td></tr>
+<tr><td><code>mut item: fn()</code></td><td>call matcher <code>fn</code> and store mutable result in <code>item</code></td></tr>
+</tbody></table>
+<p><em>Note:</em> Lifetime elision works by using the lifetime of the <code>Parser</code> instance. To use the
+lifetime of the <code>Input</code> instance, use the explicit <code>'input</code> lifetime like in the
+<a href="https://github.com/dragostis/pest/blob/master/tests/lifetimes.rs#L25">test</a>.</p>
+<h1 id="panics" class="section-header"><a href="#panics">Panics</a></h1>
+<p>In case all the patterns inside of <code>process!</code> won't match, the <code>process</code> method will <code>panic!</code>.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="macro">impl_rdp</span><span class="macro">!</span> {
+    <span class="macro">grammar</span><span class="macro">!</span> {
+        <span class="ident">a</span> <span class="op">=</span> { [<span class="string">&quot;a&quot;</span>] }
+        <span class="ident">b</span> <span class="op">=</span> { [<span class="string">&quot;b&quot;</span>] }
+    }
+
+    <span class="macro">process</span><span class="macro">!</span> {
+        <span class="ident">ab</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> () {
+            (<span class="kw">_</span>: <span class="ident">a</span>) <span class="op">=</span><span class="op">&gt;</span> {}
+        }
+    }
+}
+
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">parser</span> <span class="op">=</span> <span class="ident">Rdp</span>::<span class="ident">new</span>(<span class="ident">StringInput</span>::<span class="ident">new</span>(<span class="string">&quot;b&quot;</span>));
+
+<span class="ident">parser</span>.<span class="ident">b</span>();
+<span class="ident">parser</span>.<span class="ident">ab</span>();</pre></div>
+<h1 id="examples" class="section-header"><a href="#examples">Examples</a></h1><h3 id="nested-letter" class="section-header"><a href="#nested-letter">Nested letter</a></h3>
+<p>Let's consider the following grammar of nested letters:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="ident">expression</span> <span class="op">=</span> <span class="kw">_</span>{ <span class="ident">paren</span> <span class="op">|</span> <span class="ident">letter</span> } <span class="comment">// we don&#39;t need the expression Token</span>
+<span class="ident">paren</span>      <span class="op">=</span>  { [<span class="string">&quot;(&quot;</span>] ~ <span class="ident">expression</span> ~ [<span class="string">&quot;)&quot;</span>] }
+<span class="ident">letter</span>     <span class="op">=</span>  { [<span class="string">&#39;a&#39;</span>..<span class="string">&#39;z&#39;</span>] }</pre></div>
+<p>Defining the grammar paves way to a simple data-structre (an <code>enum</code>) that can be either a
+<code>Paren</code> or a <code>Letter</code>.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">PartialEq</span>)]</span>
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Expression</span> {
+    <span class="ident">Paren</span>(<span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Expression</span><span class="op">&gt;</span>),
+    <span class="ident">Letter</span>(<span class="ident">char</span>)
+}</pre></div>
+<p>The processing phase needs to handle two cases: parens and letters. Letters are
+straightforward captures:</p>
+
+<div class='information'><div class='tooltip ignore'>ⓘ<span class='tooltiptext'>This example is not tested</span></div></div><div class="example-wrap"><pre class="rust rust-example-rendered ignore">
+(<span class="kw-2">&amp;</span><span class="ident">letter</span>: <span class="ident">letter</span>)</pre></div>
+<p>Parens need to recursively process the next item in order to be stored inside of the <code>Paren</code>.
+But before that, it needs to match a <code>paren</code> <code>Token</code> that gets ignored.</p>
+
+<div class='information'><div class='tooltip ignore'>ⓘ<span class='tooltiptext'>This example is not tested</span></div></div><div class="example-wrap"><pre class="rust rust-example-rendered ignore">
+(<span class="kw">_</span>: <span class="ident">paren</span>, <span class="ident">expression</span>: <span class="ident">nested_letter</span>())</pre></div>
+<p>All together now:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">PartialEq</span>)]</span>
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Expression</span> {
+    <span class="ident">Paren</span>(<span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Expression</span><span class="op">&gt;</span>),
+    <span class="ident">Letter</span>(<span class="ident">char</span>)
+}
+
+<span class="macro">impl_rdp</span><span class="macro">!</span> {
+    <span class="macro">grammar</span><span class="macro">!</span> {
+        <span class="ident">expression</span> <span class="op">=</span> <span class="kw">_</span>{ <span class="ident">paren</span> <span class="op">|</span> <span class="ident">letter</span> }
+        <span class="ident">paren</span>      <span class="op">=</span>  { [<span class="string">&quot;(&quot;</span>] ~ <span class="ident">expression</span> ~ [<span class="string">&quot;)&quot;</span>] }
+        <span class="ident">letter</span>     <span class="op">=</span>  { [<span class="string">&#39;a&#39;</span>..<span class="string">&#39;z&#39;</span>] }
+    }
+
+    <span class="macro">process</span><span class="macro">!</span> {
+        <span class="ident">nested_letter</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Expression</span> {
+            (<span class="kw-2">&amp;</span><span class="ident">letter</span>: <span class="ident">letter</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">Expression</span>::<span class="ident">Letter</span>(<span class="ident">letter</span>.<span class="ident">chars</span>().<span class="ident">next</span>().<span class="ident">unwrap</span>())
+            },
+            (<span class="kw">_</span>: <span class="ident">paren</span>, <span class="ident">expression</span>: <span class="ident">nested_letter</span>()) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">Expression</span>::<span class="ident">Paren</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">expression</span>))
+            }
+        }
+    }
+}
+
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">parser</span> <span class="op">=</span> <span class="ident">Rdp</span>::<span class="ident">new</span>(<span class="ident">StringInput</span>::<span class="ident">new</span>(<span class="string">&quot;((z))&quot;</span>));
+
+<span class="macro">assert</span><span class="macro">!</span>(<span class="ident">parser</span>.<span class="ident">expression</span>());
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">parser</span>.<span class="ident">nested_letter</span>(),
+           <span class="ident">Expression</span>::<span class="ident">Paren</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">Expression</span>::<span class="ident">Paren</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">Expression</span>::<span class="ident">Letter</span>(<span class="string">&#39;z&#39;</span>))))));</pre></div>
+<h3 id="sentence" class="section-header"><a href="#sentence">Sentence</a></h3>
+<p>To showcase the use of multiple matchers, we'll use a sentence grammar:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="ident">sentence</span> <span class="op">=</span> <span class="kw">_</span>{ <span class="ident">word</span> ~ ([<span class="string">&quot; &quot;</span>] ~ <span class="ident">word</span>)<span class="op">*</span> } <span class="comment">// we don&#39;t need the sentence Token</span>
+<span class="ident">word</span>     <span class="op">=</span>  { <span class="ident">letter</span><span class="op">*</span> }
+<span class="ident">letter</span>   <span class="op">=</span>  { [<span class="string">&#39;a&#39;</span>..<span class="string">&#39;z&#39;</span>] }</pre></div>
+<p>Let's create a very simple AST that works in this case:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">PartialEq</span>)]</span>
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Node</span> {
+    <span class="ident">Sentence</span>(<span class="ident">LinkedList</span><span class="op">&lt;</span><span class="ident">Node</span><span class="op">&gt;</span>), <span class="comment">// we&#39;re using LinkedList because they&#39;re more efficient when</span>
+    <span class="ident">Word</span>(<span class="ident">LinkedList</span><span class="op">&lt;</span><span class="ident">Node</span><span class="op">&gt;</span>),     <span class="comment">// using tail recursion</span>
+    <span class="ident">Letter</span>(<span class="ident">char</span>)
+}</pre></div>
+<p>To build the <code>Token</code> processor, let's use a bottom up aproach when writing the matchers. Let's
+start by building a <code>word</code> matcher. We'll call it <code>_word</code> in order not to clash with the name
+of the rule that also gets defined as a method on the <code>Parser</code>.</p>
+
+<div class='information'><div class='tooltip ignore'>ⓘ<span class='tooltiptext'>This example is not tested</span></div></div><div class="example-wrap"><pre class="rust rust-example-rendered ignore">
+<span class="ident">_word</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">LinkedList</span><span class="op">&lt;</span><span class="ident">Node</span><span class="op">&gt;</span> { <span class="comment">// return LinkedList&lt;Node&gt; to build Word with</span>
+    (<span class="kw-2">&amp;</span><span class="ident">head</span>: <span class="ident">letter</span>, <span class="kw-2">mut</span> <span class="ident">tail</span>: <span class="ident">_word</span>()) <span class="op">=</span><span class="op">&gt;</span> { <span class="comment">// usual tail recursion</span>
+        <span class="ident">tail</span>.<span class="ident">push_front</span>(<span class="ident">Node</span>::<span class="ident">Letter</span>(<span class="ident">head</span>.<span class="ident">chars</span>().<span class="ident">next</span>().<span class="ident">unwrap</span>()));
+
+        <span class="ident">tail</span>
+    },
+    () <span class="op">=</span><span class="op">&gt;</span> {                <span class="comment">// if rule above doesn&#39;t match, there are no more letters to</span>
+        <span class="ident">LinkedList</span>::<span class="ident">new</span>()  <span class="comment">// process; return empty list</span>
+    }
+}</pre></div>
+<p>Processing a <code>sentence</code> is similar, only this time <code>head</code> will be a <code>_word</code> call.</p>
+
+<div class='information'><div class='tooltip ignore'>ⓘ<span class='tooltiptext'>This example is not tested</span></div></div><div class="example-wrap"><pre class="rust rust-example-rendered ignore">
+<span class="ident">_sentence</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">LinkedList</span><span class="op">&lt;</span><span class="ident">Node</span><span class="op">&gt;</span> {
+    (<span class="kw">_</span>: <span class="ident">word</span>, <span class="ident">head</span>: <span class="ident">_word</span>(), <span class="kw-2">mut</span> <span class="ident">tail</span>: <span class="ident">_sentence</span>()) <span class="op">=</span><span class="op">&gt;</span> { <span class="comment">// match word Token then call _word</span>
+        <span class="ident">tail</span>.<span class="ident">push_front</span>(<span class="ident">Node</span>::<span class="ident">Word</span>(<span class="ident">head</span>));
+
+        <span class="ident">tail</span>
+    },
+    () <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="ident">LinkedList</span>::<span class="ident">new</span>()
+    }
+}</pre></div>
+<p>Finally, the <code>main</code> matcher:</p>
+
+<div class='information'><div class='tooltip ignore'>ⓘ<span class='tooltiptext'>This example is not tested</span></div></div><div class="example-wrap"><pre class="rust rust-example-rendered ignore">
+<span class="ident">main</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Node</span> {
+    (<span class="ident">list</span>: <span class="ident">_sentence</span>()) <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="ident">Node</span>::<span class="ident">Sentence</span>(<span class="ident">list</span>)
+    }
+}</pre></div>
+<p>Putting everything together:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">PartialEq</span>)]</span>
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Node</span> {
+    <span class="ident">Sentence</span>(<span class="ident">LinkedList</span><span class="op">&lt;</span><span class="ident">Node</span><span class="op">&gt;</span>),
+    <span class="ident">Word</span>(<span class="ident">LinkedList</span><span class="op">&lt;</span><span class="ident">Node</span><span class="op">&gt;</span>),
+    <span class="ident">Letter</span>(<span class="ident">char</span>)
+}
+
+<span class="macro">impl_rdp</span><span class="macro">!</span> {
+    <span class="macro">grammar</span><span class="macro">!</span> {
+        <span class="ident">sentence</span> <span class="op">=</span> <span class="kw">_</span>{ <span class="ident">word</span> ~ ([<span class="string">&quot; &quot;</span>] ~ <span class="ident">word</span>)<span class="op">*</span> }
+        <span class="ident">word</span>     <span class="op">=</span>  { <span class="ident">letter</span><span class="op">*</span> }
+        <span class="ident">letter</span>   <span class="op">=</span>  { [<span class="string">&#39;a&#39;</span>..<span class="string">&#39;z&#39;</span>] }
+    }
+
+    <span class="macro">process</span><span class="macro">!</span> {
+        <span class="ident">main</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Node</span> {
+            (<span class="ident">list</span>: <span class="ident">_sentence</span>()) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">Node</span>::<span class="ident">Sentence</span>(<span class="ident">list</span>)
+            }
+        }
+
+        <span class="ident">_sentence</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">LinkedList</span><span class="op">&lt;</span><span class="ident">Node</span><span class="op">&gt;</span> {
+            (<span class="kw">_</span>: <span class="ident">word</span>, <span class="ident">head</span>: <span class="ident">_word</span>(), <span class="kw-2">mut</span> <span class="ident">tail</span>: <span class="ident">_sentence</span>()) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">tail</span>.<span class="ident">push_front</span>(<span class="ident">Node</span>::<span class="ident">Word</span>(<span class="ident">head</span>));
+
+                <span class="ident">tail</span>
+            },
+            () <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">LinkedList</span>::<span class="ident">new</span>()
+            }
+        }
+
+        <span class="ident">_word</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">LinkedList</span><span class="op">&lt;</span><span class="ident">Node</span><span class="op">&gt;</span> {
+            (<span class="kw-2">&amp;</span><span class="ident">head</span>: <span class="ident">letter</span>, <span class="kw-2">mut</span> <span class="ident">tail</span>: <span class="ident">_word</span>()) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">tail</span>.<span class="ident">push_front</span>(<span class="ident">Node</span>::<span class="ident">Letter</span>(<span class="ident">head</span>.<span class="ident">chars</span>().<span class="ident">next</span>().<span class="ident">unwrap</span>()));
+
+                <span class="ident">tail</span>
+            },
+            () <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">LinkedList</span>::<span class="ident">new</span>()
+            }
+        }
+    }
+}
+
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">parser</span> <span class="op">=</span> <span class="ident">Rdp</span>::<span class="ident">new</span>(<span class="ident">StringInput</span>::<span class="ident">new</span>(<span class="string">&quot;abc def&quot;</span>));
+
+<span class="macro">assert</span><span class="macro">!</span>(<span class="ident">parser</span>.<span class="ident">sentence</span>());
+<span class="ident">parser</span>.<span class="ident">main</span>();</pre></div>
+</div></section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../";window.currentCrate = "pest";</script><script src="../aliases.js"></script><script src="../main.js"></script><script defer src="../search-index.js"></script></body></html>

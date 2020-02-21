@@ -1,0 +1,27 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="API documentation for the Rust `parse_summary` fn in crate `mdbook`."><meta name="keywords" content="rust, rustlang, rust-lang, parse_summary"><title>mdbook::book::parse_summary - Rust</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css"><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="shortcut icon" href="../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc fn"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../mdbook/index.html'><div class='logo-container'><img src='../../rust-logo.png' alt='logo'></div></a><div class="sidebar-elems"><p class='location'><a href='../index.html'>mdbook</a>::<wbr><a href='index.html'>book</a></p><script>window.sidebarCurrent = {name: 'parse_summary', ty: 'fn', relpath: ''};</script><script defer src="sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class='fqn'><span class='out-of-band'><span id='render-detail'><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class='inner'>&#x2212;</span>]</a></span><a class='srclink' href='../../src/mdbook/book/summary.rs.html#46-49' title='goto source code'>[src]</a></span><span class='in-band'>Function <a href='../index.html'>mdbook</a>::<wbr><a href='index.html'>book</a>::<wbr><a class="fn" href=''>parse_summary</a></span></h1><pre class='rust fn'>pub fn parse_summary(summary: &amp;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a>) -&gt; <a class="type" href="../../mdbook/errors/type.Result.html" title="type mdbook::errors::Result">Result</a>&lt;<a class="struct" href="../../mdbook/book/struct.Summary.html" title="struct mdbook::book::Summary">Summary</a>&gt;</pre><div class='docblock'><p>Parse the text from a <code>SUMMARY.md</code> file into a sort of &quot;recipe&quot; to be
+used when loading a book from disk.</p>
+<h1 id="summary-format" class="section-header"><a href="#summary-format">Summary Format</a></h1>
+<p><strong>Title:</strong> It's common practice to begin with a title, generally
+&quot;# Summary&quot;. It's not mandatory and the parser (currently) ignores it, so
+you can too if you feel like it.</p>
+<p><strong>Prefix Chapter:</strong> Before the main numbered chapters you can add a couple
+of elements that will not be numbered. This is useful for forewords,
+introductions, etc. There are however some constraints. You can not nest
+prefix chapters, they should all be on the root level. And you can not add
+prefix chapters once you have added numbered chapters.</p>
+<pre><code class="language-markdown">[Title of prefix element](relative/path/to/markdown.md)
+</code></pre>
+<p><strong>Numbered Chapter:</strong> Numbered chapters are the main content of the book,
+they
+will be numbered and can be nested, resulting in a nice hierarchy (chapters,
+sub-chapters, etc.)</p>
+<pre><code class="language-markdown">- [Title of the Chapter](relative/path/to/markdown.md)
+</code></pre>
+<p>You can either use - or * to indicate a numbered chapter, the parser doesn't
+care but you'll probably want to stay consistent.</p>
+<p><strong>Suffix Chapter:</strong> After the numbered chapters you can add a couple of
+non-numbered chapters. They are the same as prefix chapters but come after
+the numbered chapters instead of before.</p>
+<p>All other elements are unsupported and will be ignored at best or result in
+an error.</p>
+</div></section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "mdbook";</script><script src="../../aliases.js"></script><script src="../../main.js"></script><script defer src="../../search-index.js"></script></body></html>

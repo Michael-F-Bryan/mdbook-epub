@@ -1,0 +1,1 @@
+initSidebarItems({"mod":[["text_renderer","Implementations of the `Renderer` trait."]],"trait":[["Renderer","A type which is a backend for HTML to text rendering."]]});
