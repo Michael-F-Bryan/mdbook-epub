@@ -8,9 +8,12 @@ addons:
       - python3
       - python3-pip
 
+# Rust 1.38 and above supports the new Cargo.lock format
+# https://github.com/rust-lang/cargo/pull/7579
+
 rust:
 - stable
-- "1.32.0"
+- "1.40.0"
 - nightly
 
 os:

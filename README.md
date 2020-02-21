@@ -55,14 +55,25 @@ $ mdbook-epub --standalone ./path/to/book/dir
 
 ## Configuration
 
-Configuration is fairly bare bones at the moment. All you can do is add 
-additional CSS files and disable the default stylesheet.
+Configuration is fairly bare bones at the moment.
 
+Recognized options:
+
+`additional-css`: A list of paths to CSS stylesheets to include.
+
+`use-default-css`: Controls whether to include the default stylesheet.
+
+`cover-image`: A path to a cover image file for the ebook.
+
+`additional-resources`: A list of path to files which should be added to the
+EPUB, such as typefaces. They will be added with path `OEBPS/<filename>`.
 
 ```toml
 [output.epub]
 additional-css = ["./path/to/main.css"]
 use-default-css = false
+cover-image = "ebook-cover.png"
+additional-resources = ["./assets/Open-Sans-Regular.ttf"]
 ```
 
 

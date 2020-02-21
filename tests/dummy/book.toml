@@ -1,4 +1,5 @@
 [book]
+title = "Dummy Book"
 authors = []
 multilingual = false
 src = "src"

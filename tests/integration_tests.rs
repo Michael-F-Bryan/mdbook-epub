@@ -5,11 +5,12 @@ extern crate mdbook_epub;
 extern crate tempdir;
 
 use epub::doc::EpubDoc;
+use std::path::Path;
+use std::process::Command;
 use failure::{Error, SyncFailure};
+use tempdir::TempDir;
 use mdbook::renderer::RenderContext;
 use mdbook::MDBook;
-use std::path::Path;
-use tempdir::TempDir;
 
 /// Convenience function for compiling the dummy book into an `EpubDoc`.
 fn generate_epub() -> Result<EpubDoc, Error> {
@@ -38,11 +39,32 @@ fn output_epub_is_valid() {
     mdbook_epub::generate(&ctx).unwrap();
 
     let output_file = mdbook_epub::output_filename(temp.path(), &ctx.config);
-    let output_file = output_file.display().to_string();
 
     let got = EpubDoc::new(&output_file);
 
     assert!(got.is_ok());
+
+    // also try to run epubcheck, if it's available
+    epub_check(&output_file).unwrap();
+}
+
+fn epub_check(path: &Path) -> Result<(), Error> {
+    let cmd = Command::new("epubcheck").arg(path).output();
+
+    match cmd {
+        Ok(output) => {
+            if output.status.success() {
+                Ok(())
+            } else {
+                let msg = failure::err_msg(format!("epubcheck failed\n{:?}", output));
+                Err(msg)
+            }
+        }
+        Err(_) => {
+            // failed to launch epubcheck, it's probably not installed
+            Ok(())
+        }
+    }
 }
 
 #[test]
