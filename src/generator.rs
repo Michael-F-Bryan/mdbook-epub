@@ -6,14 +6,14 @@ use std::fs::File;
 use mdbook::renderer::RenderContext;
 use mdbook::book::{BookItem, Chapter};
 use epub_builder::{EpubBuilder, EpubContent, ZipLibrary};
-use failure::{Error, ResultExt};
 use pulldown_cmark::{html, Parser};
 use handlebars::{Handlebars, RenderError};
 
 use crate::config::Config;
 use crate::resources::{self, Asset};
-use crate::utils::ResultExt as SyncResultExt;
 use crate::DEFAULT_CSS;
+
+use super::Error;
 
 /// The actual EPUB book renderer.
 pub struct Generator<'a> {
@@ -25,12 +25,11 @@ pub struct Generator<'a> {
 
 impl<'a> Generator<'a> {
     pub fn new(ctx: &'a RenderContext) -> Result<Generator<'a>, Error> {
-        let builder = EpubBuilder::new(ZipLibrary::new().sync()?).sync()?;
+        let builder = EpubBuilder::new(ZipLibrary::new()?)?;
         let config = Config::from_render_context(ctx)?;
 
         let mut hbs = Handlebars::new();
-        hbs.register_template_string("index", config.template()?)
-            .context("Couldn't parse the template")?;
+        hbs.register_template_string("index", config.template()?).map_err(|_| Error::TemplateParse)?;
 
         Ok(Generator {
             builder,
@@ -41,28 +40,26 @@ impl<'a> Generator<'a> {
     }
 
     fn populate_metadata(&mut self) -> Result<(), Error> {
-        self.builder.metadata("generator", "mdbook-epub").sync()?;
+        self.builder.metadata("generator", "mdbook-epub")?;
 
         if let Some(title) = self.ctx.config.book.title.clone() {
-            self.builder.metadata("title", title).sync()?;
+            self.builder.metadata("title", title)?;
         } else {
             warn!("No `title` attribute found yet all EPUB documents should have a title");
         }
 
         if let Some(desc) = self.ctx.config.book.description.clone() {
-            self.builder.metadata("description", desc).sync()?;
+            self.builder.metadata("description", desc)?;
         }
 
         if !self.ctx.config.book.authors.is_empty() {
             self.builder
-                .metadata("author", self.ctx.config.book.authors.join(", "))
-                .sync()?;
+                .metadata("author", self.ctx.config.book.authors.join(", "))?;
         }
 
         self.builder
-            .metadata("generator", env!("CARGO_PKG_NAME"))
-            .sync()?;
-        self.builder.metadata("lang", "en").sync()?;
+            .metadata("generator", env!("CARGO_PKG_NAME"))?;
+        self.builder.metadata("lang", "en")?;
 
         Ok(())
     }
@@ -77,7 +74,7 @@ impl<'a> Generator<'a> {
         self.embed_stylesheets()?;
         self.additional_assets()?;
         self.additional_resources()?;
-        self.builder.generate(writer).sync()?;
+        self.builder.generate(writer)?;
 
         Ok(())
     }
@@ -96,17 +93,16 @@ impl<'a> Generator<'a> {
     }
 
     fn add_chapter(&mut self, ch: &Chapter) -> Result<(), Error> {
-        let rendered = self.render_chapter(ch)
-            .sync()
-            .context("Unable to render template")?;
+        let rendered = self.render_chapter(ch)?;
+            //.with_context(|| "Unable to render template")?;
 
-        let path = ch.path.with_extension("html").display().to_string();
+        let path = ch.path.as_ref().unwrap().with_extension("html").display().to_string();
         let mut content = EpubContent::new(path, rendered.as_bytes()).title(format!("{}", ch));
 
         let level = ch.number.as_ref().map(|n| n.len() as i32 - 1).unwrap_or(0);
         content = content.level(level);
 
-        self.builder.add_content(content).sync()?;
+        self.builder.add_content(content)?;
 
         // second pass to actually add the sub-chapters
         for sub_item in &ch.sub_items {
@@ -123,7 +119,7 @@ impl<'a> Generator<'a> {
         let mut body = String::new();
         html::push_html(&mut body, Parser::new(&ch.content));
 
-        let stylesheet_path = ch.path
+        let stylesheet_path = ch.path.as_ref().unwrap()
             .parent()
             .expect("All chapters have a parent")
             .components()
@@ -142,9 +138,9 @@ impl<'a> Generator<'a> {
         debug!("Embedding stylesheets");
 
         let stylesheet = self
-            .generate_stylesheet()
-            .context("Unable to generate stylesheet")?;
-        self.builder.stylesheet(stylesheet.as_slice()).sync()?;
+            .generate_stylesheet()?;
+            //.context("Unable to generate stylesheet")?;
+        self.builder.stylesheet(stylesheet.as_slice())?;
 
         Ok(())
     }
@@ -152,13 +148,13 @@ impl<'a> Generator<'a> {
     fn additional_assets(&mut self) -> Result<(), Error> {
         debug!("Embedding additional assets");
 
-        let assets = resources::find(self.ctx)
-            .context("Inspecting the book for additional assets failed")?;
+        let assets = resources::find(self.ctx)?;
+            //.context("Inspecting the book for additional assets failed")?;
 
         for asset in assets {
             debug!("Embedding {}", asset.filename.display());
-            self.load_asset(&asset)
-                .with_context(|_| format!("Couldn't load {}", asset.filename.display()))?;
+            self.load_asset(&asset)?;
+                //.with_context(|| format!("Couldn't load {}", asset.filename.display()))?;
         }
 
         Ok(())
@@ -174,9 +170,9 @@ impl<'a> Generator<'a> {
             let full_path = path.canonicalize()?;
             let mt = mime_guess::from_path(&full_path).first_or_octet_stream();
 
-            let content = File::open(&full_path).context("Unable to open asset").unwrap();
+            let content = File::open(&full_path).map_err(|_| Error::AssetOpen)?;
 
-            self.builder.add_resource(&name, content, mt.to_string()).sync()?;
+            self.builder.add_resource(&name, content, mt.to_string())?;
         }
 
         Ok(())
@@ -190,22 +186,20 @@ impl<'a> Generator<'a> {
             let full_path = path.canonicalize()?;
             let mt = mime_guess::from_path(&full_path).first_or_octet_stream();
 
-            let content = File::open(&full_path).context("Unable to open asset")?;
+            let content = File::open(&full_path).map_err(|_| Error::AssetOpen)?;
 
-            self.builder.add_cover_image(&name, content, mt.to_string()).sync()?;
+            self.builder.add_cover_image(&name, content, mt.to_string())?;
         }
 
         Ok(())
     }
 
     fn load_asset(&mut self, asset: &Asset) -> Result<(), Error> {
-        let content = File::open(&asset.location_on_disk).context("Unable to open asset")?;
-
+        let content = File::open(&asset.location_on_disk).map_err(|_| Error::AssetOpen)?;
+            
         let mt = asset.mimetype.to_string();
 
-        self.builder
-            .add_resource(&asset.filename, content, mt)
-            .sync()?;
+        self.builder.add_resource(&asset.filename, content, mt)?;
 
         Ok(())
     }
@@ -219,10 +213,10 @@ impl<'a> Generator<'a> {
         }
 
         for additional_css in &self.config.additional_css {
-            let mut f = File::open(&additional_css)
-                .with_context(|_| format!("Unable to open {}", additional_css.display()))?;
-            f.read_to_end(&mut stylesheet)
-                .context("Error reading stylesheet")?;
+            let mut f = File::open(&additional_css).map_err(|_| Error::CssOpen(additional_css.clone()))?;
+                //.with_context(|| format!("Unable to open {}", additional_css.display()))?;
+            f.read_to_end(&mut stylesheet).map_err(|_| Error::StylesheetRead)?;
+                //.context("Error reading stylesheet")?;
         }
 
         Ok(stylesheet)
