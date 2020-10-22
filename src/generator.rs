@@ -20,7 +20,7 @@ pub struct Generator<'a> {
     ctx: &'a RenderContext,
     builder: EpubBuilder<ZipLibrary>,
     config: Config,
-    hbs: Handlebars,
+    hbs: Handlebars<'a>,
 }
 
 impl<'a> Generator<'a> {
@@ -96,25 +96,33 @@ impl<'a> Generator<'a> {
     }
 
     fn add_chapter(&mut self, ch: &Chapter) -> Result<(), Error> {
-        let rendered = self.render_chapter(ch)
-            .sync()
-            .context("Unable to render template")?;
+        let rendered = self.render_chapter(ch)?;
 
-        let path = ch.path.with_extension("html").display().to_string();
-        let mut content = EpubContent::new(path, rendered.as_bytes()).title(format!("{}", ch));
+        match &ch.path {
+            Some(internal_path) => {
+                trace!("add chapter {:?} by a path = {:?}", &ch.name, internal_path.as_path());
+                let path = internal_path.with_extension("html").display().to_string();
+                let mut content = EpubContent::new(path, rendered.as_bytes()).title(format!("{}", ch));
 
-        let level = ch.number.as_ref().map(|n| n.len() as i32 - 1).unwrap_or(0);
-        content = content.level(level);
+                let level = ch.number.as_ref().map(|n| n.len() as i32 - 1).unwrap_or(0);
+                content = content.level(level);
 
-        self.builder.add_content(content).sync()?;
+                self.builder.add_content(content).sync()?;
 
-        // second pass to actually add the sub-chapters
-        for sub_item in &ch.sub_items {
-            if let BookItem::Chapter(ref sub_ch) = *sub_item {
-                self.add_chapter(sub_ch)?;
+                // second pass to actually add the sub-chapters
+                for sub_item in &ch.sub_items {
+                    if let BookItem::Chapter(ref sub_ch) = *sub_item {
+                        trace!("add sub-item = {:?}", sub_ch.name);
+                        self.add_chapter(sub_ch)?;
+                    }
+                }
+            },
+            None => {
+                let error = failure::err_msg(format!("No content file is found by a path = {:?}", ch.path));
+                error!("{:?}", error);
+                return Err(error);
             }
         }
-
         Ok(())
     }
 
@@ -123,18 +131,27 @@ impl<'a> Generator<'a> {
         let mut body = String::new();
         html::push_html(&mut body, Parser::new(&ch.content));
 
-        let stylesheet_path = ch.path
-            .parent()
-            .expect("All chapters have a parent")
-            .components()
-            .map(|_| "..")
-            .chain(iter::once("stylesheet.css"))
-            .collect::<Vec<_>>()
-            .join("/");
+        match &ch.path {
+            Some(css_path) => {
+                let stylesheet_path = css_path
+                    .parent()
+                    .expect("All chapters have a parent")
+                    .components()
+                    .map(|_| "..")
+                    .chain(iter::once("stylesheet.css"))
+                    .collect::<Vec<_>>()
+                    .join("/");
 
-        let ctx = json!({ "title": ch.name, "body": body, "stylesheet": stylesheet_path });
+                let ctx = json!({ "title": ch.name, "body": body, "stylesheet": stylesheet_path });
 
-        self.hbs.render("index", &ctx)
+                self.hbs.render("index", &ctx)
+            },
+            None => {
+                let error = RenderError::new(format!("No CSS found by a path = {:?}", ch.path));
+                error!("{:?}", error);
+                return Err(error);
+            }
+        }
     }
 
     /// Generate the stylesheet and add it to the document.

@@ -7,7 +7,7 @@ extern crate tempdir;
 use epub::doc::EpubDoc;
 use std::path::Path;
 use std::process::Command;
-use failure::{Error, SyncFailure};
+use failure::{Error};
 use tempdir::TempDir;
 use mdbook::renderer::RenderContext;
 use mdbook::MDBook;
@@ -101,14 +101,15 @@ fn create_dummy_book() -> Result<(RenderContext, MDBook, TempDir), Error> {
         .join("tests")
         .join("dummy");
 
-    let md = MDBook::load(dummy_book).map_err(SyncFailure::new)?;
+    let md = MDBook::load(dummy_book);
 
+    let book = md.expect("dummy MDBook is not loaded");
     let ctx = RenderContext::new(
-        md.root.clone(),
-        md.book.clone(),
-        md.config.clone(),
+        book.root.clone(),
+        book.book.clone(),
+        book.config.clone(),
         temp.path().to_path_buf(),
     );
 
-    Ok((ctx, md, temp))
+    Ok((ctx, book, temp))
 }
