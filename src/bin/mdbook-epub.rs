@@ -43,7 +43,6 @@ fn run(args: &Args) -> Result<(), Error> {
     // get a `RenderContext`, either from stdin (because we're used as a plugin)
     // or by instrumenting MDBook directly (in standalone mode).
     let ctx: RenderContext = if args.standalone {
-        let book_root_clone = args.root.clone();
         let error = format!("book.toml root file is not found by a path {:?}",
                             &args.root.display());
         let md = MDBook::load(&args.root).expect(&error);
