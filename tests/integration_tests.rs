@@ -1,5 +1,4 @@
 extern crate epub;
-extern crate failure;
 extern crate mdbook;
 extern crate mdbook_epub;
 extern crate tempdir;
@@ -7,10 +6,10 @@ extern crate tempdir;
 use epub::doc::EpubDoc;
 use std::path::Path;
 use std::process::Command;
-use failure::{Error};
 use tempdir::TempDir;
 use mdbook::renderer::RenderContext;
 use mdbook::MDBook;
+use mdbook_epub::Error;
 
 /// Convenience function for compiling the dummy book into an `EpubDoc`.
 fn generate_epub() -> Result<EpubDoc, Error> {
@@ -19,7 +18,7 @@ fn generate_epub() -> Result<EpubDoc, Error> {
     let output_file = mdbook_epub::output_filename(temp.path(), &ctx.config);
 
     let output_file = output_file.display().to_string();
-    EpubDoc::new(&output_file).map_err(Error::from)
+    Ok(EpubDoc::new(&output_file).map_err(|_| Error::EpubDocCreate(output_file))?)
 }
 
 #[test]
@@ -56,8 +55,7 @@ fn epub_check(path: &Path) -> Result<(), Error> {
             if output.status.success() {
                 Ok(())
             } else {
-                let msg = failure::err_msg(format!("epubcheck failed\n{:?}", output));
-                Err(msg)
+                Err(Error::EpubCheck)
             }
         }
         Err(_) => {
@@ -101,7 +99,7 @@ fn create_dummy_book() -> Result<(RenderContext, MDBook, TempDir), Error> {
         .join("tests")
         .join("dummy");
 
-    let md = MDBook::load(dummy_book);
+    let md = MDBook::load(dummy_book)?;
 
     let book = md.expect("dummy MDBook is not loaded");
     let ctx = RenderContext::new(

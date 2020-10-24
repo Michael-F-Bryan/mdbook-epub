@@ -477,8 +477,6 @@ dependencies = [
  "env_logger 0.8.1",
  "epub",
  "epub-builder",
- "failure",
- "failure_derive",
  "handlebars",
  "log 0.4.11",
  "mdbook",
@@ -490,6 +488,8 @@ dependencies = [
  "serde_json",
  "structopt",
  "tempdir",
+ "thiserror",
+ "toml",
 ]
 
 [[package]]

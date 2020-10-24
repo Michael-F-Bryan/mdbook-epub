@@ -1,4 +1,4 @@
-use failure::{self, Error, ResultExt};
+use super::Error;
 use mdbook::book::BookItem;
 use mdbook::renderer::RenderContext;
 use mime_guess::{self, Mime};
@@ -10,8 +10,7 @@ pub(crate) fn find(ctx: &RenderContext) -> Result<Vec<Asset>, Error> {
     let src_dir = ctx
         .root
         .join(&ctx.config.book.src)
-        .canonicalize()
-        .context("Unable to canonicalize the src directory")?;
+        .canonicalize()?;
 
     for section in ctx.book.iter() {
         if let BookItem::Chapter(ref ch) = *section {
@@ -19,7 +18,7 @@ pub(crate) fn find(ctx: &RenderContext) -> Result<Vec<Asset>, Error> {
 
             match &ch.path {
                 Some(asset_path) => {
-                    let full_path = src_dir.join(&asset_path);
+                    let full_path = src_dir.join(ch.path.as_ref().unwrap());
                     let parent = full_path
                         .parent()
                         .expect("All book chapters have a parent directory");
@@ -90,18 +89,10 @@ fn assets_in_markdown(src: &str, parent_dir: &Path) -> Result<Vec<PathBuf>, Erro
     for link in found {
         let link = PathBuf::from(link);
         let filename = parent_dir.join(link);
-        let filename = filename.canonicalize().with_context(|_| {
-            format!(
-                "Unable to fetch the canonical path for {}",
-                filename.display()
-            )
-        })?;
+        let filename = filename.canonicalize()?;
 
         if !filename.is_file() {
-            return Err(failure::err_msg(format!(
-                "Asset was not a file, {}",
-                filename.display()
-            )));
+            return Err(Error::AssetFile(filename));
         }
 
         assets.push(filename);

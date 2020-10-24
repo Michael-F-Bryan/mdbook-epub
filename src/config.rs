@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 use std::io::Read;
 use std::fs::File;
-use failure::{Error, ResultExt};
+use super::Error;
 use mdbook::renderer::RenderContext;
 
 pub const DEFAULT_TEMPLATE: &str = include_str!("index.hbs");
@@ -46,11 +46,8 @@ impl Config {
     pub fn template(&self) -> Result<String, Error> {
         match self.index_template {
             Some(ref filename) => {
-                let mut buffer = String::new();
-                File::open(filename)
-                    .with_context(|_| format!("Unable to open template ({})", filename.display()))?
-                    .read_to_string(&mut buffer)
-                    .context("Unable to read the template file")?;
+                let buffer = std::fs::read_to_string(filename)
+                    .map_err(|_| Error::OpenTemplate(filename.clone()))?;
 
                 Ok(buffer)
             }
