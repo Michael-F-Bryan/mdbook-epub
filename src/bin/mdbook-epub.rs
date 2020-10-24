@@ -45,7 +45,7 @@ fn run(args: &Args) -> Result<(), Error> {
     let ctx: RenderContext = if args.standalone {
         let book_root_clone = args.root.clone();
         let error = format!("book.toml root file is not found by a path {:?}",
-                        &book_root_clone.into_os_string().into_string().to_owned().unwrap());
+                            &args.root.display());
         let md = MDBook::load(&args.root).expect(&error);
         let destination = md.build_dir_for("epub");
 
