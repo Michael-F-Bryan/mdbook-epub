@@ -96,7 +96,7 @@ impl<'a> Generator<'a> {
         let rendered = self.render_chapter(ch)?;
 
         let content_path = ch.path.as_ref()
-            .ok_or_else(|| Error::ContentFileNotFound(ch.path.unwrap()))?;
+            .ok_or_else(|| Error::ContentFileNotFound(format!("Content file was not found for Chapter {}", ch.name)))?;
         trace!("add a chapter {:?} by a path = {:?}", &ch.name, content_path);
         let path = content_path.with_extension("html").display().to_string();
         let mut content = EpubContent::new(path, rendered.as_bytes()).title(format!("{}", ch));
@@ -145,7 +145,7 @@ impl<'a> Generator<'a> {
 
         let stylesheet = self
             .generate_stylesheet()?;
-        self.builder.stylesheet(stylesheet.as_slice()).sync()?;
+        self.builder.stylesheet(stylesheet.as_slice())?;
 
         Ok(())
     }

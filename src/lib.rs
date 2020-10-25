@@ -43,7 +43,10 @@ pub enum Error {
     TemplateParse,
 
     #[error("Content file was not found: \'{0}\'")]
-    ContentFileNotFound(PathBuf),
+    ContentFileNotFound(String),
+
+    #[error("{0}")]
+    AssetFileNotFound(String),
 
     #[error("Asset was not a file {0}")]
     AssetFile(PathBuf),
@@ -94,9 +97,7 @@ fn version_check(ctx: &RenderContext) -> Result<(), Error> {
 
     if !required_version.matches(&provided_version) {
         Err(Error::IncompatibleVersion(
-            MDBOOK_VERSION.to_string(), ctx.version.clone()));
-
-        Err(Error::from(e))
+            MDBOOK_VERSION.to_string(), ctx.version.clone()))
     } else {
         Ok(())
     }

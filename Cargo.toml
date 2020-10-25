@@ -36,8 +36,9 @@ env_logger = "0.8"
 log = "0.4"
 mdbook = { version = "0.4", default-features = false }
 handlebars = "3.5"
+toml = "0.5"
 
 [dev-dependencies]
 tempdir = "0.3.7"
 epub = "1.2"
-toml = "0.5"
+

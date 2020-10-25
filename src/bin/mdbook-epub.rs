@@ -1,17 +1,15 @@
 extern crate env_logger;
 #[macro_use]
 extern crate log;
-extern crate failure;
+extern crate thiserror;
 extern crate mdbook;
 extern crate mdbook_epub;
 extern crate pulldown_cmark;
 extern crate serde_json;
 extern crate structopt;
 
-use failure::{Error, ResultExt};
 use mdbook::renderer::RenderContext;
 use mdbook::MDBook;
-use std::env;
 use std::io;
 use std::path::PathBuf;
 use std::process;
@@ -38,7 +36,7 @@ fn run(args: &Args) -> Result<(), Error> {
     let ctx: RenderContext = if args.standalone {
         let error = format!("book.toml root file is not found by a path {:?}",
                             &args.root.display());
-        let md = MDBook::load(&args.root).map_err(|| Error::EpubDocCreate(error));
+        let md = MDBook::load(&args.root).expect(&error);
         let destination = md.build_dir_for("epub");
 
         RenderContext::new(md.root, md.book, md.config, destination)

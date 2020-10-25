@@ -1,6 +1,4 @@
 use std::path::PathBuf;
-use std::io::Read;
-use std::fs::File;
 use super::Error;
 use mdbook::renderer::RenderContext;
 
