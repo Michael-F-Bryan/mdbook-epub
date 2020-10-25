@@ -74,6 +74,8 @@ fn look_for_chapter_1_heading() {
     let content = doc.get_resource_str_by_path(path).unwrap();
 
     assert!(content.contains("<h1>Chapter 1</h1>"));
+    // assert!(!content.contains("{{#rustdoc_include")); // prepare fix link error
+    // assert!(content.contains("fn main() {")); // prepare fix link error
 }
 
 #[test]
@@ -101,13 +103,12 @@ fn create_dummy_book() -> Result<(RenderContext, MDBook, TempDir), Error> {
 
     let md = MDBook::load(dummy_book)?;
 
-    let book = md.expect("dummy MDBook is not loaded");
     let ctx = RenderContext::new(
-        book.root.clone(),
-        book.book.clone(),
-        book.config.clone(),
+        md.root.clone(),
+        md.book.clone(),
+        md.config.clone(),
         temp.path().to_path_buf(),
     );
 
-    Ok((ctx, book, temp))
+    Ok((ctx, md, temp))
 }
