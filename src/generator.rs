@@ -153,7 +153,10 @@ impl<'a> Generator<'a> {
     fn additional_assets(&mut self) -> Result<(), Error> {
         debug!("Embedding additional assets");
 
-        let assets = resources::find(self.ctx)?;
+        let error = String::from("Failed finding/fetch resource taken from content? Look up content for possible error...");
+        // resources::find can emit very unclear error based on internal MD content,
+        // so let's give a tip to user in error message
+        let assets = resources::find(self.ctx).expect(&error);
 
         for asset in assets {
             debug!("Embedding {}", asset.filename.display());
@@ -216,11 +219,11 @@ impl<'a> Generator<'a> {
         }
 
         for additional_css in &self.config.additional_css {
-            trace!("generating stylesheet: {:?}", &additional_css);
+            debug!("generating stylesheet: {:?}", &additional_css);
             let mut f = File::open(&additional_css).map_err(|_| Error::CssOpen(additional_css.clone()))?;
             f.read_to_end(&mut stylesheet).map_err(|_| Error::StylesheetRead)?;
         }
-
+        debug!("found style(s) = [{}]", stylesheet.len());
         Ok(stylesheet)
     }
 }

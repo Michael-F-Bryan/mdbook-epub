@@ -7,18 +7,21 @@ use std::path::{Path, PathBuf};
 
 pub(crate) fn find(ctx: &RenderContext) -> Result<Vec<Asset>, Error> {
     let mut assets = Vec::new();
+    debug!("Finding resources by:\n{:?}", ctx.config);
     let src_dir = ctx
         .root
         .join(&ctx.config.book.src)
         .canonicalize()?;
 
+    debug!("Start iteration over a [{:?}] sections in src_dir = {:?}", ctx.book.sections.len(), src_dir);
     for section in ctx.book.iter() {
         if let BookItem::Chapter(ref ch) = *section {
-            log::trace!("Searching {} for links and assets", ch);
+            debug!("Searching links and assets for: {}", ch);
 
             let asset_path = ch.path.as_ref()
                 .ok_or_else(|| Error::AssetFileNotFound(format!("Asset was not found for Chapter {}", ch.name) ))?;
             let full_path = src_dir.join(asset_path);
+            debug!("Asset full path = {:?}", full_path);
             let parent = full_path
                 .parent()
                 .expect("All book chapters have a parent directory");
@@ -26,8 +29,11 @@ pub(crate) fn find(ctx: &RenderContext) -> Result<Vec<Asset>, Error> {
 
             for full_filename in found {
                 let relative = full_filename.strip_prefix(&src_dir).unwrap();
+                debug!("An relative path to asset: {:?}", full_path);
                 assets.push(Asset::new(relative, &full_filename));
             }
+        } else {
+            debug!("That's odd! Section is not found !");
         }
     }
 
