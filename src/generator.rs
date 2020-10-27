@@ -1,7 +1,9 @@
-use std::iter;
-use std::io::{Read, Write};
-use std::fmt::{self, Debug, Formatter};
-use std::fs::File;
+use std::{iter,
+          io::{Read, Write},
+          fmt::{self, Debug, Formatter},
+          fs::File,
+          path::PathBuf
+};
 
 use mdbook::renderer::RenderContext;
 use mdbook::book::{BookItem, Chapter};
@@ -75,7 +77,7 @@ impl<'a> Generator<'a> {
         self.additional_assets()?;
         self.additional_resources()?;
         self.builder.generate(writer)?;
-
+        info!("Generating the EPUB book - DONE !");
         Ok(())
     }
 
@@ -159,7 +161,7 @@ impl<'a> Generator<'a> {
         let assets = resources::find(self.ctx).expect(&error);
 
         for asset in assets {
-            debug!("Embedding {}", asset.filename.display());
+            debug!("Embedding asset : {}", asset.filename.display());
             self.load_asset(&asset)?;
         }
 
@@ -170,14 +172,24 @@ impl<'a> Generator<'a> {
         debug!("Embedding additional resources");
 
         for path in self.config.additional_resources.iter() {
-            debug!("Embedding {:?}", path);
+            debug!("Embedding resource: {:?}", path);
 
             let name = path.file_name().unwrap_or_else(|| panic!("Can't determine file name of: {:?}", &path));
-            let full_path = path.canonicalize()?;
+            let full_path: PathBuf;
+            if let Ok(full_path_internal) = path.canonicalize() {
+                debug!("Found resource by a path = {:?}", full_path_internal);
+                full_path = full_path_internal;
+            } else {
+                debug!("Failed to find resource, trying to compose path...");
+                let full_path_composed = self.ctx.root.join(path);
+                debug!("Try embed resource by a path = {:?}", full_path_composed);
+                let error = format!("Failed to find cover image by full path-name = {:?}", full_path_composed);
+                full_path = full_path_composed.canonicalize().expect(&error);
+            }
             let mt = mime_guess::from_path(&full_path).first_or_octet_stream();
 
             let content = File::open(&full_path).map_err(|_| Error::AssetOpen)?;
-
+            debug!("Adding resource: {:?} / {:?} ", path, mt.to_string());
             self.builder.add_resource(&name, content, mt.to_string())?;
         }
 
@@ -185,15 +197,25 @@ impl<'a> Generator<'a> {
     }
 
     fn add_cover_image(&mut self) -> Result<(), Error> {
-        debug!("Adding cover image");
+        debug!("Adding cover image...");
 
         if let Some(ref path) = self.config.cover_image {
             let name = path.file_name().expect("Can't provide file name.");
-            let full_path = path.canonicalize()?;
+            let full_path: PathBuf;
+            if let Ok(full_path_internal) = path.canonicalize() {
+                debug!("Found resource by a path = {:?}", full_path_internal);
+                full_path = full_path_internal;
+            } else {
+                debug!("Failed to find resource, trying to compose path...");
+                let full_path_composed = self.ctx.root.join(path);
+                debug!("Try cover image by a path = {:?}", full_path_composed);
+                let error = format!("Failed to find cover image by full path-name = {:?}", full_path_composed);
+                full_path = full_path_composed.canonicalize().expect(&error);
+            }
             let mt = mime_guess::from_path(&full_path).first_or_octet_stream();
 
             let content = File::open(&full_path).map_err(|_| Error::AssetOpen)?;
-
+            debug!("Adding cover image: {:?} / {:?} ", path, mt.to_string());
             self.builder.add_cover_image(&name, content, mt.to_string())?;
         }
 
