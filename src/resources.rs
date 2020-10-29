@@ -2,7 +2,7 @@ use super::Error;
 use mdbook::book::BookItem;
 use mdbook::renderer::RenderContext;
 use mime_guess::{self, Mime};
-use pulldown_cmark::{Event, Parser, Tag};
+use pulldown_cmark::{Event, Parser, Options, Tag};
 use std::path::{Path, PathBuf};
 
 pub(crate) fn find(ctx: &RenderContext) -> Result<Vec<Asset>, Error> {
@@ -69,7 +69,15 @@ impl Asset {
 fn assets_in_markdown(src: &str, parent_dir: &Path) -> Result<Vec<PathBuf>, Error> {
     let mut found = Vec::new();
 
-    for event in Parser::new(src) {
+    let mut options = Options::empty();
+    options.insert(Options::ENABLE_TABLES);
+    options.insert(Options::ENABLE_FOOTNOTES);
+    options.insert(Options::ENABLE_STRIKETHROUGH);
+    options.insert(Options::ENABLE_TASKLISTS);
+
+    let pulldown_parser = Parser::new_ext(src, options);
+
+    for event in pulldown_parser {
         if let Event::Start(Tag::Image(_, dest, _)) = event {
             found.push(dest.to_string());
         }
@@ -96,7 +104,7 @@ fn assets_in_markdown(src: &str, parent_dir: &Path) -> Result<Vec<PathBuf>, Erro
 
         assets.push(filename);
     }
-
+    trace!("Assets found in content : [{}]", assets.len());
     Ok(assets)
 }
 
