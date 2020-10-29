@@ -38,7 +38,8 @@ fn run(args: &Args) -> Result<(), Error> {
                             &args.root.display());
         let md = MDBook::load(&args.root).expect(&error);
         let destination = md.build_dir_for("epub");
-
+        debug!("EPUB book destination folder is : {:?}", destination.display());
+        debug!("EPUB book config is : {:?}", md.config);
         RenderContext::new(md.root, md.book, md.config, destination)
     } else {
         serde_json::from_reader(io::stdin()).map_err(|_| Error::RenderContext)?
