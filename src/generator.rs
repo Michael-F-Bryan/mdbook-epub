@@ -174,14 +174,13 @@ impl<'a> Generator<'a> {
         for path in self.config.additional_resources.iter() {
             debug!("Embedding resource: {:?}", path);
 
-            let name = path.file_name().unwrap_or_else(|| panic!("Can't determine file name of: {:?}", &path));
             let full_path: PathBuf;
             if let Ok(full_path_internal) = path.canonicalize() {
                 debug!("Found resource by a path = {:?}", full_path_internal);
                 full_path = full_path_internal;
             } else {
                 debug!("Failed to find resource, trying to compose path...");
-                let full_path_composed = self.ctx.root.join(path);
+                let full_path_composed = self.ctx.root.join(self.ctx.config.book.src.clone()).join(path);
                 debug!("Try embed resource by a path = {:?}", full_path_composed);
                 let error = format!("Failed to find cover image by full path-name = {:?}", full_path_composed);
                 full_path = full_path_composed.canonicalize().expect(&error);
@@ -190,7 +189,7 @@ impl<'a> Generator<'a> {
 
             let content = File::open(&full_path).map_err(|_| Error::AssetOpen)?;
             debug!("Adding resource: {:?} / {:?} ", path, mt.to_string());
-            self.builder.add_resource(&name, content, mt.to_string())?;
+            self.builder.add_resource(&path, content, mt.to_string())?;
         }
 
         Ok(())
@@ -200,14 +199,13 @@ impl<'a> Generator<'a> {
         debug!("Adding cover image...");
 
         if let Some(ref path) = self.config.cover_image {
-            let name = path.file_name().expect("Can't provide file name.");
             let full_path: PathBuf;
             if let Ok(full_path_internal) = path.canonicalize() {
                 debug!("Found resource by a path = {:?}", full_path_internal);
                 full_path = full_path_internal;
             } else {
                 debug!("Failed to find resource, trying to compose path...");
-                let full_path_composed = self.ctx.root.join(path);
+                let full_path_composed = self.ctx.root.join(self.ctx.config.book.src.clone()).join(path);
                 debug!("Try cover image by a path = {:?}", full_path_composed);
                 let error = format!("Failed to find cover image by full path-name = {:?}", full_path_composed);
                 full_path = full_path_composed.canonicalize().expect(&error);
@@ -216,7 +214,7 @@ impl<'a> Generator<'a> {
 
             let content = File::open(&full_path).map_err(|_| Error::AssetOpen)?;
             debug!("Adding cover image: {:?} / {:?} ", path, mt.to_string());
-            self.builder.add_cover_image(&name, content, mt.to_string())?;
+            self.builder.add_cover_image(&path, content, mt.to_string())?;
         }
 
         Ok(())
