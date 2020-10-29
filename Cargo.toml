@@ -25,7 +25,7 @@ doc = false
 [dependencies]
 epub-builder = "0.4"
 thiserror = "1.0"
-pulldown-cmark = "0.8"
+pulldown-cmark = "0.7"
 semver = "0.9"
 serde = "1.0"
 serde_derive = "1.0"
