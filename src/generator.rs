@@ -175,15 +175,25 @@ impl<'a> Generator<'a> {
             debug!("Embedding resource: {:?}", path);
 
             let full_path: PathBuf;
-            if let Ok(full_path_internal) = path.canonicalize() {
+            if let Ok(full_path_internal) = path.canonicalize() { // try process by 'path only' first
                 debug!("Found resource by a path = {:?}", full_path_internal);
-                full_path = full_path_internal;
+                full_path = full_path_internal; // OK
             } else {
-                debug!("Failed to find resource, trying to compose path...");
+                debug!("Failed to find resource by path, trying to compose 'root + src + path'...");
+                // try process by using 'root + src + path'
                 let full_path_composed = self.ctx.root.join(self.ctx.config.book.src.clone()).join(path);
                 debug!("Try embed resource by a path = {:?}", full_path_composed);
-                let error = format!("Failed to find cover image by full path-name = {:?}", full_path_composed);
-                full_path = full_path_composed.canonicalize().expect(&error);
+                if let Ok(full_path_src) = full_path_composed.canonicalize() {
+                    full_path = full_path_src; // OK
+                } else {
+                    // try process by using 'root + path' finally
+                    let mut error = format!("Failed to find resource file by 'root + src + path' = {:?}", full_path_composed);
+                    warn!("{:?}", error);
+                    debug!("Failed to find resource, trying to compose by 'root + path' only...");
+                    let full_path_composed = self.ctx.root.join(path);
+                    error = format!("Failed to find resource file by a root + path = {:?}", full_path_composed);
+                    full_path = full_path_composed.canonicalize().expect(&error);
+                }
             }
             let mt = mime_guess::from_path(&full_path).first_or_octet_stream();
 
