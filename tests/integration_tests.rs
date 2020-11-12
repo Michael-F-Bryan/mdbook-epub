@@ -1,8 +1,8 @@
-extern crate epub;
-extern crate failure;
-extern crate mdbook;
-extern crate mdbook_epub;
-extern crate tempdir;
+use ::epub;
+use ::failure;
+use ::mdbook;
+use ::mdbook_epub;
+use ::tempdir;
 
 use epub::doc::EpubDoc;
 use std::path::Path;
