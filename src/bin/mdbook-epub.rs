@@ -1,12 +1,13 @@
-extern crate env_logger;
-extern crate failure;
-extern crate mdbook;
-extern crate mdbook_epub;
-extern crate pulldown_cmark;
-extern crate serde_json;
-extern crate structopt;
+use ::env_logger;
+#[macro_use]
+extern crate log;
+use ::failure;
+use ::mdbook;
+use ::mdbook_epub;
+use ::serde_json;
+use ::structopt;
 
-use failure::{Error, ResultExt, SyncFailure};
+use failure::{Error, ResultExt};
 use mdbook::renderer::RenderContext;
 use mdbook::MDBook;
 use std::env;
@@ -17,10 +18,12 @@ use structopt::StructOpt;
 
 fn main() {
     env_logger::init();
+    info!("Booting EPUB generator...");
     let args = Args::from_args();
+    debug!("generator args = {:?}", args);
 
     if let Err(e) = run(&args) {
-        eprintln!("Error: {}", e);
+        log::error!("{}", e);
 
         for cause in e.iter_causes() {
             eprintln!("\tCaused By: {}", cause);
@@ -39,7 +42,9 @@ fn run(args: &Args) -> Result<(), Error> {
     // get a `RenderContext`, either from stdin (because we're used as a plugin)
     // or by instrumenting MDBook directly (in standalone mode).
     let ctx: RenderContext = if args.standalone {
-        let md = MDBook::load(&args.root).map_err(SyncFailure::new)?;
+        let error = format!("book.toml root file is not found by a path {:?}",
+                            &args.root.display());
+        let md = MDBook::load(&args.root).expect(&error);
         let destination = md.build_dir_for("epub");
 
         RenderContext::new(md.root, md.book, md.config, destination)

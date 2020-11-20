@@ -20,7 +20,7 @@ pub struct Generator<'a> {
     ctx: &'a RenderContext,
     builder: EpubBuilder<ZipLibrary>,
     config: Config,
-    hbs: Handlebars,
+    hbs: Handlebars<'a>,
 }
 
 impl<'a> Generator<'a> {
@@ -96,11 +96,12 @@ impl<'a> Generator<'a> {
     }
 
     fn add_chapter(&mut self, ch: &Chapter) -> Result<(), Error> {
-        let rendered = self.render_chapter(ch)
-            .sync()
-            .context("Unable to render template")?;
+        let rendered = self.render_chapter(ch)?;
 
-        let path = ch.path.with_extension("html").display().to_string();
+        let content_path = ch.path.as_ref()
+            .ok_or_else(|| failure::err_msg(format!("No content file is found by a path = {:?}", ch.path)))?;
+        trace!("add a chapter {:?} by a path = {:?}", &ch.name, content_path);
+        let path = content_path.with_extension("html").display().to_string();
         let mut content = EpubContent::new(path, rendered.as_bytes()).title(format!("{}", ch));
 
         let level = ch.number.as_ref().map(|n| n.len() as i32 - 1).unwrap_or(0);
@@ -111,6 +112,7 @@ impl<'a> Generator<'a> {
         // second pass to actually add the sub-chapters
         for sub_item in &ch.sub_items {
             if let BookItem::Chapter(ref sub_ch) = *sub_item {
+                trace!("add sub-item = {:?}", sub_ch.name);
                 self.add_chapter(sub_ch)?;
             }
         }
@@ -123,7 +125,10 @@ impl<'a> Generator<'a> {
         let mut body = String::new();
         html::push_html(&mut body, Parser::new(&ch.content));
 
-        let stylesheet_path = ch.path
+        let css_path = ch.path.as_ref()
+            .ok_or_else(|| RenderError::new(format!("No CSS found by a path =  = {:?}", ch.path)))?;
+
+        let stylesheet_path = css_path
             .parent()
             .expect("All chapters have a parent")
             .components()

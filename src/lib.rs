@@ -1,17 +1,12 @@
 //! A `mdbook` backend for generating a book in the `EPUB` format.
 
-extern crate epub_builder;
-extern crate failure;
+use ::failure;
 #[macro_use]
 extern crate failure_derive;
-extern crate handlebars;
 #[macro_use]
 extern crate log;
-extern crate mdbook;
-extern crate mime_guess;
-extern crate pulldown_cmark;
-extern crate semver;
-extern crate serde;
+use ::mdbook;
+use ::semver;
 #[macro_use]
 extern crate serde_derive;
 #[macro_use]

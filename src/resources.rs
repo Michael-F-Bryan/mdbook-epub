@@ -17,7 +17,10 @@ pub(crate) fn find(ctx: &RenderContext) -> Result<Vec<Asset>, Error> {
         if let BookItem::Chapter(ref ch) = *section {
             log::trace!("Searching {} for links and assets", ch);
 
-            let full_path = src_dir.join(&ch.path);
+            let asset_path = ch.path.as_ref()
+                .ok_or_else(|| failure::err_msg(format!("No asset file is found by a path = {:?}", ch.path)))?;
+
+            let full_path = src_dir.join(&asset_path);
             let parent = full_path
                 .parent()
                 .expect("All book chapters have a parent directory");
