@@ -23,6 +23,8 @@ pub struct Config {
     pub additional_resources: Vec<PathBuf>,
     /// Don't render section labels.
     pub no_section_label: bool,
+    /// Use "smart quotes" instead of the usual `"` character.
+    pub curly_quotes: bool,
 }
 
 impl Config {
@@ -70,6 +72,7 @@ impl Default for Config {
             cover_image: None,
             additional_resources: Vec::new(),
             no_section_label: false,
+            curly_quotes: false,
         }
     }
 }
