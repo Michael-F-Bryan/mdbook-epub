@@ -7,7 +7,7 @@ use mdbook::renderer::RenderContext;
 use mdbook::book::{BookItem, Chapter};
 use epub_builder::{EpubBuilder, EpubContent, ZipLibrary};
 use failure::{Error, ResultExt};
-use pulldown_cmark::{html, Parser};
+use pulldown_cmark::{html, Parser, Options};
 use handlebars::{Handlebars, RenderError};
 
 use crate::config::Config;
@@ -120,10 +120,19 @@ impl<'a> Generator<'a> {
         Ok(())
     }
 
+    pub fn new_cmark_parser(text: &str) -> Parser<'_> {
+        let mut opts = Options::empty();
+        opts.insert(Options::ENABLE_TABLES);
+        opts.insert(Options::ENABLE_FOOTNOTES);
+        opts.insert(Options::ENABLE_STRIKETHROUGH);
+        opts.insert(Options::ENABLE_TASKLISTS);
+        Parser::new_ext(text, opts)
+    }
+
     /// Render the chapter into its fully formed HTML representation.
     fn render_chapter(&self, ch: &Chapter) -> Result<String, RenderError> {
         let mut body = String::new();
-        html::push_html(&mut body, Parser::new(&ch.content));
+        html::push_html(&mut body, Generator::new_cmark_parser(&ch.content));
 
         let css_path = ch.path.as_ref()
             .ok_or_else(|| RenderError::new(format!("No CSS found by a path =  = {:?}", ch.path)))?;
