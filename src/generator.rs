@@ -102,7 +102,16 @@ impl<'a> Generator<'a> {
             .ok_or_else(|| failure::err_msg(format!("No content file is found by a path = {:?}", ch.path)))?;
         trace!("add a chapter {:?} by a path = {:?}", &ch.name, content_path);
         let path = content_path.with_extension("html").display().to_string();
-        let mut content = EpubContent::new(path, rendered.as_bytes()).title(format!("{}", ch));
+
+        let title = if self.config.no_section_label {
+            ch.name.clone()
+        } else if let Some(ref section_number) = ch.number {
+            format!{"{} {}", section_number, ch.name}
+        } else {
+            ch.name.clone()
+        };
+
+        let mut content = EpubContent::new(path, rendered.as_bytes()).title(title);
 
         let level = ch.number.as_ref().map(|n| n.len() as i32 - 1).unwrap_or(0);
         content = content.level(level);
