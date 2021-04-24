@@ -1,5 +1,4 @@
 use ::epub;
-use ::failure;
 use std::env;
 use ::mdbook;
 use ::mdbook_epub;
@@ -12,11 +11,11 @@ extern crate serial_test;
 use epub::doc::EpubDoc;
 use std::path::{Path, PathBuf};
 use std::process::Command;
-use failure::{Error};
 use tempdir::TempDir;
 use std::sync::Once;
 use mdbook::renderer::RenderContext;
 use mdbook::MDBook;
+use mdbook_epub::Error;
 
 static INIT: Once = Once::new();
 
@@ -36,10 +35,13 @@ fn generate_epub() -> Result< (EpubDoc, PathBuf), Error> {
 
     // let output_file_name = output_file.display().to_string();
     match EpubDoc::new(&output_file) {
-        Ok(epub) => { 
+        Ok(epub) => {
             let result: (EpubDoc, PathBuf) = (epub, output_file);
             return Ok( result )},
-        Err(err) => return Err(err),
+        Err(err) => {
+            error!("dummy book creation error = {}", err);
+            return Err(Error::EpubDocCreate(output_file.display().to_string()))?
+        },
     }
 }
 
@@ -82,8 +84,7 @@ fn epub_check(path: &Path) -> Result<(), Error> {
             if output.status.success() {
                 Ok(())
             } else {
-                let msg = failure::err_msg(format!("epubcheck failed\n{:?}", output));
-                Err(msg)
+                Err(Error::EpubCheck)
             }
         }
         Err(_) => {
@@ -114,6 +115,8 @@ fn look_for_chapter_1_heading() {
     let content = file.unwrap();
     debug!("content = {:?}", content.len());
     assert!(content.contains("<h1>Chapter 1</h1>"));
+    // assert!(!content.contains("{{#rustdoc_include")); // prepare fix link error
+    // assert!(content.contains("fn main() {")); // prepare fix link error
 }
 
 #[test]

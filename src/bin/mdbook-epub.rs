@@ -1,20 +1,19 @@
 use ::env_logger;
 #[macro_use]
 extern crate log;
-use ::failure;
 use ::mdbook;
 use ::mdbook_epub;
 use ::serde_json;
 use ::structopt;
 
-use failure::{Error, ResultExt};
 use mdbook::renderer::RenderContext;
 use mdbook::MDBook;
-use std::env;
 use std::io;
 use std::path::PathBuf;
 use std::process;
 use structopt::StructOpt;
+
+use mdbook_epub::Error;
 
 fn main() {
     env_logger::init();
@@ -24,15 +23,6 @@ fn main() {
 
     if let Err(e) = run(&args) {
         log::error!("{}", e);
-
-        for cause in e.iter_causes() {
-            eprintln!("\tCaused By: {}", cause);
-        }
-
-        if env::var("RUST_BACKTRACE").is_ok() {
-            eprintln!();
-            eprintln!("{}", e.backtrace());
-        }
 
         process::exit(1);
     }
@@ -46,10 +36,11 @@ fn run(args: &Args) -> Result<(), Error> {
                             &args.root.display());
         let md = MDBook::load(&args.root).expect(&error);
         let destination = md.build_dir_for("epub");
-
+        debug!("EPUB book destination folder is : {:?}", destination.display());
+        debug!("EPUB book config is : {:?}", md.config);
         RenderContext::new(md.root, md.book, md.config, destination)
     } else {
-        serde_json::from_reader(io::stdin()).context("Unable to parse RenderContext")?
+        serde_json::from_reader(io::stdin()).map_err(|_| Error::RenderContext)?
     };
 
     mdbook_epub::generate(&ctx)?;

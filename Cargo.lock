@@ -490,13 +490,11 @@ dependencies = [
 
 [[package]]
 name = "mdbook-epub"
-version = "0.3.2-alpha.0"
+version = "0.3.3-alpha.0"
 dependencies = [
  "env_logger 0.8.1",
  "epub",
  "epub-builder",
- "failure",
- "failure_derive",
  "handlebars",
  "log 0.4.11",
  "mdbook",
@@ -509,6 +507,8 @@ dependencies = [
  "serial_test",
  "structopt",
  "tempdir",
+ "thiserror",
+ "toml",
 ]
 
 [[package]]
