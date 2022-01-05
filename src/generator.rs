@@ -119,7 +119,7 @@ impl<'a> Generator<'a> {
         Ok(())
     }
 
-    pub fn new_cmark_parser(text: &str) -> Parser<'_> {
+    pub fn new_cmark_parser(text: &str) -> Parser<'_, '_> {
         let mut opts = Options::empty();
         opts.insert(Options::ENABLE_TABLES);
         opts.insert(Options::ENABLE_FOOTNOTES);

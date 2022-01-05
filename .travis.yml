@@ -13,7 +13,7 @@ addons:
 
 rust:
 - stable
-- "1.40.0"
+- "1.57.0"
 - nightly
 
 os:
