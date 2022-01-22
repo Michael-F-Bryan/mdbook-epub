@@ -61,7 +61,12 @@ impl<'a> Generator<'a> {
 
         self.builder
             .metadata("generator", env!("CARGO_PKG_NAME"))?;
-        self.builder.metadata("lang", "en")?;
+
+        if let Some(lang) = self.ctx.config.book.language.clone() {
+            self.builder.metadata("lang", lang)?;
+        } else {
+            self.builder.metadata("lang", "en")?;
+        }
 
         Ok(())
     }
