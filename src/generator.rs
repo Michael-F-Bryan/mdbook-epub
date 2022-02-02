@@ -133,19 +133,26 @@ impl<'a> Generator<'a> {
         let mut body = String::new();
         html::push_html(&mut body, Generator::new_cmark_parser(&ch.content));
 
-        let css_path = ch.path.as_ref()
-            .ok_or_else(|| RenderError::new(format!("No CSS found by a path =  = {:?}", ch.path)))?;
+        let css_path = ch.path.as_ref();
 
-        let stylesheet_path = css_path
-            .parent()
-            .expect("All chapters have a parent")
-            .components()
-            .map(|_| "..")
-            .chain(iter::once("stylesheet.css"))
-            .collect::<Vec<_>>()
-            .join("/");
-
-        let ctx = json!({ "title": ch.name, "body": body, "stylesheet": stylesheet_path });
+        // match for existing or missing CSS file
+        let ctx = match css_path {
+            Some(found_css_path) => {
+                let stylesheet_path = found_css_path
+                    .parent()
+                    .expect("All chapters have a parent")
+                    .components()
+                    .map(| _ | "..")
+                    .chain(iter::once("stylesheet.css"))
+                    .collect::<Vec<_>>()
+                    .join("/");
+                json!({ "title": ch.name, "body": body, "stylesheet": stylesheet_path })
+            }
+            None => {
+                warn!("CSS not found for EPUB book");
+                json!({ "title": ch.name, "body": body})
+            }
+        };
 
         self.hbs.render("index", &ctx)
     }
