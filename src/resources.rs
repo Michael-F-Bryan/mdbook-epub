@@ -1,4 +1,5 @@
 use super::Error;
+use html_parser::{Dom, Node};
 use mdbook::book::BookItem;
 use mdbook::renderer::RenderContext;
 use mime_guess::{self, Mime};
@@ -78,10 +79,34 @@ fn assets_in_markdown(src: &str, parent_dir: &Path) -> Result<Vec<PathBuf>, Erro
     let pulldown_parser = Parser::new_ext(src, options);
 
     for event in pulldown_parser {
-        if let Event::Start(Tag::Image(_, dest, _)) = event {
-            found.push(dest.to_string());
+        match event {
+            Event::Start(Tag::Image(_, dest, _)) => {
+                found.push(dest.to_string());
+            }
+            Event::Html(html) => {
+                let content = html.clone().into_string();
+
+                if let Ok(dom) = Dom::parse(&content) {
+                    for item in dom.children {
+                        match item {
+                            Node::Element(ref element) if element.name == "img" => {
+                                if let Some(dest) = element.attributes["src"].clone() {
+                                    if !dest.starts_with("http") {
+                                        found.push(dest);
+                                    }
+                                }
+                            }
+                            _ => {}
+                        }
+                    }
+                }
+            }
+            _ => {}
         }
     }
+
+    found.sort();
+    found.dedup();
 
     // TODO: Allow linked images to be either a URL or path on disk
 
@@ -116,10 +141,13 @@ mod tests {
     fn find_images() {
         let parent_dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/dummy/src");
         let src =
-            "![Image 1](./rust-logo.png)\n[a link](to/nowhere) ![Image 2][2]\n\n[2]: reddit.svg\n";
+            "![Image 1](./rust-logo.png)\n[a link](to/nowhere) ![Image 2][2]\n\n[2]: reddit.svg\n\
+            \n\n<img alt=\"Rust Logo in html\" src=\"rust-logo.svg\" class=\"center\" style=\"width: 20%;\" />\n\n\
+            ![Image 4](./rust-logo.png)\n[a link](to/nowhere)";
         let should_be = vec![
             parent_dir.join("rust-logo.png").canonicalize().unwrap(),
             parent_dir.join("reddit.svg").canonicalize().unwrap(),
+            parent_dir.join("rust-logo.svg").canonicalize().unwrap(),
         ];
 
         let got = assets_in_markdown(src, &parent_dir).unwrap();
