@@ -259,7 +259,18 @@ impl<'a> Generator<'a> {
 
         for additional_css in &self.config.additional_css {
             debug!("generating stylesheet: {:?}", &additional_css);
-            let mut f = File::open(&additional_css).map_err(|_| Error::CssOpen(additional_css.clone()))?;
+            let full_path: PathBuf;
+            if let Ok(full_path_internal) = additional_css.canonicalize() {
+                debug!("Found stylesheet by a path = {:?}", full_path_internal);
+                full_path = full_path_internal;
+            } else {
+                debug!("Failed to find stylesheet, trying to compose path...");
+                let full_path_composed = self.ctx.root.join(additional_css);
+                debug!("Try stylesheet by a path = {:?}", full_path_composed);
+                let error = format!("Failed to find stylesheet by full path-name = {:?}", full_path_composed);
+                full_path = full_path_composed.canonicalize().expect(&error);
+            }
+            let mut f = File::open(&full_path).map_err(|_| Error::CssOpen(full_path.clone()))?;
             f.read_to_end(&mut stylesheet).map_err(|_| Error::StylesheetRead)?;
         }
         debug!("found style(s) = [{}]", stylesheet.len());
