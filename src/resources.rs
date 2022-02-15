@@ -84,15 +84,15 @@ fn assets_in_markdown(src: &str, parent_dir: &Path) -> Result<Vec<PathBuf>, Erro
                 found.push(dest.to_string());
             }
             Event::Html(html) => {
-                let content = html.clone().into_string();
+                let content = html.into_string();
 
                 if let Ok(dom) = Dom::parse(&content) {
                     for item in dom.children {
                         match item {
                             Node::Element(ref element) if element.name == "img" => {
-                                if let Some(dest) = element.attributes["src"].clone() {
+                                if let Some(dest) = &element.attributes["src"] {
                                     if !dest.starts_with("http") {
-                                        found.push(dest);
+                                        found.push(dest.clone());
                                     }
                                 }
                             }
