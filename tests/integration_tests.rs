@@ -143,6 +143,27 @@ fn rendered_document_contains_all_chapter_files_and_assets() {
     }
 }
 
+#[test]
+#[serial]
+fn straight_quotes_transformed_into_curly_quotes() {
+    init_logging();
+    debug!("straight_quotes_transformed_into_curly_quotes...");
+    let mut doc = generate_epub().unwrap();
+    debug!("doc current path = {:?}", doc.1);
+
+    let path;
+    if cfg!(target_os = "linux") {
+        path = Path::new("OEBPS").join("chapter_1.html"); // linux
+    } else {
+        path = Path::new("OEBPS/chapter_1.html").to_path_buf(); // windows with 'forward slash' /
+    }
+    let file = doc.0.get_resource_str_by_path(path);
+    let content = file.unwrap();
+    debug!("content = {:?}", content.len());
+    assert!(content.contains("<p>“One morning, when Gregor Samsa woke from troubled dreams, he found himself ‘transformed’ in his bed into a horrible vermin.”</p>"));
+}
+
+
 /// Use `MDBook::load()` to load the dummy book into memory, then set up the
 /// `RenderContext` for use the EPUB generator.
 fn create_dummy_book() -> Result<(RenderContext, MDBook, TempDir), Error> {
