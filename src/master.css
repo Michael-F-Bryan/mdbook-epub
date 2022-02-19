@@ -1,24 +1,14 @@
 /* BB eBooks BoilerPlate EPUB */
-
-
 /* Modify as Needed */
-
-
 /* NOT SUITABLE for Kindle */
-
-
 /* visit us @ http://bbebooksthailand.com/developers.html */
 
-
 /* This adds margins around every page to stop ADE's line numbers from being superimposed over content  */
-
 @page {
     margin: 10px;
 }
 
-
 /*===Reset code to prevent cross-reader strangeness===*/
-
 html,
 body,
 div,
@@ -102,6 +92,7 @@ video {
 }
 
 table {
+    /*margin: 1.0em auto;*/
     border-collapse: collapse;
     border-spacing: 0;
 }
@@ -119,30 +110,42 @@ dd {
     vertical-align: baseline;
 }
 
+a {
+    font-size: 1.0em;
+}
+/* unvisited link */
+a:link {
+}
+
+/* visited link */
+a:visited {
+}
+
+/* mouse over link */
+a:hover {
+}
+
+/* selected link */
+a:active {
+}
 
 /*===GENERAL PRESENTATION===*/
-
-
 /*===Body Presentation and Margins===*/
-
-
 /* Text alignment is still a matter of debate. Feel free to change to text-align: left; */
-
 body {
+    margin: 1em;
     text-align: justify;
     line-height: 120%;
 }
 
 
 /*===Headings===*/
-
-
 /* After page breaks, eReaders sometimes do not render margins above the content. Adjusting padding-top can help */
 
 h1 {
     text-indent: 0;
     text-align: center;
-    margin: 100px 0 0 0;
+    margin: 8px 0 0 0;
     font-size: 2.0em;
     font-weight: bold;
     page-break-before: always;
@@ -153,7 +156,7 @@ h1 {
 h2 {
     text-indent: 0;
     text-align: center;
-    margin: 50px 0 0 0;
+    margin: 10px 0 0 0;
     font-size: 1.5em;
     font-weight: bold;
     page-break-before: always;
@@ -164,6 +167,7 @@ h2 {
 h3 {
     text-indent: 0;
     text-align: left;
+    margin: 8px 0 6px 0;
     font-size: 1.4em;
     font-weight: bold;
 }
@@ -173,6 +177,7 @@ h4 {
     text-align: left;
     font-size: 1.2em;
     font-weight: bold;
+    margin: 8px 0 6px 0;
 }
 
 h5 {
@@ -180,6 +185,7 @@ h5 {
     text-align: left;
     font-size: 1.1em;
     font-weight: bold;
+    margin: 8px 0 6px 0;
 }
 
 h6 {
@@ -187,12 +193,11 @@ h6 {
     text-align: left;
     font-size: 1.0em;
     font-weight: bold;
+    margin: 8px 0 6px 0;
 }
 
 
 /* Hyphen and pagination Fixer */
-
-
 /* Note: Do not try on the Kindle, it does not recognize the hyphens property */
 
 h1,
@@ -209,35 +214,60 @@ h6 {
 
 
 /*===Paragraph Elements===*/
-
-
 /* Margins are usually added on the top, left, and right, but not on the bottom to prevent certain eReaders not collapsing white space properly */
-
-
 /*first-line indent paragraph for fiction*/
 
 p {
+    font-size: 1.0em;
     text-indent: 1.25em;
-    margin: 0;
+    margin: 0.2em;
     widows: 2;
     orphans: 2;
 }
 
 
-/* block type paragraph for non-fiction* /
-/*
-p
-{
-text-indent: 0;
-margin: 1.0em 0 0 0;
-widows: 2;
-orphans: 2;
+/* block type paragraph for non-fiction */
+p code {
+    text-indent: 0;
+    margin: 1.0em 0 0 0;
+    overflow-x: auto;
+    background: #f1f1f1;
+    color: #484848;
+    padding: 0.2em;
 }
-*/
+pre {
+    white-space: pre-wrap;       /* Since CSS 2.1 */
+    white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
+    white-space: -pre-wrap;      /* Opera 4-6 */
+    white-space: -o-pre-wrap;    /* Opera 7 */
+    word-wrap: break-word;       /* Internet Explorer 5.5+ */
+}
+pre code {
+    display: block;
+    overflow-x: auto;
+    background: #f1f1f1;
+    color: #373737;
+    padding: 0.2em;
+    overflow-wrap: break-word;
+    margin-left: 0.5em;
+}
+pre code.language-console {
+    color: #373737;
+}
+pre code.language-toml {
+    color: #000000;
+}
+pre code.language-rust {
+    color: #000000;
+}
 
+span.caption {
+    font-size: 1.0em;
+    font-weight: 600;
+    line-height: 1.45em;
+}
 
 /* for centered text and wrappers on images */
-
 p.centered {
     text-indent: 0;
     margin: 1.0em 0 0 0;
@@ -246,7 +276,6 @@ p.centered {
 
 
 /* section Breaks (can use centered-style for non-fiction) */
-
 p.centeredbreak {
     text-indent: 0;
     margin: 1.0em 0 1.0em 0;
@@ -255,7 +284,6 @@ p.centeredbreak {
 
 
 /* First sentence in chapters following heading */
-
 p.texttop {
     margin: 1.5em 0 0 0;
     text-indent: 0;
@@ -263,14 +291,12 @@ p.texttop {
 
 
 /* Use for second sentence to clear drop cap's float */
-
 p.clearit {
     clear: both;
 }
 
 
 /* 1st level TOC */
-
 p.toctext {
     margin: 0 0 0 1.5em;
     text-indent: 0;
@@ -278,7 +304,6 @@ p.toctext {
 
 
 /* 2nd level TOC */
-
 p.toctext2 {
     margin: 0 0 0 2.5em;
     text-indent: 0;
@@ -286,7 +311,6 @@ p.toctext2 {
 
 
 /*==LISTS==*/
-
 ul {
     margin: 1em 0 0 2em;
     text-align: left;
@@ -296,13 +320,17 @@ ol {
     margin: 1em 0 0 2em;
     text-align: left;
 }
+ul li code {
+    overflow-x: auto;
+    background: #f1f1f1;
+    color: #373737;
+    padding: 0.2em;
+    overflow-wrap: break-word;
+}
 
 
 /*===IN-LINE STYLES===*/
-
-
 /* Recommend avoiding use of <b>, <i>, and <u>. Use span tags instead */
-
 span.i {
     font-style: italic;
 }
@@ -321,10 +349,7 @@ span.st {
 
 
 /*==in-line combinations==*/
-
-
 /* Using something like <span class="i b">... may seem okay, but it causes problems on some eReaders */
-
 span.ib {
     font-style: italic;
     font-weight: bold;
@@ -347,23 +372,28 @@ span.ibu {
 }
 
 
-/* This fixes the bug where the text-align property of block-level elements is not recognized on iBooks 
+/* This fixes the bug where the text-align property of block-level elements is not recognized on iBooks
  example: html markup would look like <p class="centered"><span class="ipadcenterfix">Centered Content</span></p> */
-
 span.ipadcenterfix {
     text-align: center;
 }
 
 
 /*==IMAGES==*/
-
 img {
     max-width: 100%;
 }
-
+.ferris-explain {
+    width: 100px;
+}
+.center {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    width: 50%;
+}
 
 /*==TABLES==*/
-
 table {
     margin: 1.0em auto;
 }
@@ -371,13 +401,26 @@ table {
 tr,
 th,
 td {
+    padding: 3px 20px;
+    border: 1px hsl(0, 0%, 95%) solid;
     margin: 0;
-    padding: 2px;
-    border: 1px solid black;
-    font-size: 100%;
     vertical-align: baseline;
 }
-
+table thead {
+    background: rgb(204, 204, 204);
+}
+table tbody tr:nth-child(2n) {
+    background: hsl(0, 0%, 97%);
+}
+table thead th {
+    padding: 3px 20px;
+}
+table tbody tr td code {
+    display: inline;
+    padding: 0.1em 0.3em;
+    border-radius: 3px;
+    background: #f1f1f1;
+}
 
 /* Superscripted Footnote Text */
 
@@ -422,7 +465,11 @@ div.pullquote hr {
 
 
 /*==BLOCK QUOTE==*/
-
+blockquote {
+    margin: 10px 0;
+    padding: 0 20px;
+    background-color: hsl(197, 37%, 96%);
+}
 div.blockquote {
     margin: 1em 1.5em 0 1.5em;
     text-align: left;
