@@ -523,7 +523,7 @@ dependencies = [
 
 [[package]]
 name = "mdbook-epub"
-version = "0.4.15"
+version = "0.4.15-beta"
 dependencies = [
  "env_logger 0.7.1",
  "epub",
