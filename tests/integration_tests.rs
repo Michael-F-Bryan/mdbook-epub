@@ -159,7 +159,7 @@ fn straight_quotes_transformed_into_curly_quotes() {
     }
     let file = doc.0.get_resource_str_by_path(path);
     let content = file.unwrap();
-    debug!("content = {:?}", content.len());
+    debug!("content = {:?}", content);
     assert!(content.contains("<p>“One morning, when Gregor Samsa woke from troubled dreams, he found himself ‘transformed’ in his bed into a horrible vermin.”</p>"));
 }
 
