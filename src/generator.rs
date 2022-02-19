@@ -8,7 +8,7 @@ use std::{iter,
 use mdbook::renderer::RenderContext;
 use mdbook::book::{BookItem, Chapter};
 use epub_builder::{EpubBuilder, EpubContent, ZipLibrary};
-use pulldown_cmark::{html, Parser, Options};
+use pulldown_cmark::{html, Parser, Options, Event, CowStr, Tag};
 use super::Error;
 use handlebars::{Handlebars, RenderError};
 
@@ -136,7 +136,11 @@ impl<'a> Generator<'a> {
     /// Render the chapter into its fully formed HTML representation.
     fn render_chapter(&self, ch: &Chapter) -> Result<String, RenderError> {
         let mut body = String::new();
-        html::push_html(&mut body, Generator::new_cmark_parser(&ch.content));
+        let p = Generator::new_cmark_parser(&ch.content);
+        let mut converter = EventQuoteConverter::new(self.config.curly_quotes);
+        let events = p.map(|event| converter.convert(event));
+
+        html::push_html(&mut body, events);
 
         let css_path = ch.path.as_ref()
             .ok_or_else(|| RenderError::new(format!("No CSS found by a path =  = {:?}", ch.path)))?;
@@ -281,3 +285,72 @@ impl<'a> Debug for Generator<'a> {
             .finish()
     }
 }
+
+/// From `mdbook/src/utils/mod.rs`, where this is a private struct.
+struct EventQuoteConverter {
+    enabled: bool,
+    convert_text: bool,
+}
+
+impl EventQuoteConverter {
+    fn new(enabled: bool) -> Self {
+        EventQuoteConverter {
+            enabled,
+            convert_text: true,
+        }
+    }
+
+    fn convert<'a>(&mut self, event: Event<'a>) -> Event<'a> {
+        if !self.enabled {
+            return event;
+        }
+
+        match event {
+            Event::Start(Tag::CodeBlock(_)) => {
+                self.convert_text = false;
+                event
+            }
+            Event::End(Tag::CodeBlock(_)) => {
+                self.convert_text = true;
+                event
+            }
+            Event::Text(ref text) if self.convert_text => {
+                Event::Text(CowStr::from(convert_quotes_to_curly(text)))
+            }
+            _ => event,
+        }
+    }
+}
+
+fn convert_quotes_to_curly(original_text: &str) -> String {
+    // We'll consider the start to be "whitespace".
+    let mut preceded_by_whitespace = true;
+
+    original_text
+        .chars()
+        .map(|original_char| {
+            let converted_char = match original_char {
+                '\'' => {
+                    if preceded_by_whitespace {
+                        '‘'
+                    } else {
+                        '’'
+                    }
+                }
+                '"' => {
+                    if preceded_by_whitespace {
+                        '“'
+                    } else {
+                        '”'
+                    }
+                }
+                _ => original_char,
+            };
+
+            preceded_by_whitespace = original_char.is_whitespace();
+
+            converted_char
+        })
+        .collect()
+}
+

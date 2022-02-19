@@ -68,12 +68,20 @@ Recognized options:
 `additional-resources`: A list of path to files which should be added to the
 EPUB, such as typefaces. They will be added with path `OEBPS/<filename>`.
 
+`no-section-label`: In the contents list, don't prefix the chapter title with
+its section number.
+
+`curly-quotes`: Enable converting straight quotes `'x'` and `"x"` to `‘x’` and
+`“x”` (aka *smart quotes*).
+
 ```toml
 [output.epub]
 additional-css = ["./path/to/main.css"]
 use-default-css = false
 cover-image = "ebook-cover.png"
 additional-resources = ["./assets/Open-Sans-Regular.ttf"]
+no-section-label = true
+curly-quotes = true
 ```
 
 
