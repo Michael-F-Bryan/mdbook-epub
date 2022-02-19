@@ -3,6 +3,7 @@ title = "DummyBook"
 authors = []
 multilingual = false
 src = "src"
+lang = "en"
 
 [output.epub]
 curly-quotes = true

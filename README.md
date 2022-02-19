@@ -97,9 +97,9 @@ list is by no means complete, so feature requests are most welcome!
    - [ ] Actually make that stylesheet pretty enough for human consumption
 - [x] Include user-defined stylesheets and themes
 - [ ] Allow users to tweak the generated page by providing their own template
-- [ ] Ensure the generated document is viewable on the following platforms
-  - [ ] Amazon Kindle
-  - [ ] Sony PRS-T3
+- [x] Ensure the generated document is viewable on the following platforms
+  - [x] Amazon Kindle
+  - [x] Sony PRS-T3
 
 
 ## Contributing
