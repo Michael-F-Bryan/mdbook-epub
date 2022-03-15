@@ -119,7 +119,7 @@ fn assets_in_markdown(src: &str, parent_dir: &Path) -> Result<Vec<PathBuf>, Erro
     let mut assets = Vec::new();
 
     for link in found {
-        let link = PathBuf::from(link);
+        let link = PathBuf::from(normalize_path_sep(link));
         let filename = parent_dir.join(link);
         let filename = filename.canonicalize()?;
 
@@ -131,6 +131,14 @@ fn assets_in_markdown(src: &str, parent_dir: &Path) -> Result<Vec<PathBuf>, Erro
     }
     trace!("Assets found in content : [{}]", assets.len());
     Ok(assets)
+}
+
+fn normalize_path_sep(s: String) -> String {
+    if std::path::MAIN_SEPARATOR == '\\' {
+        s.replace('/', "\\")
+    } else {
+        s
+    }
 }
 
 #[cfg(test)]
