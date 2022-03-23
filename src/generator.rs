@@ -12,6 +12,7 @@ use handlebars::{Handlebars, RenderError};
 use mdbook::book::{BookItem, Chapter};
 use mdbook::renderer::RenderContext;
 use pulldown_cmark::{html, CowStr, Event, Options, Parser, Tag};
+use regex::{self, Regex};
 
 use crate::config::Config;
 use crate::resources::{self, Asset};
@@ -146,7 +147,9 @@ impl<'a> Generator<'a> {
         let mut body = String::new();
         let p = Generator::new_cmark_parser(&ch.content);
         let mut converter = EventQuoteConverter::new(self.config.curly_quotes);
-        let events = p.map(|event| converter.convert(event));
+        let events = p
+            .map(|event| converter.convert(event))
+            .map(|event| LocalMdLinkFilter {}.filter(event));
 
         html::push_html(&mut body, events);
 
@@ -394,4 +397,42 @@ fn convert_quotes_to_curly(original_text: &str) -> String {
             converted_char
         })
         .collect()
+}
+
+/// Fix links to the correct location.
+trait LinkFilter {
+    fn filter<'a>(&self, event: Event<'a>) -> Event<'a> {
+        match event {
+            Event::Start(Tag::Link(link_type, dest, title)) => {
+                Event::Start(Tag::Link(link_type, CowStr::from(self.fix(&dest)), title))
+            }
+            _ => event,
+        }
+    }
+    fn fix(&self, data: &str) -> String;
+}
+
+/// Adjusts local links that turning `.md` extensions to `.html`.
+/// From `mdbook/src/utils/mod.rs`, where this is a private fn.
+struct LocalMdLinkFilter {}
+impl LinkFilter for LocalMdLinkFilter {
+    fn fix(&self, dest: &str) -> String {
+        lazy_static! {
+            static ref SCHEME_LINK: Regex = Regex::new(r"^[a-z][a-z0-9+.-]*:").unwrap();
+            static ref MD_LINK: Regex = Regex::new(r"(?P<link>.*)\.md(?P<anchor>#.*)?").unwrap();
+        }
+        if !SCHEME_LINK.is_match(dest) {
+            if let Some(caps) = MD_LINK.captures(dest) {
+                let mut fixed_link = String::new();
+                fixed_link.push_str(&caps["link"]);
+                fixed_link.push_str(".html");
+                if let Some(anchor) = caps.name("anchor") {
+                    fixed_link.push_str(anchor.as_str());
+                }
+                debug!("Filter link: {} -> {}", dest, fixed_link);
+                return fixed_link;
+            }
+        }
+        dest.to_string()
+    }
 }

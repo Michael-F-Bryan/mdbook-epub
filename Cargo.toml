@@ -38,6 +38,8 @@ mdbook = { version = "0.4", default-features = false }
 handlebars = "4.2"
 toml = "0.5"
 html_parser = "0.6.2"
+lazy_static = "1.0"
+regex = "1.5.5"
 
 [dev-dependencies]
 tempdir = "0.3.7"
