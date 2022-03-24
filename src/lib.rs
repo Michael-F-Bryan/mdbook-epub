@@ -1,8 +1,8 @@
 //! A `mdbook` backend for generating a book in the `EPUB` format.
 
 use ::epub_builder;
-use ::thiserror::Error;
 use ::handlebars;
+use ::thiserror::Error;
 #[macro_use]
 extern crate log;
 use ::mdbook;
@@ -94,7 +94,9 @@ fn version_check(ctx: &RenderContext) -> Result<(), Error> {
 
     if !required_version.matches(&provided_version) {
         Err(Error::IncompatibleVersion(
-            MDBOOK_VERSION.to_string(), ctx.version.clone()))
+            MDBOOK_VERSION.to_string(),
+            ctx.version.clone(),
+        ))
     } else {
         Ok(())
     }
