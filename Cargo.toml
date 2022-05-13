@@ -23,16 +23,16 @@ name = "mdbook-epub"
 doc = false
 
 [dependencies]
-epub-builder = "0.5"
+epub-builder = "0.5.0"
 thiserror = "1.0"
 pulldown-cmark = "0.9"
-semver = "0.11"
+semver = "1.0"
 serde = "1.0"
 serde_derive = "1.0"
 serde_json = "1.0"
 structopt = "0.3"
 mime_guess = "2.0"
-env_logger = "0.7"
+env_logger = "0.9.0"
 log = "0.4"
 mdbook = { version = "0.4", default-features = false }
 handlebars = "4.2"
@@ -42,4 +42,4 @@ html_parser = "0.6.2"
 [dev-dependencies]
 tempdir = "0.3.7"
 epub = "1.2"
-serial_test = "0.5"
+serial_test = "0.6.0"

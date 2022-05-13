@@ -72,9 +72,7 @@ pub enum Error {
     #[error(transparent)]
     Book(#[from] mdbook::errors::Error),
     #[error(transparent)]
-    Semver(#[from] semver::SemVerError),
-    #[error(transparent)]
-    SemverReqParse(#[from] semver::ReqParseError),
+    Semver(#[from] semver::Error),
     #[error(transparent)]
     EpubBuilder(#[from] epub_builder::Error),
     #[error(transparent)]
