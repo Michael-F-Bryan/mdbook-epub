@@ -104,7 +104,7 @@ impl<'a> Generator<'a> {
 
         let content_path = ch.path.as_ref()
             .ok_or_else(|| Error::ContentFileNotFound(format!("Content file was not found for Chapter {}", ch.name)))?;
-            trace!("add a chapter {:?} by a path = {:?}", &ch.name, content_path);
+        trace!("add a chapter {:?} by a path = {:?}", &ch.name, content_path);
         let path = content_path.with_extension("html").display().to_string();
         let title = format!("{}", ch);
         let mut titleclean = String::new();
