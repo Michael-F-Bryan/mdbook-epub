@@ -8,7 +8,7 @@ use std::{iter,
 use mdbook::renderer::RenderContext;
 use mdbook::book::{BookItem, Chapter};
 use epub_builder::{EpubBuilder, EpubContent, ZipLibrary};
-use pulldown_cmark::{html, Parser, Options, Event, CowStr, Tag};
+use pulldown_cmark::{html, Parser, Options, Event, CowStr, Tag, escape};
 use super::Error;
 use handlebars::{Handlebars, RenderError};
 
@@ -104,9 +104,12 @@ impl<'a> Generator<'a> {
 
         let content_path = ch.path.as_ref()
             .ok_or_else(|| Error::ContentFileNotFound(format!("Content file was not found for Chapter {}", ch.name)))?;
-        trace!("add a chapter {:?} by a path = {:?}", &ch.name, content_path);
+            trace!("add a chapter {:?} by a path = {:?}", &ch.name, content_path);
         let path = content_path.with_extension("html").display().to_string();
-        let mut content = EpubContent::new(path, rendered.as_bytes()).title(format!("{}", ch));
+        let title = format!("{}", ch);
+        let mut titleclean = String::new();
+        escape::escape_html(&mut titleclean, &title).unwrap();
+        let mut content = EpubContent::new(path, rendered.as_bytes()).title(titleclean);
 
         let level = ch.number.as_ref().map(|n| n.len() as i32 - 1).unwrap_or(0);
         content = content.level(level);
