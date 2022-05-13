@@ -142,6 +142,8 @@ impl<'a> Generator<'a> {
         let p = Generator::new_cmark_parser(&ch.content);
         let mut converter = EventQuoteConverter::new(self.config.curly_quotes);
         let events = p.map(|event| converter.convert(event));
+        let mut codeconverter = EventCodeConverter::new();
+        let events = events.map(|event| codeconverter.convert(event));
 
         html::push_html(&mut body, events);
 
@@ -330,6 +332,38 @@ impl EventQuoteConverter {
             }
             Event::Text(ref text) if self.convert_text => {
                 Event::Text(CowStr::from(convert_quotes_to_curly(text)))
+            }
+            _ => event,
+        }
+    }
+}
+
+struct EventCodeConverter {
+    convert_code: bool
+}
+
+impl EventCodeConverter {
+    fn new() -> Self {
+        EventCodeConverter {
+            convert_code: false
+        }
+    }
+
+    fn convert<'a>(&mut self, event: Event<'a>) -> Event<'a> {
+        match event {
+            Event::Start(Tag::CodeBlock(_)) => {
+                self.convert_code = true;
+                event
+            }
+            Event::End(Tag::CodeBlock(_)) => {
+                self.convert_code = false;
+                event
+            }
+            Event::Text(ref text) if self.convert_code => {
+                Event::Text(CowStr::from(text.lines().filter(|line| !line.starts_with("# ")).collect::<Vec<&str>>().join("\n").replace("    ", "  ")))
+            }
+            Event::Code(ref text) => {
+                Event::Code(CowStr::from(text.lines().filter(|line| !line.starts_with("# ")).collect::<Vec<&str>>().join("\n").replace("    ", "  ")))
             }
             _ => event,
         }
