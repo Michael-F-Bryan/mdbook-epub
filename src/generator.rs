@@ -339,13 +339,15 @@ impl EventQuoteConverter {
 }
 
 struct EventCodeConverter {
-    convert_code: bool
+    convert_code: bool,
+    in_html: bool,
 }
 
 impl EventCodeConverter {
     fn new() -> Self {
         EventCodeConverter {
-            convert_code: false
+            convert_code: false,
+            in_html: false,
         }
     }
 
@@ -364,6 +366,19 @@ impl EventCodeConverter {
             }
             Event::Code(ref text) => {
                 Event::Code(CowStr::from(text.lines().filter(|line| !line.starts_with("# ")).collect::<Vec<&str>>().join("\n").replace("    ", "  ")))
+            },
+            Event::Html(ref text) => {
+                if text.trim_start().starts_with("<!--") {
+                    self.in_html = true;
+                }
+                if text.trim_end().ends_with("-->") {
+                    self.in_html = false;
+                }
+                if self.in_html || text.trim_start().starts_with("<!--") || text.trim_end().ends_with("-->") {
+                    Event::Html(CowStr::from(""))
+                } else {
+                    event
+                }
             }
             _ => event,
         }
