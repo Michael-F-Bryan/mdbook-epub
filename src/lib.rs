@@ -81,6 +81,8 @@ pub enum Error {
     Render(#[from] handlebars::RenderError),
     #[error(transparent)]
     TomlDeser(#[from] toml::de::Error),
+    #[error(transparent)]
+    HttpError(#[from] ureq::Error),
 }
 
 /// The exact version of `mdbook` this crate is compiled against.

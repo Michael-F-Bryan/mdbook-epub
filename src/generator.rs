@@ -9,11 +9,14 @@ use std::{
 
 use epub_builder::{EpubBuilder, EpubContent, ZipLibrary};
 use handlebars::{Handlebars, RenderError};
+use html_parser::{Dom, Node};
 use mdbook::book::{BookItem, Chapter};
 use mdbook::renderer::RenderContext;
 use pulldown_cmark::{html, CowStr, Event, Options, Parser, Tag};
+use url::Url;
 
 use crate::config::Config;
+use crate::resources::handler::{ContentRetriever, ResourceHandler};
 use crate::resources::{self, Asset};
 use crate::Error;
 use crate::DEFAULT_CSS;
@@ -25,10 +28,19 @@ pub struct Generator<'a> {
     config: Config,
     hbs: Handlebars<'a>,
     assets: HashMap<String, Asset>,
+    handler: Box<dyn ContentRetriever>,
 }
 
 impl<'a> Generator<'a> {
     pub fn new(ctx: &'a RenderContext) -> Result<Generator<'a>, Error> {
+        Self::new_with_handler(ctx, ResourceHandler)
+    }
+
+    fn new_with_handler(
+        ctx: &'a RenderContext,
+        handler: impl ContentRetriever + 'static,
+    ) -> Result<Generator<'a>, Error> {
+        let handler = Box::new(handler);
         let builder = EpubBuilder::new(ZipLibrary::new()?)?;
         let config = Config::from_render_context(ctx)?;
 
@@ -42,6 +54,7 @@ impl<'a> Generator<'a> {
             config,
             hbs,
             assets: HashMap::new(),
+            handler,
         })
     }
 
@@ -163,8 +176,11 @@ impl<'a> Generator<'a> {
     fn render_chapter(&self, ch: &Chapter) -> Result<String, RenderError> {
         let mut body = String::new();
         let p = Generator::new_cmark_parser(&ch.content);
-        let mut converter = EventQuoteConverter::new(self.config.curly_quotes);
-        let events = p.map(|event| converter.convert(event));
+        let mut quote_converter = EventQuoteConverter::new(self.config.curly_quotes);
+        let asset_link_filter = AssetLinkFilter::new(&self.assets);
+        let events = p
+            .map(|event| quote_converter.convert(event))
+            .map(|event| asset_link_filter.apply(event));
 
         html::push_html(&mut body, events);
 
@@ -202,12 +218,14 @@ impl<'a> Generator<'a> {
         // TODO: have a list of Asset URLs and try to download all of them (in parallel?)
         // to a temporary location.
         for asset in self.assets.values() {
+            self.handler.download(asset)?;
             debug!("Embedding asset : {}", asset.filename.display());
-            let content = File::open(&asset.location_on_disk).map_err(|_| Error::AssetOpen)?;
-
+            let mut content = Vec::new();
+            self.handler
+                .read(&asset.location_on_disk, &mut content)
+                .map_err(|_| Error::AssetOpen)?;
             let mt = asset.mimetype.to_string();
-
-            self.builder.add_resource(&asset.filename, content, mt)?;
+            self.builder.add_resource(&asset.filename, &*content, mt)?;
         }
         Ok(())
     }
@@ -332,7 +350,65 @@ impl<'a> Debug for Generator<'a> {
             .field("ctx", &self.ctx)
             .field("builder", &self.builder)
             .field("config", &self.config)
+            .field("assets", &self.assets.keys())
             .finish()
+    }
+}
+
+struct AssetLinkFilter<'a> {
+    assets: &'a HashMap<String, Asset>,
+}
+
+impl<'a> AssetLinkFilter<'a> {
+    fn new(assets: &'a HashMap<String, Asset>) -> Self {
+        Self { assets }
+    }
+    fn apply(&self, event: Event<'a>) -> Event<'a> {
+        match event {
+            Event::Start(Tag::Image(ty, ref url, ref title)) => {
+                if let Some(asset) = self.assets.get(&url.to_string()) {
+                    // replace original link with `cache/<hash.ext>` in book.
+                    let new = asset.filename.to_string_lossy().into();
+                    Event::Start(Tag::Image(ty, new, title.to_owned()))
+                } else {
+                    event
+                }
+            }
+            Event::Html(ref html) => {
+                let mut found = Vec::new();
+                if let Ok(dom) = Dom::parse(&html.clone().into_string()) {
+                    for item in dom.children {
+                        match item {
+                            Node::Element(ref element) if element.name == "img" => {
+                                if let Some(dest) = &element.attributes["src"] {
+                                    if Url::parse(dest).is_ok() {
+                                        debug!("Found a valid remote img src:\"{}\".", dest);
+                                        found.push(dest.to_owned());
+                                    }
+                                }
+                            }
+                            _ => {}
+                        }
+                    }
+                }
+                if found.is_empty() {
+                    event
+                } else {
+                    found.dedup();
+                    let mut content = html.clone().into_string();
+                    for link in found {
+                        if let Some(asset) = self.assets.get(link.as_str()) {
+                            let new = asset.filename.to_string_lossy();
+                            content = content.replace(link.as_str(), &new);
+                        } else {
+                            unreachable!("{link} should be replaced, but it doesn't.");
+                        }
+                    }
+                    Event::Html(CowStr::from(content))
+                }
+            }
+            _ => event,
+        }
     }
 }
 
@@ -406,9 +482,112 @@ fn convert_quotes_to_curly(original_text: &str) -> String {
 
 #[cfg(test)]
 mod tests {
+    use mime_guess::mime;
     use std::path::Path;
 
     use super::*;
+    use crate::resources::{handler::MockContentRetriever, AssetKind};
+
+    #[test]
+    fn load_assets() {
+        let png = "rust-logo.png";
+        let svg = "rust-logo.svg";
+        let url = "https://www.rust-lang.org/static/images/rust-logo-blk.svg";
+        let content = format!(
+            "# Chapter 1\n\n\
+            ![Rust Logo]({png})\n\n\
+            ![Rust Logo remote]({url})\n\n\
+            <img alt=\"Rust Logo in html\" src=\"{svg}\" />\n"
+        );
+        let destination = tempdir::TempDir::new("mdbook-epub").unwrap();
+        let json = ctx_with_template(&content, "src", destination.path()).to_string();
+        let ctx = RenderContext::from_json(json.as_bytes()).unwrap();
+
+        let mut mock_client = MockContentRetriever::new();
+        mock_client.expect_download().times(3).returning(|_| Ok(()));
+        // checks local path of assets
+        let book_source = PathBuf::from(&ctx.root)
+            .join(&ctx.config.book.src)
+            .canonicalize()
+            .unwrap();
+        let should_be_png = book_source.join(png);
+        let should_be_svg = book_source.join(svg);
+        let hashed_filename = resources::hash_link(&url.parse::<Url>().unwrap());
+        let should_be_url = destination.path().join("cache").join(hashed_filename);
+        for should_be in [should_be_svg, should_be_png, should_be_url] {
+            mock_client
+                .expect_read()
+                .times(1)
+                .withf(move |path, _| path == should_be)
+                .returning(|_, _| Ok(()));
+        }
+
+        let mut g = Generator::new_with_handler(&ctx, mock_client).unwrap();
+        g.find_assets().unwrap();
+        assert_eq!(g.assets.len(), 3);
+        g.additional_assets().unwrap();
+    }
+
+    #[test]
+    fn render_assets() {
+        let links = vec![
+            "local.webp",
+            "http://server/remote.svg",
+            "http://server/link.png",
+        ];
+        let root = tempdir::TempDir::new("mdbook-epub").unwrap();
+        let mut assets = HashMap::new();
+        assets.insert(
+            links[0].to_string(),
+            Asset {
+                location_on_disk: root.path().join("src").join(links[0]),
+                filename: PathBuf::from(links[0]),
+                mimetype: "image/webp".parse::<mime::Mime>().unwrap(),
+                source: AssetKind::Local(PathBuf::from(links[0])),
+            },
+        );
+        let url = Url::parse(links[1]).unwrap();
+        let hashed_filename = Path::new("cache").join(resources::hash_link(&url));
+        assets.insert(
+            links[1].to_string(),
+            Asset {
+                location_on_disk: root.path().join("book").join(&hashed_filename),
+                filename: hashed_filename.to_owned(),
+                mimetype: "image/svg+xml".parse::<mime::Mime>().unwrap(),
+                source: AssetKind::Remote(url),
+            },
+        );
+        let markdown_str = format!(
+            "Chapter 1\n\
+            =====\n\n\
+            * [link]({})\n\
+            * ![Local Image]({})\n\
+            * <img alt=\"Remote Image\" src=\"{}\" >\n",
+            links[2], links[0], links[1]
+        );
+
+        let filter = AssetLinkFilter::new(&assets);
+        let parser = Parser::new(&markdown_str);
+        let events = parser.map(|ev| filter.apply(ev));
+        let mut html_buf = String::new();
+        html::push_html(&mut html_buf, events);
+
+        assert_eq!(
+            html_buf,
+            format!(
+                "<h1>Chapter 1</h1>\n\
+                <ul>\n\
+                <li><a href=\"{}\">link</a></li>\n\
+                <li><img src=\"{}\" alt=\"Local Image\" /></li>\n\
+                <li><img alt=\"Remote Image\" src=\"{}\" >\n\
+                </li>\n\
+                </ul>\n",
+                links[2],
+                links[0],
+                hashed_filename.display()
+            )
+        );
+    }
 
     #[test]
     #[should_panic]
