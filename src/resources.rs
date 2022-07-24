@@ -161,7 +161,7 @@ fn assets_in_markdown(src: &str) -> Result<Vec<String>, Error> {
     Ok(found)
 }
 
-fn hash_link(url: &Url) -> String {
+pub(crate) fn hash_link(url: &Url) -> String {
     use std::collections::hash_map::DefaultHasher;
     use std::hash::{Hash, Hasher};
 
@@ -203,6 +203,52 @@ pub fn normalize_path(path: &Path) -> PathBuf {
     ret
 }
 
+pub(crate) mod handler {
+    use std::{
+        fs::{self, File, OpenOptions},
+        io::{self, Read},
+        path::Path,
+    };
+
+    #[cfg(test)]
+    use mockall::automock;
+
+    use crate::Error;
+
+    use super::{Asset, AssetKind};
+
+    #[cfg_attr(test, automock)]
+    pub(crate) trait ContentRetriever {
+        fn download(&self, assets: &Asset) -> Result<(), Error>;
+        fn read(&self, path: &Path, buffer: &mut Vec<u8>) -> Result<(), Error>;
+    }
+
+    pub(crate) struct ResourceHandler;
+
+    impl ContentRetriever for ResourceHandler {
+        fn download(&self, asset: &Asset) -> Result<(), Error> {
+            if let AssetKind::Remote(url) = &asset.source {
+                let dest = &asset.location_on_disk;
+                if dest.is_file() {
+                    debug!("Cache file {:?} to {} already exists.", dest, url);
+                } else {
+                    if let Some(cache_dir) = dest.parent() {
+                        fs::create_dir_all(cache_dir)?;
+                    }
+                    debug!("Downloading asset : {}", url);
+                    let mut file = OpenOptions::new().create(true).write(true).open(dest)?;
+                    let resp = ureq::get(url.as_str()).call()?;
+                    io::copy(&mut resp.into_reader(), &mut file)?;
+                }
+            }
+            Ok(())
+        }
+        fn read(&self, path: &Path, buffer: &mut Vec<u8>) -> Result<(), Error> {
+            File::open(path)?.read_to_end(buffer)?;
+            Ok(())
+        }
+    }
+}
 #[cfg(test)]
 mod tests {
     use serde_json::{json, Value};
