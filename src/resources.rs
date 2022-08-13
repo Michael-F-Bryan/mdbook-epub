@@ -1,13 +1,17 @@
-use super::Error;
 use html_parser::{Dom, Node};
 use mdbook::book::BookItem;
 use mdbook::renderer::RenderContext;
-use mime_guess::{self, Mime};
+use mime_guess::Mime;
 use pulldown_cmark::{Event, Options, Parser, Tag};
-use std::path::{Path, PathBuf};
+use std::collections::HashMap;
+use std::ffi::OsStr;
+use std::path::{Component, Path, PathBuf};
+use url::Url;
 
-pub(crate) fn find(ctx: &RenderContext) -> Result<Vec<Asset>, Error> {
-    let mut assets = Vec::new();
+use crate::Error;
+
+pub(crate) fn find(ctx: &RenderContext) -> Result<HashMap<String, Asset>, Error> {
+    let mut assets: HashMap<String, Asset> = HashMap::new();
     debug!("Finding resources by:\n{:?}", ctx.config);
     let src_dir = ctx.root.join(&ctx.config.book.src).canonicalize()?;
 
@@ -19,21 +23,16 @@ pub(crate) fn find(ctx: &RenderContext) -> Result<Vec<Asset>, Error> {
     for section in ctx.book.iter() {
         if let BookItem::Chapter(ref ch) = *section {
             debug!("Searching links and assets for: {}", ch);
-
-            let asset_path = ch.path.as_ref().ok_or_else(|| {
-                Error::AssetFileNotFound(format!("Asset was not found for Chapter {}", ch.name))
-            })?;
-            let full_path = src_dir.join(asset_path);
-            debug!("Asset full path = {:?}", full_path);
-            let parent = full_path
-                .parent()
-                .expect("All book chapters have a parent directory");
-            let found = assets_in_markdown(&ch.content, parent)?;
-
-            for full_filename in found {
-                let relative = full_filename.strip_prefix(&src_dir).unwrap();
-                debug!("An relative path to asset: {:?}", full_path);
-                assets.push(Asset::new(relative, &full_filename));
+            if ch.path.is_none() {
+                debug!("{} is a draft chapter and should be no content.", ch.name);
+                continue;
+            }
+            for link in assets_in_markdown(&ch.content)? {
+                let asset = match Url::parse(&link) {
+                    Ok(url) => Asset::from_url(url, &ctx.destination),
+                    Err(_) => Asset::from_local(&link, &src_dir, ch.path.as_ref().unwrap()),
+                }?;
+                assets.insert(link, asset);
             }
         } else {
             debug!("That's odd! Section is not found !");
@@ -44,32 +43,81 @@ pub(crate) fn find(ctx: &RenderContext) -> Result<Vec<Asset>, Error> {
 }
 
 #[derive(Clone, PartialEq, Debug)]
+pub(crate) enum AssetKind {
+    Remote(Url),
+    Local(PathBuf),
+}
+
+#[derive(Clone, PartialEq, Debug)]
 pub(crate) struct Asset {
     /// The asset's absolute location on disk.
     pub(crate) location_on_disk: PathBuf,
-    /// The asset's filename relative to the `src/` directory.
+    /// The asset's filename relative to the `src/` directory. If it's a remote
+    /// asset it relative to the destination where the book generated.
     pub(crate) filename: PathBuf,
     pub(crate) mimetype: Mime,
+    /// The asset's original link as a enum [local][AssetKind::Local] or [remote][AssetKind::Remote].
+    pub(crate) source: AssetKind,
 }
 
 impl Asset {
-    fn new<P, Q>(filename: P, absolute_location: Q) -> Asset
+    pub(crate) fn new<P, Q, K>(filename: P, absolute_location: Q, source: K) -> Self
     where
         P: Into<PathBuf>,
         Q: Into<PathBuf>,
+        K: Into<AssetKind>,
     {
         let location_on_disk = absolute_location.into();
         let mt = mime_guess::from_path(&location_on_disk).first_or_octet_stream();
-
-        Asset {
+        let source = source.into();
+        Self {
             location_on_disk,
             filename: filename.into(),
             mimetype: mt,
+            source,
         }
+    }
+
+    fn from_url(url: Url, dest_dir: &Path) -> Result<Asset, Error> {
+        let filename = hash_link(&url);
+        let dest_dir = normalize_path(dest_dir);
+        let full_filename = dest_dir.join("cache").join(filename);
+        // Will fetch assets to normalized path later. fs::canonicalize() only works for existed path.
+        let absolute_location = normalize_path(full_filename.as_path());
+        let filename = absolute_location.strip_prefix(dest_dir).unwrap();
+        let asset = Asset::new(filename, &absolute_location, AssetKind::Remote(url));
+        trace!("{:#?}", asset);
+        Ok(asset)
+    }
+
+    fn from_local(link: &str, src_dir: &Path, chapter_path: &Path) -> Result<Asset, Error> {
+        let full_path = src_dir.join(chapter_path);
+        let asset_path = full_path.parent().ok_or_else(|| {
+            Error::AssetFileNotFound(format!(
+                "All book chapters have a parent directory: {:?}",
+                full_path
+            ))
+        })?;
+        let relative_link = PathBuf::from(link);
+        let full_filename = asset_path.join(&relative_link);
+        let absolute_location = full_filename
+            .canonicalize()
+            .map_err(|_| Error::AssetFileNotFound(format!("Asset was not found: {}", link)))?;
+        if !absolute_location.is_file() {
+            return Err(Error::AssetFile(absolute_location));
+        }
+        let filename = absolute_location.strip_prefix(src_dir).unwrap();
+        let asset = Asset::new(
+            filename,
+            &absolute_location,
+            AssetKind::Local(relative_link),
+        );
+        trace!("{:#?}", asset);
+        Ok(asset)
     }
 }
 
-fn assets_in_markdown(src: &str, parent_dir: &Path) -> Result<Vec<PathBuf>, Error> {
+fn assets_in_markdown(src: &str) -> Result<Vec<String>, Error> {
     let mut found = Vec::new();
 
     let mut options = Options::empty();
@@ -109,34 +157,56 @@ fn assets_in_markdown(src: &str, parent_dir: &Path) -> Result<Vec<PathBuf>, Erro
 
     found.sort();
     found.dedup();
+    trace!("Assets found in content : [{}]", found.len());
+    Ok(found)
+}
 
-    // TODO: Allow linked images to be either a URL or path on disk
+fn hash_link(url: &Url) -> String {
+    use std::collections::hash_map::DefaultHasher;
+    use std::hash::{Hash, Hasher};
 
-    // I'm assuming you'd just determine if each link is a URL or filename so
-    // the `find()` function can put together a deduplicated list of URLs and
-    // try to download all of them (in parallel?) to a temporary location. It'd
-    // be nice if we could have some sort of caching mechanism by using the
-    // destination directory (hash the URL and store it as
-    // `book/epub/cache/$hash.$ext`?).
-    let mut assets = Vec::new();
+    let mut hasher = DefaultHasher::new();
+    url.hash(&mut hasher);
+    let path = PathBuf::from(url.path());
+    let ext = path
+        .extension()
+        .and_then(OsStr::to_str)
+        .unwrap_or_else(|| panic!("Unable to extract file ext from {url}"));
+    format!("{:x}.{}", hasher.finish(), ext)
+}
 
-    for link in found {
-        let link = PathBuf::from(link);
-        let filename = parent_dir.join(link);
-        let filename = filename.canonicalize()?;
+// From cargo/util/paths.rs
+pub fn normalize_path(path: &Path) -> PathBuf {
+    let mut components = path.components().peekable();
+    let mut ret = if let Some(c @ Component::Prefix(..)) = components.peek().cloned() {
+        components.next();
+        PathBuf::from(c.as_os_str())
+    } else {
+        PathBuf::new()
+    };
 
-        if !filename.is_file() {
-            return Err(Error::AssetFile(filename));
+    for component in components {
+        match component {
+            Component::Prefix(..) => unreachable!(),
+            Component::RootDir => {
+                ret.push(component.as_os_str());
+            }
+            Component::CurDir => {}
+            Component::ParentDir => {
+                ret.pop();
+            }
+            Component::Normal(c) => {
+                ret.push(c);
+            }
         }
-
-        assets.push(filename);
     }
-    trace!("Assets found in content : [{}]", assets.len());
-    Ok(assets)
+    ret
 }
 
 #[cfg(test)]
 mod tests {
+    use serde_json::{json, Value};
+
     use super::*;
 
     #[test]
@@ -152,8 +222,104 @@ mod tests {
             parent_dir.join("rust-logo.svg").canonicalize().unwrap(),
         ];
 
-        let got = assets_in_markdown(src, &parent_dir).unwrap();
+        let got = assets_in_markdown(src)
+            .unwrap()
+            .into_iter()
+            .map(|a| parent_dir.join(a).canonicalize().unwrap())
+            .collect::<Vec<_>>();
 
         assert_eq!(got, should_be);
+    }
+
+    #[test]
+    fn find_local_asset() {
+        let link = "./rust-logo.png";
+        let temp = tempdir::TempDir::new("mdbook-epub").unwrap();
+        let dest_dir = temp.path().to_string_lossy().to_string();
+        let chapters = json!([
+        {"Chapter": {
+            "name": "Chapter 1",
+            "content": format!("# Chapter 1\r\n\r\n![Image]({link})"),
+            "number": [1],
+            "sub_items": [],
+            "path": "chapter_1.md",
+            "parent_names": []}}]);
+        let ctx = ctx_with_chapters(&chapters, &dest_dir).unwrap();
+
+        let mut assets = find(&ctx).unwrap();
+        assert!(assets.len() == 1);
+        let got = assets.remove(link).unwrap();
+
+        let path = PathBuf::from(link);
+        let filename = normalize_path(&path);
+        let absolute_location = PathBuf::from(&ctx.root)
+            .join(&ctx.config.book.src)
+            .join(&filename)
+            .canonicalize()
+            .unwrap();
+        let source = AssetKind::Local(path);
+        let should_be = Asset::new(filename, absolute_location, source);
+        assert_eq!(got, should_be);
+    }
+
+    #[test]
+    fn find_remote_asset() {
+        let link = "https://www.rust-lang.org/static/images/rust-logo-blk.svg";
+        let link_parsed = Url::parse(link).unwrap();
+        let temp = tempdir::TempDir::new("mdbook-epub").unwrap();
+        let dest_dir = temp.path().to_string_lossy().to_string();
+        let chapters = json!([
+        {"Chapter": {
+            "name": "Chapter 1",
+            "content": format!("# Chapter 1\r\n\r\n![Image]({link})"),
+            "number": [1],
+            "sub_items": [],
+            "path": "chapter_1.md",
+            "parent_names": []}}]);
+        let ctx = ctx_with_chapters(&chapters, &dest_dir).unwrap();
+
+        let mut assets = find(&ctx).unwrap();
+
+        assert!(assets.len() == 1);
+        let got = assets.remove(link).unwrap();
+
+        let filename = PathBuf::from("cache").join(hash_link(&link_parsed));
+        let absolute_location = temp.path().join(&filename);
+        let source = AssetKind::Remote(link_parsed);
+        let should_be = Asset::new(filename, absolute_location, source);
+        assert_eq!(got, should_be);
+    }
+
+    #[test]
+    fn find_draft_chapter_without_error() {
+        let temp = tempdir::TempDir::new("mdbook-epub").unwrap();
+        let dest_dir = temp.into_path().to_string_lossy().to_string();
+        let chapters = json!([
+        {"Chapter": {
+            "name": "Chapter 1",
+            "content": "",
+            "number": [1],
+            "sub_items": [],
+            "path": null,
+            "parent_names": []}}]);
+        let ctx = ctx_with_chapters(&chapters, &dest_dir).unwrap();
+        assert!(find(&ctx).unwrap().is_empty());
+    }
+
+    fn ctx_with_chapters(
+        chapters: &Value,
+        destination: &str,
+    ) -> Result<RenderContext, mdbook::errors::Error> {
+        let json_ctx = json!({
+            "version": mdbook::MDBOOK_VERSION,
+            "root": "tests/dummy",
+            "book": {"sections": chapters, "__non_exhaustive": null},
+            "config": {
+                "book": {"authors": [], "language": "en", "multilingual": false,
+                    "src": "src", "title": "DummyBook"},
+                "output": {"epub": {"curly-quotes": true}}},
+            "destination": destination
+        });
+        RenderContext::from_json(json_ctx.to_string().as_bytes())
     }
 }
