@@ -1,4 +1,5 @@
 use std::{
+    collections::HashMap,
     fmt::{self, Debug, Formatter},
     fs::File,
     io::{Read, Write},
@@ -6,7 +7,6 @@ use std::{
     path::PathBuf,
 };
 
-use super::Error;
 use epub_builder::{EpubBuilder, EpubContent, ZipLibrary};
 use handlebars::{Handlebars, RenderError};
 use mdbook::book::{BookItem, Chapter};
@@ -15,6 +15,7 @@ use pulldown_cmark::{html, CowStr, Event, Options, Parser, Tag};
 
 use crate::config::Config;
 use crate::resources::{self, Asset};
+use crate::Error;
 use crate::DEFAULT_CSS;
 
 /// The actual EPUB book renderer.
@@ -23,6 +24,7 @@ pub struct Generator<'a> {
     builder: EpubBuilder<ZipLibrary>,
     config: Config,
     hbs: Handlebars<'a>,
+    assets: HashMap<String, Asset>,
 }
 
 impl<'a> Generator<'a> {
@@ -39,6 +41,7 @@ impl<'a> Generator<'a> {
             ctx,
             config,
             hbs,
+            assets: HashMap::new(),
         })
     }
 
@@ -75,6 +78,7 @@ impl<'a> Generator<'a> {
         info!("Generating the EPUB book");
 
         self.populate_metadata()?;
+        self.find_assets()?;
         self.generate_chapters()?;
 
         self.add_cover_image()?;
@@ -83,6 +87,20 @@ impl<'a> Generator<'a> {
         self.additional_resources()?;
         self.builder.generate(writer)?;
         info!("Generating the EPUB book - DONE !");
+        Ok(())
+    }
+
+    /// Find assets for adding to the document later. For remote linked assets, they would be
+    /// rendered differently in the document by provided information of assets.
+    fn find_assets(&mut self) -> Result<(), Error> {
+        let error = String::from("Failed finding/fetch resource taken from content? Look up content for possible error...");
+        // resources::find can emit very unclear error based on internal MD content,
+        // so let's give a tip to user in error message
+        let assets = resources::find(self.ctx).map_err(|e| {
+            error!("{}", error);
+            e
+        })?;
+        self.assets.extend(assets);
         Ok(())
     }
 
@@ -181,16 +199,16 @@ impl<'a> Generator<'a> {
     fn additional_assets(&mut self) -> Result<(), Error> {
         debug!("Embedding additional assets");
 
-        let error = String::from("Failed finding/fetch resource taken from content? Look up content for possible error...");
-        // resources::find can emit very unclear error based on internal MD content,
-        // so let's give a tip to user in error message
-        let assets = resources::find(self.ctx).expect(&error);
-
-        for asset in assets {
+        // TODO: have a list of Asset URLs and try to download all of them (in parallel?)
+        // to a temporary location.
+        for asset in self.assets.values() {
             debug!("Embedding asset : {}", asset.filename.display());
-            self.load_asset(&asset)?;
-        }
+            let content = File::open(&asset.location_on_disk).map_err(|_| Error::AssetOpen)?;
 
+            let mt = asset.mimetype.to_string();
+
+            self.builder.add_resource(&asset.filename, content, mt)?;
+        }
         Ok(())
     }
 
@@ -271,16 +289,6 @@ impl<'a> Generator<'a> {
             self.builder
                 .add_cover_image(path, content, mt.to_string())?;
         }
-
-        Ok(())
-    }
-
-    fn load_asset(&mut self, asset: &Asset) -> Result<(), Error> {
-        let content = File::open(&asset.location_on_disk).map_err(|_| Error::AssetOpen)?;
-
-        let mt = asset.mimetype.to_string();
-
-        self.builder.add_resource(&asset.filename, content, mt)?;
 
         Ok(())
     }
@@ -394,4 +402,46 @@ fn convert_quotes_to_curly(original_text: &str) -> String {
             converted_char
         })
         .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use std::path::Path;
+
+    use super::*;
+
+    #[test]
+    #[should_panic]
+    fn find_assets_with_wrong_src_dir() {
+        let json = ctx_with_template(
+            "# Chapter 1\n\n",
+            "nosuchsrc",
+            tempdir::TempDir::new("mdbook-epub").unwrap().path(),
+        )
+        .to_string();
+        let ctx = RenderContext::from_json(json.as_bytes()).unwrap();
+        let mut g = Generator::new(&ctx).unwrap();
+        g.find_assets().unwrap();
+    }
+
+    fn ctx_with_template(content: &str, source: &str, destination: &Path) -> serde_json::Value {
+        json!({
+            "version": mdbook::MDBOOK_VERSION,
+            "root": "tests/dummy",
+            "book": {"sections": [{
+                "Chapter": {
+                    "name": "Chapter 1",
+                    "content": content,
+                    "number": [1],
+                    "sub_items": [],
+                    "path": "chapter_1.md",
+                    "parent_names": []
+                }}], "__non_exhaustive": null},
+            "config": {
+                "book": {"authors": [], "language": "en", "multilingual": false,
+                    "src": source, "title": "DummyBook"},
+                "output": {"epub": {"curly-quotes": true}}},
+            "destination": destination
+        })
+    }
 }
