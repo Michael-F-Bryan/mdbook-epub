@@ -1,10 +1,11 @@
 use std::{
     collections::HashMap,
+    ffi::OsString,
     fmt::{self, Debug, Formatter},
     fs::File,
     io::{Read, Write},
     iter,
-    path::PathBuf,
+    path::{Path, PathBuf},
 };
 
 use epub_builder::{EpubBuilder, EpubContent, ZipLibrary};
@@ -174,23 +175,28 @@ impl<'a> Generator<'a> {
 
     /// Render the chapter into its fully formed HTML representation.
     fn render_chapter(&self, ch: &Chapter) -> Result<String, RenderError> {
+        let chapter_dir = if let Some(chapter_file_path) = &ch.path {
+            chapter_file_path.parent().ok_or_else(|| {
+                RenderError::new(format!("No CSS found by a path = {:?}", ch.path))
+            })?
+        } else {
+            return Err(RenderError::new(format!(
+                "Draft chapter: {} could not be rendered.",
+                ch.name
+            )));
+        };
         let mut body = String::new();
         let p = Generator::new_cmark_parser(&ch.content);
         let mut quote_converter = EventQuoteConverter::new(self.config.curly_quotes);
-        let asset_link_filter = AssetLinkFilter::new(&self.assets);
+        let ch_depth = chapter_dir.components().count();
+        let asset_link_filter = AssetLinkFilter::new(&self.assets, ch_depth);
         let events = p
             .map(|event| quote_converter.convert(event))
             .map(|event| asset_link_filter.apply(event));
 
         html::push_html(&mut body, events);
 
-        let css_path = ch.path.as_ref().ok_or_else(|| {
-            RenderError::new(format!("No CSS found by a path =  = {:?}", ch.path))
-        })?;
-
-        let stylesheet_path = css_path
-            .parent()
-            .expect("All chapters have a parent")
+        let stylesheet_path = chapter_dir
             .components()
             .map(|_| "..")
             .chain(iter::once("stylesheet.css"))
@@ -357,19 +363,20 @@ impl<'a> Debug for Generator<'a> {
 
 struct AssetLinkFilter<'a> {
     assets: &'a HashMap<String, Asset>,
+    depth: usize,
 }
 
 impl<'a> AssetLinkFilter<'a> {
-    fn new(assets: &'a HashMap<String, Asset>) -> Self {
-        Self { assets }
+    fn new(assets: &'a HashMap<String, Asset>, depth: usize) -> Self {
+        Self { assets, depth }
     }
     fn apply(&self, event: Event<'a>) -> Event<'a> {
         match event {
             Event::Start(Tag::Image(ty, ref url, ref title)) => {
                 if let Some(asset) = self.assets.get(&url.to_string()) {
                     // replace original link with `cache/<hash.ext>` in book.
-                    let new = asset.filename.to_string_lossy().into();
-                    Event::Start(Tag::Image(ty, new, title.to_owned()))
+                    let new = self.path_prefix(asset.filename.as_path());
+                    Event::Start(Tag::Image(ty, CowStr::from(new), title.to_owned()))
                 } else {
                     event
                 }
@@ -398,8 +405,8 @@ impl<'a> AssetLinkFilter<'a> {
                     let mut content = html.clone().into_string();
                     for link in found {
                         if let Some(asset) = self.assets.get(link.as_str()) {
-                            let new = asset.filename.to_string_lossy();
-                            content = content.replace(link.as_str(), &new);
+                            let new = self.path_prefix(asset.filename.as_path());
+                            content = content.replace(link.as_str(), &CowStr::from(new));
                         } else {
                             unreachable!("{link} should be replaced, but it doesn't.");
                         }
@@ -409,6 +416,25 @@ impl<'a> AssetLinkFilter<'a> {
             }
             _ => event,
         }
+    }
+    fn path_prefix(&self, path: &Path) -> String {
+        // compatible to Windows, translate to forawrd slash in file path.
+        let mut fsp = OsString::new();
+        for (i, component) in path.components().enumerate() {
+            if i > 0 {
+                fsp.push("/");
+            }
+            fsp.push(component);
+        }
+        let filename = match fsp.into_string() {
+            Ok(s) => s,
+            Err(orig) => orig.to_string_lossy().to_string(),
+        };
+        (0..self.depth)
+            .map(|_| "..")
+            .chain(iter::once(filename.as_str()))
+            .collect::<Vec<_>>()
+            .join("/")
     }
 }
 
@@ -547,12 +573,13 @@ mod tests {
             },
         );
         let url = Url::parse(links[1]).unwrap();
-        let hashed_filename = Path::new("cache").join(resources::hash_link(&url));
+        let hashed_filename = resources::hash_link(&url);
+        let hashed_path = Path::new("cache").join(&hashed_filename);
         assets.insert(
             links[1].to_string(),
             Asset {
-                location_on_disk: root.path().join("book").join(&hashed_filename),
-                filename: hashed_filename.to_owned(),
+                location_on_disk: root.path().join("book").join(&hashed_path),
+                filename: hashed_path,
                 mimetype: "image/svg+xml".parse::<mime::Mime>().unwrap(),
                 source: AssetKind::Remote(url),
             },
@@ -566,7 +593,7 @@ mod tests {
             links[2], links[0], links[1]
         );
 
-        let filter = AssetLinkFilter::new(&assets);
+        let filter = AssetLinkFilter::new(&assets, 0);
         let parser = Parser::new(&markdown_str);
         let events = parser.map(|ev| filter.apply(ev));
         let mut html_buf = String::new();
@@ -579,14 +606,84 @@ mod tests {
                 <ul>\n\
                 <li><a href=\"{}\">link</a></li>\n\
                 <li><img src=\"{}\" alt=\"Local Image\" /></li>\n\
-                <li><img alt=\"Remote Image\" src=\"{}\" >\n\
+                <li><img alt=\"Remote Image\" src=\"cache/{}\" >\n\
                 </li>\n\
                 </ul>\n",
-                links[2],
-                links[0],
-                hashed_filename.display()
+                links[2], links[0], hashed_filename
             )
         );
+    }
+
+    #[test]
+    fn render_remote_assets_in_sub_chapter() {
+        let link = "https://mdbook.epub/dummy.svg";
+        let dest_dir = tempdir::TempDir::new("mdbook-epub").unwrap();
+        let ch1_1 = json!({
+            "Chapter": {
+                "name": "subchapter",
+                "content": format!("# Subchapter\n\n![Image]({link})"),
+                "number": [1,1],
+                "sub_items": [],
+                "path": "chapter_1/subchapter.md",
+                "parent_names": ["Chapter 1"]
+            }
+        });
+        let ch1 = json!({
+            "Chapter": {
+                "name": "Chapter 1",
+                "content": format!("# Chapter 1\n\n![Image]({link})"),
+                "number": [1],
+                "sub_items": [ch1_1],
+                "path": "chapter_1/index.md",
+                "parent_names": []
+            }
+        });
+        let ch2 = json!({
+            "Chapter": {
+                "name": "Chapter 2",
+                "content": format!("# Chapter 2\n\n![Image]({link})"),
+                "number": [2],
+                "sub_items": [],
+                "path": "chapter_2.md",
+                "parent_names": []
+            }
+        });
+        let mut json = ctx_with_template("", "src", dest_dir.path());
+        let chvalue = json["book"]["sections"].as_array_mut().unwrap();
+        chvalue.clear();
+        chvalue.push(ch1);
+        chvalue.push(ch2);
+
+        let ctx = RenderContext::from_json(json.to_string().as_bytes()).unwrap();
+        let mut g = Generator::new(&ctx).unwrap();
+        g.find_assets().unwrap();
+        assert_eq!(g.assets.len(), 1);
+
+        let pat = |heading, prefix| {
+            format!(
+                "<h1>{}</h1>\n<p><img src=\"{}cache/811c431d49ec880b.svg\"",
+                heading, prefix
+            )
+        };
+        if let BookItem::Chapter(ref ch) = ctx.book.sections[0] {
+            let rendered: String = g.render_chapter(ch).unwrap();
+            assert!(rendered.contains(&pat("Chapter 1", "../")));
+
+            if let BookItem::Chapter(ref sub_ch) = ch.sub_items[0] {
+                let sub_rendered = g.render_chapter(sub_ch).unwrap();
+                assert!(sub_rendered.contains(&pat("Subchapter", "../")));
+            } else {
+                panic!();
+            }
+        } else {
+            panic!();
+        }
+        if let BookItem::Chapter(ref ch) = ctx.book.sections[1] {
+            let rendered: String = g.render_chapter(ch).unwrap();
+            assert!(rendered.contains(&pat("Chapter 2", "")));
+        } else {
+            panic!();
+        }
     }
 
     #[test]
