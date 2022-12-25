@@ -13,15 +13,20 @@ addons:
 
 rust:
 - stable
-- "1.57.0"
+- beta
 - nightly
+
+jobs:
+  allow_failures:
+    - rust: nightly
+  fast_finish: true
 
 os:
 - linux
 
 script:
-- cargo build --verbose
-- cargo test --verbose
+- cargo build --verbose --workspace
+- cargo test --verbose --workspace
 
 after_success:
 - test "$TRAVIS_PULL_REQUEST" == "false" && test "$TRAVIS_BRANCH" == "master" && test
