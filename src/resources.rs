@@ -141,9 +141,7 @@ fn assets_in_markdown(src: &str) -> Result<Vec<String>, Error> {
                         match item {
                             Node::Element(ref element) if element.name == "img" => {
                                 if let Some(dest) = &element.attributes["src"] {
-                                    if !dest.starts_with("http") {
-                                        found.push(dest.clone());
-                                    }
+                                    found.push(dest.clone());
                                 }
                             }
                             _ => {}
@@ -311,13 +309,14 @@ mod tests {
     #[test]
     fn find_remote_asset() {
         let link = "https://www.rust-lang.org/static/images/rust-logo-blk.svg";
+        let link2 = "https://www.rust-lang.org/static/images/rust-logo-blk.png";
         let link_parsed = Url::parse(link).unwrap();
         let temp = tempdir::TempDir::new("mdbook-epub").unwrap();
         let dest_dir = temp.path().to_string_lossy().to_string();
         let chapters = json!([
         {"Chapter": {
             "name": "Chapter 1",
-            "content": format!("# Chapter 1\r\n\r\n![Image]({link})"),
+            "content": format!("# Chapter 1\r\n\r\n![Image]({link})\r\n<a href=\"\"><img  src=\"{link2}\"></a>"),
             "number": [1],
             "sub_items": [],
             "path": "chapter_1.md",
@@ -326,7 +325,7 @@ mod tests {
 
         let mut assets = find(&ctx).unwrap();
 
-        assert!(assets.len() == 1);
+        assert!(assets.len() == 2);
         let got = assets.remove(link).unwrap();
 
         let filename = PathBuf::from("cache").join(hash_link(&link_parsed));
