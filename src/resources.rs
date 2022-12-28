@@ -106,7 +106,16 @@ impl Asset {
         if !absolute_location.is_file() {
             return Err(Error::AssetFile(absolute_location));
         }
-        let filename = absolute_location.strip_prefix(src_dir).unwrap();
+        // Use filename as embedded file path with content from absolute_location.
+        let filename = if full_filename.is_symlink() {
+            debug!(
+                "Strip symlinked asset '{:?}' prefix without canonicalized path.",
+                &relative_link
+            );
+            full_filename.strip_prefix(src_dir).unwrap()
+        } else {
+            absolute_location.strip_prefix(src_dir).unwrap()
+        };
         let asset = Asset::new(
             filename,
             &absolute_location,
@@ -155,7 +164,9 @@ fn assets_in_markdown(src: &str) -> Result<Vec<String>, Error> {
 
     found.sort();
     found.dedup();
-    trace!("Assets found in content : [{}]", found.len());
+    if !found.is_empty() {
+        trace!("Assets found in content : {:?}", found);
+    }
     Ok(found)
 }
 
@@ -278,12 +289,13 @@ mod tests {
     #[test]
     fn find_local_asset() {
         let link = "./rust-logo.png";
+        let link2 = "./epub-logo.svg";
         let temp = tempdir::TempDir::new("mdbook-epub").unwrap();
         let dest_dir = temp.path().to_string_lossy().to_string();
         let chapters = json!([
         {"Chapter": {
             "name": "Chapter 1",
-            "content": format!("# Chapter 1\r\n\r\n![Image]({link})"),
+            "content": format!("# Chapter 1\r\n\r\n![Image]({link})\r\n![Image]({link2})"),
             "number": [1],
             "sub_items": [],
             "path": "chapter_1.md",
@@ -291,19 +303,22 @@ mod tests {
         let ctx = ctx_with_chapters(&chapters, &dest_dir).unwrap();
 
         let mut assets = find(&ctx).unwrap();
-        assert!(assets.len() == 1);
-        let got = assets.remove(link).unwrap();
+        assert!(assets.len() == 2);
 
-        let path = PathBuf::from(link);
-        let filename = normalize_path(&path);
-        let absolute_location = PathBuf::from(&ctx.root)
-            .join(&ctx.config.book.src)
-            .join(&filename)
-            .canonicalize()
-            .unwrap();
-        let source = AssetKind::Local(path);
-        let should_be = Asset::new(filename, absolute_location, source);
-        assert_eq!(got, should_be);
+        fn assert_asset(a: Asset, link: &str, ctx: &RenderContext) {
+            let path = PathBuf::from(link);
+            let filename = normalize_path(&path);
+            let absolute_location = PathBuf::from(&ctx.root)
+                .join(&ctx.config.book.src)
+                .join(&filename)
+                .canonicalize()
+                .unwrap();
+            let source = AssetKind::Local(path);
+            let should_be = Asset::new(filename, absolute_location, source);
+            assert_eq!(a, should_be);
+        }
+        assert_asset(assets.remove(link).unwrap(), link, &ctx);
+        assert_asset(assets.remove(link2).unwrap(), link2, &ctx);
     }
 
     #[test]
