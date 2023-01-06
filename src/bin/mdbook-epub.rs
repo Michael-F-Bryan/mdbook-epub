@@ -8,10 +8,9 @@ use std::process;
 use ::env_logger;
 use ::mdbook;
 use ::serde_json;
-use ::structopt;
-use mdbook::MDBook;
+use clap::{value_parser, Parser};
 use mdbook::renderer::RenderContext;
-use structopt::StructOpt;
+use mdbook::MDBook;
 
 use ::mdbook_epub;
 use mdbook_epub::errors::Error;
@@ -19,7 +18,7 @@ use mdbook_epub::errors::Error;
 fn main() {
     env_logger::init();
     info!("Booting EPUB generator...");
-    let args = Args::from_args();
+    let args = Args::parse();
     debug!("prepared generator args = {:?}", args);
 
     if let Err(e) = run(&args) {
@@ -61,14 +60,16 @@ fn run(args: &Args) -> Result<(), Error> {
     Ok(())
 }
 
-#[derive(Debug, Clone, StructOpt)]
+#[derive(Debug, Clone, Parser)]
+#[command(version, about, long_about = None)]
 struct Args {
-    #[structopt(
-        short = "s",
+    #[arg(
+        short = 's',
         long = "standalone",
         help = "Run standalone (i.e. not as a mdbook plugin)"
     )]
     standalone: bool,
-    #[structopt(help = "The book to render.", parse(from_os_str), default_value = ".")]
+
+    #[arg(help = "The book to render.", value_parser = value_parser!(PathBuf), default_value = ".")]
     root: PathBuf,
 }
