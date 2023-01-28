@@ -92,14 +92,10 @@ impl Asset {
 
     fn from_local(link: &str, src_dir: &Path, chapter_path: &Path) -> Result<Asset, Error> {
         let full_path = src_dir.join(chapter_path);
-        let asset_path = full_path.parent().ok_or_else(|| {
-            Error::AssetFileNotFound(format!(
-                "All book chapters have a parent directory: {:?}",
-                full_path
-            ))
-        })?;
         let relative_link = PathBuf::from(link);
-        let full_filename = asset_path.join(&relative_link);
+        // Since chapter_path is some file and joined with src_dir, it's safe to
+        // unwrap parent here.
+        let full_filename = full_path.parent().unwrap().join(&relative_link);
         let absolute_location = full_filename
             .canonicalize()
             .map_err(|_| Error::AssetFileNotFound(format!("Asset was not found: {}", link)))?;
@@ -228,13 +224,6 @@ pub(crate) mod handler {
 
     #[cfg_attr(test, automock)]
     pub(crate) trait ContentRetriever {
-        fn download(&self, assets: &Asset) -> Result<(), Error>;
-        fn read(&self, path: &Path, buffer: &mut Vec<u8>) -> Result<(), Error>;
-    }
-
-    pub(crate) struct ResourceHandler;
-
-    impl ContentRetriever for ResourceHandler {
         fn download(&self, asset: &Asset) -> Result<(), Error> {
             if let AssetKind::Remote(url) = &asset.source {
                 let dest = &asset.location_on_disk;
@@ -246,8 +235,8 @@ pub(crate) mod handler {
                     }
                     debug!("Downloading asset : {}", url);
                     let mut file = OpenOptions::new().create(true).write(true).open(dest)?;
-                    let resp = ureq::get(url.as_str()).call()?;
-                    io::copy(&mut resp.into_reader(), &mut file)?;
+                    let mut resp = self.retrieve(url.as_str())?;
+                    io::copy(&mut resp, &mut file)?;
                 }
             }
             Ok(())
@@ -256,8 +245,95 @@ pub(crate) mod handler {
             File::open(path)?.read_to_end(buffer)?;
             Ok(())
         }
+        fn retrieve(&self, url: &str) -> Result<Box<(dyn Read + Send + Sync + 'static)>, Error>;
+    }
+
+    pub(crate) struct ResourceHandler;
+    impl ContentRetriever for ResourceHandler {
+        fn retrieve(&self, url: &str) -> Result<Box<(dyn Read + Send + Sync + 'static)>, Error> {
+            let res = ureq::get(url).call()?;
+            match res.status() {
+                200 => Ok(res.into_reader()),
+                404 => Err(Error::AssetFileNotFound(format!(
+                    "Missing remote resource: {}",
+                    url
+                ))),
+                _ => unreachable!("Unexpected response status"),
+            }
+        }
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::ContentRetriever;
+        use crate::{resources::Asset, Error};
+        use tempdir::TempDir;
+
+        type BoxRead = Box<(dyn std::io::Read + Send + Sync + 'static)>;
+
+        #[test]
+        fn download_success() {
+            use std::io::Read;
+
+            struct TestHandler;
+            impl ContentRetriever for TestHandler {
+                fn retrieve(&self, _url: &str) -> Result<BoxRead, Error> {
+                    Ok(Box::new("donwload content".as_bytes()))
+                }
+            }
+            let cr = TestHandler {};
+            let a = temp_remote_asset("https://mdbook-epub.org/image.svg").unwrap();
+            let r = cr.download(&a);
+
+            assert!(r.is_ok());
+            let mut buffer = String::new();
+            let mut f = std::fs::File::open(&a.location_on_disk).unwrap();
+            f.read_to_string(&mut buffer).unwrap();
+            assert_eq!(buffer, "donwload content");
+        }
+
+        #[test]
+        fn download_fail_when_resource_not_exist() {
+            struct TestHandler;
+            impl ContentRetriever for TestHandler {
+                fn retrieve(&self, url: &str) -> Result<BoxRead, Error> {
+                    Err(Error::AssetFileNotFound(format!(
+                        "Missing remote resource: {}",
+                        url
+                    )))
+                }
+            }
+            let cr = TestHandler {};
+            let a = temp_remote_asset("https://mdbook-epub.org/not-exist.svg").unwrap();
+            let r = cr.download(&a);
+
+            assert!(r.is_err());
+            assert!(matches!(r.unwrap_err(), Error::AssetFileNotFound(_)));
+        }
+
+        #[test]
+        #[should_panic(expected = "NOT 200 or 404")]
+        fn download_fail_with_unexpected_status() {
+            struct TestHandler;
+            impl ContentRetriever for TestHandler {
+                fn retrieve(&self, _url: &str) -> Result<BoxRead, Error> {
+                    panic!("NOT 200 or 404")
+                }
+            }
+            let cr = TestHandler {};
+            let a = temp_remote_asset("https://mdbook-epub.org/bad.svg").unwrap();
+            let r = cr.download(&a);
+
+            panic!("{}", r.unwrap_err().to_string());
+        }
+
+        fn temp_remote_asset(url: &str) -> Result<Asset, Error> {
+            let dest_dir = TempDir::new("mdbook-epub")?;
+            Asset::from_url(url::Url::parse(url).unwrap(), dest_dir.path())
+        }
     }
 }
+
 #[cfg(test)]
 mod tests {
     use serde_json::{json, Value};
@@ -364,6 +440,32 @@ mod tests {
             "parent_names": []}}]);
         let ctx = ctx_with_chapters(&chapters, &dest_dir).unwrap();
         assert!(find(&ctx).unwrap().is_empty());
+    }
+
+    #[test]
+    #[should_panic(expected = "Asset was not found")]
+    fn find_asset_fail_when_chapter_dir_not_exist() {
+        panic!(
+            "{}",
+            Asset::from_local("a.png", Path::new("tests/dummy/src"), Path::new("ch/a.md"))
+                .unwrap_err()
+                .to_string()
+        );
+    }
+
+    #[test]
+    #[should_panic(expected = "Asset was not a file")]
+    fn find_asset_fail_when_it_is_a_dir() {
+        panic!(
+            "{}",
+            Asset::from_local(
+                "wikimedia",
+                Path::new("tests/dummy"),
+                Path::new("third_party/a.md")
+            )
+            .unwrap_err()
+            .to_string()
+        );
     }
 
     fn ctx_with_chapters(
