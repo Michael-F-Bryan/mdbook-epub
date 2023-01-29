@@ -3,24 +3,26 @@ use html_parser::{Dom, Node};
 use mdbook::book::BookItem;
 use mdbook::renderer::RenderContext;
 use mime_guess::{self, Mime};
-use pulldown_cmark::{Event, Parser, Options, Tag};
+use pulldown_cmark::{Event, Options, Parser, Tag};
 use std::path::{Path, PathBuf};
 
 pub(crate) fn find(ctx: &RenderContext) -> Result<Vec<Asset>, Error> {
     let mut assets = Vec::new();
     debug!("Finding resources by:\n{:?}", ctx.config);
-    let src_dir = ctx
-        .root
-        .join(&ctx.config.book.src)
-        .canonicalize()?;
+    let src_dir = ctx.root.join(&ctx.config.book.src).canonicalize()?;
 
-    debug!("Start iteration over a [{:?}] sections in src_dir = {:?}", ctx.book.sections.len(), src_dir);
+    debug!(
+        "Start iteration over a [{:?}] sections in src_dir = {:?}",
+        ctx.book.sections.len(),
+        src_dir
+    );
     for section in ctx.book.iter() {
         if let BookItem::Chapter(ref ch) = *section {
             debug!("Searching links and assets for: {}", ch);
 
-            let asset_path = ch.path.as_ref()
-                .ok_or_else(|| Error::AssetFileNotFound(format!("Asset was not found for Chapter {}", ch.name) ))?;
+            let asset_path = ch.path.as_ref().ok_or_else(|| {
+                Error::AssetFileNotFound(format!("Asset was not found for Chapter {}", ch.name))
+            })?;
             let full_path = src_dir.join(asset_path);
             debug!("Asset full path = {:?}", full_path);
             let parent = full_path

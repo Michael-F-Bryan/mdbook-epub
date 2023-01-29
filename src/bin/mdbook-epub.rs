@@ -32,11 +32,16 @@ fn run(args: &Args) -> Result<(), Error> {
     // get a `RenderContext`, either from stdin (because we're used as a plugin)
     // or by instrumenting MDBook directly (in standalone mode).
     let ctx: RenderContext = if args.standalone {
-        let error = format!("book.toml root file is not found by a path {:?}",
-                            &args.root.display());
+        let error = format!(
+            "book.toml root file is not found by a path {:?}",
+            &args.root.display()
+        );
         let md = MDBook::load(&args.root).expect(&error);
         let destination = md.build_dir_for("epub");
-        debug!("EPUB book destination folder is : {:?}", destination.display());
+        debug!(
+            "EPUB book destination folder is : {:?}",
+            destination.display()
+        );
         debug!("EPUB book config is : {:?}", md.config);
         RenderContext::new(md.root, md.book, md.config, destination)
     } else {
