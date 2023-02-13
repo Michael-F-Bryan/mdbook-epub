@@ -82,7 +82,13 @@ pub enum Error {
     #[error(transparent)]
     TomlDeser(#[from] toml::de::Error),
     #[error(transparent)]
-    HttpError(#[from] ureq::Error),
+    HttpError(#[from] Box<ureq::Error>),
+}
+
+impl From<ureq::Error> for Error {
+    fn from(e: ureq::Error) -> Self {
+        Error::HttpError(Box::new(e))
+    }
 }
 
 /// The exact version of `mdbook` this crate is compiled against.
@@ -92,7 +98,7 @@ pub const MDBOOK_VERSION: &str = mdbook::MDBOOK_VERSION;
 /// backend.
 fn version_check(ctx: &RenderContext) -> Result<(), Error> {
     let provided_version = Version::parse(&ctx.version)?;
-    let required_version = VersionReq::parse(&format!("~{}", MDBOOK_VERSION))?;
+    let required_version = VersionReq::parse(&format!("~{MDBOOK_VERSION}"))?;
 
     if !required_version.matches(&provided_version) {
         Err(Error::IncompatibleVersion(
