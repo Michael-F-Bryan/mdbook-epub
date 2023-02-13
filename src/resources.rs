@@ -98,7 +98,7 @@ impl Asset {
         let full_filename = full_path.parent().unwrap().join(&relative_link);
         let absolute_location = full_filename
             .canonicalize()
-            .map_err(|_| Error::AssetFileNotFound(format!("Asset was not found: {}", link)))?;
+            .map_err(|_| Error::AssetFileNotFound(format!("Asset was not found: {link}")))?;
         if !absolute_location.is_file() {
             return Err(Error::AssetFile(absolute_location));
         }
@@ -255,8 +255,7 @@ pub(crate) mod handler {
             match res.status() {
                 200 => Ok(res.into_reader()),
                 404 => Err(Error::AssetFileNotFound(format!(
-                    "Missing remote resource: {}",
-                    url
+                    "Missing remote resource: {url}"
                 ))),
                 _ => unreachable!("Unexpected response status"),
             }
@@ -298,8 +297,7 @@ pub(crate) mod handler {
             impl ContentRetriever for TestHandler {
                 fn retrieve(&self, url: &str) -> Result<BoxRead, Error> {
                     Err(Error::AssetFileNotFound(format!(
-                        "Missing remote resource: {}",
-                        url
+                        "Missing remote resource: {url}"
                     )))
                 }
             }
