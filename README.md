@@ -68,12 +68,20 @@ Recognized options:
 `additional-resources`: A list of path to files which should be added to the
 EPUB, such as typefaces. They will be added with path `OEBPS/<filename>`.
 
+`no-section-label`: In the contents list, don't prefix the chapter title with
+its section number.
+
+`curly-quotes`: Enable converting straight quotes `'x'` and `"x"` to `‘x’` and
+`“x”` (aka *smart quotes*).
+
 ```toml
 [output.epub]
 additional-css = ["./path/to/main.css"]
 use-default-css = false
 cover-image = "ebook-cover.png"
 additional-resources = ["./assets/Open-Sans-Regular.ttf"]
+no-section-label = true
+curly-quotes = true
 ```
 
 
@@ -89,9 +97,9 @@ list is by no means complete, so feature requests are most welcome!
    - [ ] Actually make that stylesheet pretty enough for human consumption
 - [x] Include user-defined stylesheets and themes
 - [ ] Allow users to tweak the generated page by providing their own template
-- [ ] Ensure the generated document is viewable on the following platforms
-  - [ ] Amazon Kindle
-  - [ ] Sony PRS-T3
+- [x] Ensure the generated document is viewable on the following platforms
+  - [x] Amazon Kindle
+  - [x] Sony PRS-T3
 
 
 ## Contributing

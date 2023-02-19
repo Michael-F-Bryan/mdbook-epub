@@ -1,21 +1,21 @@
 use ::epub;
-use std::env;
 use ::mdbook;
 use ::mdbook_epub;
 use ::tempdir;
+use std::env;
 #[macro_use]
 extern crate log;
 #[macro_use]
 extern crate serial_test;
 
 use epub::doc::EpubDoc;
-use std::path::{Path, PathBuf};
-use std::process::Command;
-use tempdir::TempDir;
-use std::sync::Once;
 use mdbook::renderer::RenderContext;
 use mdbook::MDBook;
 use mdbook_epub::Error;
+use std::path::{Path, PathBuf};
+use std::process::Command;
+use std::sync::Once;
+use tempdir::TempDir;
 
 static INIT: Once = Once::new();
 
@@ -26,7 +26,7 @@ fn init_logging() {
 }
 
 /// Convenience function for compiling the dummy book into an `EpubDoc`.
-fn generate_epub() -> Result< (EpubDoc, PathBuf), Error> {
+fn generate_epub() -> Result<(EpubDoc, PathBuf), Error> {
     let (ctx, _md, temp) = create_dummy_book().unwrap();
     debug!("temp dir = {:?}", &temp);
     mdbook_epub::generate(&ctx)?;
@@ -37,11 +37,12 @@ fn generate_epub() -> Result< (EpubDoc, PathBuf), Error> {
     match EpubDoc::new(&output_file) {
         Ok(epub) => {
             let result: (EpubDoc, PathBuf) = (epub, output_file);
-            return Ok( result )},
+            Ok(result)
+        }
         Err(err) => {
             error!("dummy book creation error = {}", err);
-            return Err(Error::EpubDocCreate(output_file.display().to_string()))?
-        },
+            Err(Error::EpubDocCreate(output_file.display().to_string()))
+        }
     }
 }
 
@@ -102,12 +103,11 @@ fn look_for_chapter_1_heading() {
     let mut doc = generate_epub().unwrap();
     debug!("doc current path = {:?}", doc.1);
 
-    let path;
-    if cfg!(target_os = "linux") {
-        path = Path::new("OEBPS").join("chapter_1.html"); // linux
+    let path = if cfg!(target_os = "linux") {
+        Path::new("OEBPS").join("chapter_1.html") // linux
     } else {
-        path = Path::new("OEBPS/chapter_1.html").to_path_buf(); // windows with 'forward slash' /
-    }
+        Path::new("OEBPS/chapter_1.html").to_path_buf() // windows with 'forward slash' /
+    };
     debug!("short path = {:?}", path.display().to_string());
     debug!("full path = {:?}", &doc.1);
     let file = doc.0.get_resource_str_by_path(path);
@@ -126,21 +126,43 @@ fn rendered_document_contains_all_chapter_files_and_assets() {
     debug!("rendered_document_contains_all_chapter_files_and_assets...");
     let chapters = vec!["chapter_1.html", "rust-logo.png"];
     let mut doc = generate_epub().unwrap();
-    debug!("doc current path = {:?} / {:?}", doc.0.get_current_path(), doc.1);
+    debug!(
+        "doc current path = {:?} / {:?}",
+        doc.0.get_current_path(),
+        doc.1
+    );
 
     for chapter in chapters {
-        let path;
-        if cfg!(target_os = "windows") {
-            path = Path::new("OEBPS/").join(chapter); // windows with 'forward slash' /
+        let path = if cfg!(target_os = "windows") {
+            Path::new("OEBPS/").join(chapter) // windows with 'forward slash' /
         } else {
-            path = Path::new("OEBPS").join(chapter); // linux
-        }
+            Path::new("OEBPS").join(chapter) // linux
+        };
         // let path = path.display().to_string();
         debug!("path = {}", &path.display().to_string());
         let got = doc.0.get_resource_by_path(&path);
         debug!("got = {:?}", got.is_ok());
         assert!(got.is_ok(), "{}", &path.display().to_string());
     }
+}
+
+#[test]
+#[serial]
+fn straight_quotes_transformed_into_curly_quotes() {
+    init_logging();
+    debug!("straight_quotes_transformed_into_curly_quotes...");
+    let mut doc = generate_epub().unwrap();
+    debug!("doc current path = {:?}", doc.1);
+
+    let path = if cfg!(target_os = "linux") {
+        Path::new("OEBPS").join("chapter_1.html") // linux
+    } else {
+        Path::new("OEBPS/chapter_1.html").to_path_buf() // windows with 'forward slash' /
+    };
+    let file = doc.0.get_resource_str_by_path(path);
+    let content = file.unwrap();
+    debug!("content = {:?}", content);
+    assert!(content.contains("<p>“One morning, when Gregor Samsa woke from troubled dreams, he found himself ‘transformed’ in his bed into a horrible vermin.”</p>"));
 }
 
 /// Use `MDBook::load()` to load the dummy book into memory, then set up the
