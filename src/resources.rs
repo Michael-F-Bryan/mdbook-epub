@@ -21,21 +21,23 @@ pub(crate) fn find(ctx: &RenderContext) -> Result<HashMap<String, Asset>, Error>
         src_dir
     );
     for section in ctx.book.iter() {
-        if let BookItem::Chapter(ref ch) = *section {
-            debug!("Searching links and assets for: {}", ch);
-            if ch.path.is_none() {
-                debug!("{} is a draft chapter and should be no content.", ch.name);
-                continue;
+        match *section {
+            BookItem::Chapter(ref ch) => {
+                debug!("Searching links and assets for: {}", ch);
+                if ch.path.is_none() {
+                    debug!("{} is a draft chapter and should be no content.", ch.name);
+                    continue;
+                }
+                for link in assets_in_markdown(&ch.content)? {
+                    let asset = match Url::parse(&link) {
+                        Ok(url) => Asset::from_url(url, &ctx.destination),
+                        Err(_) => Asset::from_local(&link, &src_dir, ch.path.as_ref().unwrap()),
+                    }?;
+                    assets.insert(link, asset);
+                }
             }
-            for link in assets_in_markdown(&ch.content)? {
-                let asset = match Url::parse(&link) {
-                    Ok(url) => Asset::from_url(url, &ctx.destination),
-                    Err(_) => Asset::from_local(&link, &src_dir, ch.path.as_ref().unwrap()),
-                }?;
-                assets.insert(link, asset);
-            }
-        } else {
-            debug!("That's odd! Section is not found !");
+            BookItem::Separator => trace!("Skip separator."),
+            BookItem::PartTitle(ref title) => trace!("Skip part title: {}.", title),
         }
     }
 

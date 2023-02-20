@@ -111,7 +111,7 @@ impl<'a> Generator<'a> {
         // resources::find can emit very unclear error based on internal MD content,
         // so let's give a tip to user in error message
         let assets = resources::find(self.ctx).map_err(|e| {
-            error!("{}", error);
+            error!("{} Caused by: {}", error, e);
             e
         })?;
         self.assets.extend(assets);
