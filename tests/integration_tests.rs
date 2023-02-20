@@ -3,6 +3,9 @@ use ::mdbook;
 use ::mdbook_epub;
 use ::tempdir;
 use std::env;
+use std::fs::File;
+use std::io::BufReader;
+
 #[macro_use]
 extern crate log;
 #[macro_use]
@@ -26,7 +29,7 @@ fn init_logging() {
 }
 
 /// Convenience function for compiling the dummy book into an `EpubDoc`.
-fn generate_epub() -> Result<(EpubDoc, PathBuf), Error> {
+fn generate_epub() -> Result<(EpubDoc<BufReader<File>>, PathBuf), Error> {
     let (ctx, _md, temp) = create_dummy_book().unwrap();
     debug!("temp dir = {:?}", &temp);
     mdbook_epub::generate(&ctx)?;
@@ -36,8 +39,7 @@ fn generate_epub() -> Result<(EpubDoc, PathBuf), Error> {
     // let output_file_name = output_file.display().to_string();
     match EpubDoc::new(&output_file) {
         Ok(epub) => {
-            let result: (EpubDoc, PathBuf) = (epub, output_file);
-            Ok(result)
+            Ok((epub, output_file))
         }
         Err(err) => {
             error!("dummy book creation error = {}", err);
