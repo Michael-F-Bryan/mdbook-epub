@@ -1,0 +1,116 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+  CARGO_NET_RETRY: 10
+  RUST_BACKTRACE: short
+  RUSTFLAGS: "-D warnings"
+
+jobs:
+  rustfmt:
+    name: Rustfmt [Formatter]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup | Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup | Rust
+        uses: actions-rs/toolchain@v1.0.7
+        with:
+          toolchain: stable
+          override: true
+          profile: minimal
+          components: rustfmt
+
+      - name: Build | Format
+        run: cargo fmt --all -- --check
+
+  clippy:
+    name: Clippy [Linter]
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macOS-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Setup | Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup | Rust
+        uses: actions-rs/toolchain@v1.0.7
+        with:
+          toolchain: stable
+          override: true
+          profile: minimal
+          components: clippy
+
+      - name: Setup | Cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Build | Lint
+        uses: actions-rs/cargo@v1.0.3
+        with:
+          command: clippy
+          args: --workspace --locked --all-targets --all-features -- -D clippy::all
+
+  cargo_check:
+    name: Compile
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup | Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup | Rust
+        uses: actions-rs/toolchain@v1.0.7
+        with:
+          toolchain: stable
+          profile: minimal
+          override: true
+
+      - name: Setup | Cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Build | Check
+        run: cargo check --workspace --locked
+
+  test:
+    name: Test Suite
+    runs-on: ${{ matrix.os }}
+    needs: cargo_check # First check then run expansive tests
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macOS-latest, windows-latest]
+        rust: [stable, nightly]
+        include:
+          - os: windows-latest
+            rustflags: -C target-feature=+crt-static
+    env:
+      RUSTFLAGS: ${{ matrix.rustflags || '' }}
+    steps:
+      - name: Setup | Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup | Rust
+        uses: actions-rs/toolchain@v1.0.7
+        with:
+          toolchain: ${{ matrix.rust }}
+          profile: minimal
+          override: true
+
+      - name: Setup | Cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Build | Test
+        run: "cargo test --workspce --locked"
+        env:
+          # Avoid -D warnings on nightly builds
+          RUSTFLAGS: ""
