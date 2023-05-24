@@ -2,7 +2,7 @@
 authors = ["Michael Bryan <michaelfbryan@gmail.com>"]
 description = "An EPUB renderer for mdbook."
 name = "mdbook-epub"
-version = "0.4.28"
+version = "0.4.29"
 readme = "README.md"
 license = "MIT"
 repository = "https://github.com/Michael-F-Bryan/mdbook-epub"
@@ -37,12 +37,13 @@ structopt = "0.3"
 mime_guess = "2.0"
 env_logger = "0.10"
 log = "0.4"
-mdbook = { version = "0.4.28", default-features = false }
+mdbook = { version = "0.4.29", default-features = false }
 handlebars = "4.3"
 toml = "0.5"
 html_parser = "0.6.2"
 url = "2.3"
 ureq = "2.5"
+const_format = "0.2.30"
 
 [dev-dependencies]
 tempdir = "0.3.7"
