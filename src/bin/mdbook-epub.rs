@@ -19,7 +19,7 @@ fn main() {
     env_logger::init();
     info!("Booting EPUB generator...");
     let args = Args::from_args();
-    debug!("generator args = {:?}", args);
+    debug!("prepared generator args = {:?}", args);
 
     if let Err(e) = run(&args) {
         log::error!("{}", e);
@@ -29,6 +29,7 @@ fn main() {
 }
 
 fn run(args: &Args) -> Result<(), Error> {
+    debug!("run EPUB book build...");
     // get a `RenderContext`, either from stdin (because we're used as a plugin)
     // or by instrumenting MDBook directly (in standalone mode).
     let ctx: RenderContext = if args.standalone {
@@ -49,6 +50,10 @@ fn run(args: &Args) -> Result<(), Error> {
     };
 
     mdbook_epub::generate(&ctx)?;
+    info!(
+        "Book is READY in directory: '{}'",
+        ctx.destination.display()
+    );
 
     Ok(())
 }

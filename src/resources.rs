@@ -23,6 +23,7 @@ pub(crate) fn find(ctx: &RenderContext) -> Result<HashMap<String, Asset>, Error>
     for section in ctx.book.iter() {
         match *section {
             BookItem::Chapter(ref ch) => {
+                let mut assets_count = 0;
                 debug!("Searching links and assets for: {}", ch);
                 if ch.path.is_none() {
                     debug!("{} is a draft chapter and should be no content.", ch.name);
@@ -33,14 +34,17 @@ pub(crate) fn find(ctx: &RenderContext) -> Result<HashMap<String, Asset>, Error>
                         Ok(url) => Asset::from_url(url, &ctx.destination),
                         Err(_) => Asset::from_local(&link, &src_dir, ch.path.as_ref().unwrap()),
                     }?;
+                    debug!("Adding asset by link '{}' : {:#?}", &link, &asset);
                     assets.insert(link, asset);
+                    assets_count += 1;
                 }
+                debug!("Found '{}' links and assets for: {}", assets_count, ch);
             }
             BookItem::Separator => trace!("Skip separator."),
             BookItem::PartTitle(ref title) => trace!("Skip part title: {}.", title),
         }
     }
-
+    debug!("Added '{}' links and assets in total", assets.len());
     Ok(assets)
 }
 
