@@ -219,26 +219,30 @@ impl<'a> Generator<'a> {
     }
 
     fn additional_assets(&mut self) -> Result<(), Error> {
-        debug!("Embedding additional assets");
+        debug!("Embedding additional assets...");
 
         // TODO: have a list of Asset URLs and try to download all of them (in parallel?)
         // to a temporary location.
+        let mut count = 0;
         for asset in self.assets.values() {
             self.handler.download(asset)?;
-            debug!("Embedding asset : {}", asset.filename.display());
+            debug!("Embedding asset : {:?}", asset);
             let mut content = Vec::new();
             self.handler
                 .read(&asset.location_on_disk, &mut content)
                 .map_err(|_| Error::AssetOpen)?;
             let mt = asset.mimetype.to_string();
             self.builder.add_resource(&asset.filename, &*content, mt)?;
+            count += 1;
         }
+        debug!("Embedded '{}' additional assets", count);
         Ok(())
     }
 
     fn additional_resources(&mut self) -> Result<(), Error> {
-        debug!("Embedding additional resources");
+        debug!("Embedding additional resources...");
 
+        let mut count = 0;
         for path in self.config.additional_resources.iter() {
             debug!("Embedding resource: {:?}", path);
 
@@ -275,10 +279,11 @@ impl<'a> Generator<'a> {
             let mt = mime_guess::from_path(&full_path).first_or_octet_stream();
 
             let content = File::open(&full_path).map_err(|_| Error::AssetOpen)?;
-            debug!("Adding resource: {:?} / {:?} ", path, mt.to_string());
+            debug!("Adding resource [{}]: {:?} / {:?} ", count, path, mt.to_string());
             self.builder.add_resource(path, content, mt.to_string())?;
+            count += 1;
         }
-
+        debug!("Embedded '{}' additional resources", count);
         Ok(())
     }
 

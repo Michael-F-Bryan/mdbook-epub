@@ -28,6 +28,7 @@ pub(crate) fn find(ctx: &RenderContext) -> Result<HashMap<String, Asset>, Error>
     for section in ctx.book.iter() {
         match *section {
             BookItem::Chapter(ref ch) => {
+                let mut assets_count = 0;
                 debug!("Searching links and assets for: {}", ch);
                 if ch.path.is_none() {
                     debug!("{} is a draft chapter and should be no content.", ch.name);
@@ -38,14 +39,30 @@ pub(crate) fn find(ctx: &RenderContext) -> Result<HashMap<String, Asset>, Error>
                         Ok(url) => Asset::from_url(url, &ctx.destination),
                         Err(_) => Asset::from_local(&link, &src_dir, ch.path.as_ref().unwrap()),
                     }?;
+/*                    let relative = asset.location_on_disk.strip_prefix(&src_dir);
+                    match relative {
+                        Ok(relative_link_path) => {
+                            let link_key: String = String::from(relative_link_path.file_name().unwrap().to_str().unwrap());
+                            debug!("Adding asset by link '{:?}' : {:#?}", relative_link_path, &asset);
+                            assets.insert(link_key, asset);
+                            assets_count += 1;
+                        },
+                        _ => {
+                            error!("We can't add asset outside of book /src/, {:?}", &asset);
+                        }
+                    }*/
+                    // TODO: that way is not correct for EPUB generation, needs change
+                    debug!("Adding asset by link '{}' : {:#?}", &link, &asset);
                     assets.insert(link, asset);
+                    assets_count += 1;
                 }
+                debug!("Found '{}' links and assets for: {}", assets_count, ch);
             }
             BookItem::Separator => trace!("Skip separator."),
             BookItem::PartTitle(ref title) => trace!("Skip part title: {}.", title),
         }
     }
-
+    debug!("Added '{}' links and assets in total", assets.len());
     Ok(assets)
 }
 
@@ -98,7 +115,7 @@ impl Asset {
     }
 
     fn from_local(link: &str, src_dir: &Path, chapter_path: &Path) -> Result<Asset, Error> {
-        debug!("Composing asset path for {:?} + {:?} in chapter = {:?}", src_dir, link, chapter_path);
+        debug!("Composing local asset path for {:?} + {:?} in chapter = {:?}", src_dir, link, chapter_path);
         let chapter_path = src_dir.join(chapter_path);
         // let relative_link = normalize_path(PathBuf::from(link).as_path());
         // Since chapter_path is some file and joined with src_dir, it's safe to
