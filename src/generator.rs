@@ -132,16 +132,27 @@ impl<'a> Generator<'a> {
     }
 
     fn add_chapter(&mut self, ch: &Chapter) -> Result<(), Error> {
-        let rendered = self.render_chapter(ch)?;
+        debug!("Adding chapter = '{}'", &ch.name);
+        let rendered_result = self.render_chapter(ch);
+        // let's skip chapter without content (drafts)
+        let rendered = match rendered_result {
+            Ok(rendered_content) => {
+                rendered_content
+            }
+            Err(error_msg) => {
+                warn!("SKIPPED chapter '{}' dur to error = {}", &ch.name, error_msg);
+                return Ok(());
+            }
+        };
 
         let content_path = ch.path.as_ref().ok_or_else(|| {
             Error::ContentFileNotFound(format!(
-                "Content file was not found for Chapter {}",
+                "Content file was not found for Chapter '{}'",
                 ch.name
             ))
         })?;
         trace!(
-            "add a chapter {:?} by a path = {:?}",
+            "add a chapter '{:?}' by a path = '{:?}'",
             &ch.name,
             content_path
         );
@@ -181,7 +192,7 @@ impl<'a> Generator<'a> {
             })?
         } else {
             return Err(RenderError::new(format!(
-                "Draft chapter: {} could not be rendered.",
+                "Draft chapter: '{}' could not be rendered.",
                 ch.name
             )));
         };

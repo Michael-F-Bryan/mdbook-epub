@@ -29,9 +29,9 @@ pub(crate) fn find(ctx: &RenderContext) -> Result<HashMap<String, Asset>, Error>
         match *section {
             BookItem::Chapter(ref ch) => {
                 let mut assets_count = 0;
-                debug!("Searching links and assets for: {}", ch);
+                debug!("Searching links and assets for: '{}'", ch.name);
                 if ch.path.is_none() {
-                    debug!("{} is a draft chapter and should be no content.", ch.name);
+                    debug!("'{}' is a draft chapter and should be no content.", ch.name);
                     continue;
                 }
                 for link in assets_in_markdown(&ch.content)? {
