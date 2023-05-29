@@ -29,7 +29,7 @@ pub(crate) fn find(ctx: &RenderContext) -> Result<HashMap<String, Asset>, Error>
         match *section {
             BookItem::Chapter(ref ch) => {
                 let mut assets_count = 0;
-                debug!("Searching links and assets for: '{}'", ch.name);
+                debug!("Searching links and assets for: '{}'", ch);
                 if ch.path.is_none() {
                     debug!("'{}' is a draft chapter and should be no content.", ch.name);
                     continue;
@@ -39,6 +39,8 @@ pub(crate) fn find(ctx: &RenderContext) -> Result<HashMap<String, Asset>, Error>
                         Ok(url) => Asset::from_url(url, &ctx.destination),
                         Err(_) => Asset::from_local(&link, &src_dir, ch.path.as_ref().unwrap()),
                     }?;
+
+                    // TODO: that way is CORRECT generation way
 /*                    let relative = asset.location_on_disk.strip_prefix(&src_dir);
                     match relative {
                         Ok(relative_link_path) => {
@@ -115,7 +117,7 @@ impl Asset {
     }
 
     fn from_local(link: &str, src_dir: &Path, chapter_path: &Path) -> Result<Asset, Error> {
-        debug!("Composing local asset path for {:?} + {:?} in chapter = {:?}", src_dir, link, chapter_path);
+        debug!("Composing asset path for {:?} + {:?} in chapter = {:?}", src_dir, link, chapter_path);
         let chapter_path = src_dir.join(chapter_path);
         // let relative_link = normalize_path(PathBuf::from(link).as_path());
         // Since chapter_path is some file and joined with src_dir, it's safe to
