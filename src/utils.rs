@@ -1,5 +1,5 @@
-use std::ffi::OsStr;
 use pulldown_cmark::{Options, Parser};
+use std::ffi::OsStr;
 use std::path::{Component, Path, PathBuf};
 use url::Url;
 
