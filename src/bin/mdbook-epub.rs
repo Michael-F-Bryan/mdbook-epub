@@ -30,9 +30,9 @@ fn main() {
 
 fn run(args: &Args) -> Result<(), Error> {
     debug!("run EPUB book build...");
-    // get a `RenderContext`, either from stdin (because we're used as a plugin)
-    // or by instrumenting MDBook directly (in standalone mode).
-    let ctx: RenderContext = if args.standalone {
+    // get a `RenderContext`, either from stdin (because it's used as a plugin)
+    // or by instrumenting MDBook directly
+    let ctx: RenderContext = if !args.plugin {
         let error = format!(
             "book.toml root file is not found by a path {:?}",
             &args.root.display()
@@ -60,12 +60,8 @@ fn run(args: &Args) -> Result<(), Error> {
 
 #[derive(Debug, Clone, StructOpt)]
 struct Args {
-    #[structopt(
-        short = "s",
-        long = "standalone",
-        help = "Run standalone (i.e. not as a mdbook plugin)"
-    )]
-    standalone: bool,
+    #[structopt(short = "p", long = "plugin", help = "Run as a mdbook plugin")]
+    plugin: bool,
     #[structopt(help = "The book to render.", parse(from_os_str), default_value = ".")]
     root: PathBuf,
 }
