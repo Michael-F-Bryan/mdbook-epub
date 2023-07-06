@@ -53,3 +53,53 @@ pub(crate) fn hash_link(url: &Url) -> String {
         .unwrap_or_else(|| panic!("Unable to extract file ext from {url}"));
     format!("{:x}.{}", hasher.finish(), ext)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_normalize_path() {
+        let link = "./asset1.jpg";
+        let link_as_path = normalize_path(Path::new(link));
+        assert_eq!(
+            link_as_path.as_path().to_str().unwrap(),
+            "asset1.jpg"
+        );
+
+        let link = "../asset1.jpg";
+        let link_as_path = normalize_path(Path::new(link));
+        assert_eq!(
+            link_as_path.as_path().to_str().unwrap(),
+            "asset1.jpg"
+        );
+
+        let link = "../upper/assets/asset1.jpg";
+        let link_as_path = normalize_path(Path::new(link));
+        assert_eq!(
+            link_as_path.as_path().to_str().unwrap(),
+            "upper/assets/asset1.jpg"
+        );
+
+        let link = "assets/asset1.jpg";
+        let link_as_path = normalize_path(Path::new(link));
+        assert_eq!(
+            link_as_path.as_path().to_str().unwrap(),
+            "assets/asset1.jpg"
+        );
+
+        let link = "./assets/asset1.jpg";
+        let link_as_path = normalize_path(Path::new(link));
+        assert_eq!(
+            link_as_path.as_path().to_str().unwrap(),
+            "assets/asset1.jpg"
+        );
+
+        let link = "../assets/asset1.jpg";
+        let link_as_path = normalize_path(Path::new(link));
+        assert_eq!(
+            link_as_path.as_path().to_str().unwrap(),
+            "assets/asset1.jpg"
+        );
+    }
+}

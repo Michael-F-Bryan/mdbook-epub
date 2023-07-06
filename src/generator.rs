@@ -1,3 +1,4 @@
+use std::path::MAIN_SEPARATOR_STR;
 use std::{
     collections::HashMap,
     ffi::OsString,
@@ -13,14 +14,14 @@ use handlebars::{Handlebars, RenderError};
 use html_parser::{Dom, Node};
 use mdbook::book::{BookItem, Chapter};
 use mdbook::renderer::RenderContext;
-use pulldown_cmark::{html, CowStr, Event, Options, Parser, Tag};
+use pulldown_cmark::{html, CowStr, Event, Tag};
 use url::Url;
 
 use crate::config::Config;
 use crate::resources::handler::{ContentRetriever, ResourceHandler};
-use crate::resources::{self, Asset};
-use crate::Error;
+use crate::resources::{self, Asset, AssetKind};
 use crate::DEFAULT_CSS;
+use crate::{utils, Error};
 
 /// The actual EPUB book renderer.
 pub struct Generator<'a> {
@@ -60,6 +61,7 @@ impl<'a> Generator<'a> {
     }
 
     fn populate_metadata(&mut self) -> Result<(), Error> {
+        info!("1. populate metadata ==");
         self.builder.metadata("generator", "mdbook-epub")?;
 
         if let Some(title) = self.ctx.config.book.title.clone() {
@@ -99,6 +101,7 @@ impl<'a> Generator<'a> {
         self.embed_stylesheets()?;
         self.additional_assets()?;
         self.additional_resources()?;
+        info!("8. final generation ==");
         self.builder.generate(writer)?;
         info!("Generating the EPUB book - DONE !");
         Ok(())
@@ -107,6 +110,7 @@ impl<'a> Generator<'a> {
     /// Find assets for adding to the document later. For remote linked assets, they would be
     /// rendered differently in the document by provided information of assets.
     fn find_assets(&mut self) -> Result<(), Error> {
+        info!("2. find assets ==");
         let error = String::from("Failed finding/fetch resource taken from content? Look up content for possible error...");
         // resources::find can emit very unclear error based on internal MD content,
         // so let's give a tip to user in error message
@@ -119,7 +123,7 @@ impl<'a> Generator<'a> {
     }
 
     fn generate_chapters(&mut self) -> Result<(), Error> {
-        debug!("Rendering Chapters");
+        info!("3. Generate chapters == ");
 
         for item in &self.ctx.book.sections {
             if let BookItem::Chapter(ref ch) = *item {
@@ -132,15 +136,16 @@ impl<'a> Generator<'a> {
     }
 
     fn add_chapter(&mut self, ch: &Chapter) -> Result<(), Error> {
-        debug!("Adding chapter = '{}'", &ch.name);
+        info!("Adding chapter = '{}'", &ch.name);
         let rendered_result = self.render_chapter(ch);
         // let's skip chapter without content (drafts)
         let rendered = match rendered_result {
-            Ok(rendered_content) => {
-                rendered_content
-            }
+            Ok(rendered_content) => rendered_content,
             Err(error_msg) => {
-                warn!("SKIPPED chapter '{}' dur to error = {}", &ch.name, error_msg);
+                warn!(
+                    "SKIPPED chapter '{}' due to error = {}",
+                    &ch.name, error_msg
+                );
                 return Ok(());
             }
         };
@@ -175,15 +180,6 @@ impl<'a> Generator<'a> {
         Ok(())
     }
 
-    pub fn new_cmark_parser(text: &str) -> Parser<'_, '_> {
-        let mut opts = Options::empty();
-        opts.insert(Options::ENABLE_TABLES);
-        opts.insert(Options::ENABLE_FOOTNOTES);
-        opts.insert(Options::ENABLE_STRIKETHROUGH);
-        opts.insert(Options::ENABLE_TASKLISTS);
-        Parser::new_ext(text, opts)
-    }
-
     /// Render the chapter into its fully formed HTML representation.
     fn render_chapter(&self, ch: &Chapter) -> Result<String, RenderError> {
         let chapter_dir = if let Some(chapter_file_path) = &ch.path {
@@ -197,15 +193,38 @@ impl<'a> Generator<'a> {
             )));
         };
         let mut body = String::new();
-        let p = Generator::new_cmark_parser(&ch.content);
+        let parser = utils::create_new_pull_down_parser(&ch.content);
         let mut quote_converter = EventQuoteConverter::new(self.config.curly_quotes);
         let ch_depth = chapter_dir.components().count();
-        let asset_link_filter = AssetLinkFilter::new(&self.assets, ch_depth);
-        let events = p
+
+        // create 'Remote Assets' copy to be processed by AssetLinkFilter
+        let mut remote_assets: HashMap<String, Asset> = HashMap::new();
+        for (key, value) in self.assets.clone().into_iter() {
+            trace!("{} / {:?}", key, &value);
+            match value.source {
+                AssetKind::Remote(ref remote_url) => {
+                    trace!(
+                        "Adding remote_assets = '{}' / {:?}",
+                        remote_url.to_string(),
+                        &value
+                    );
+                    remote_assets.insert(remote_url.to_string(), value);
+                },
+                _ => {},
+/*                AssetKind::Local(ref _local_path) => {
+                    let relative_path = value.filename.to_str().unwrap();
+                    remote_assets.insert(String::from(relative_path), value);
+                }*/
+            }
+        }
+        let asset_link_filter = AssetLinkFilter::new(&remote_assets, ch_depth);
+        let events = parser
             .map(|event| quote_converter.convert(event))
             .map(|event| asset_link_filter.apply(event));
+        trace!("Found Rendering events map = [{:?}]", &events);
 
         html::push_html(&mut body, events);
+        trace!("Chapter content after Events processing = [{:?}]", body);
 
         let stylesheet_path = chapter_dir
             .components()
@@ -221,7 +240,7 @@ impl<'a> Generator<'a> {
 
     /// Generate the stylesheet and add it to the document.
     fn embed_stylesheets(&mut self) -> Result<(), Error> {
-        debug!("Embedding stylesheets");
+        info!("5. Embedding stylesheets ==");
 
         let stylesheet = self.generate_stylesheet()?;
         self.builder.stylesheet(stylesheet.as_slice())?;
@@ -230,14 +249,14 @@ impl<'a> Generator<'a> {
     }
 
     fn additional_assets(&mut self) -> Result<(), Error> {
-        debug!("Embedding additional assets...");
+        info!("6. Embedding, downloading additional assets == [{:?}]", self.assets.len());
 
         // TODO: have a list of Asset URLs and try to download all of them (in parallel?)
         // to a temporary location.
         let mut count = 0;
         for asset in self.assets.values() {
             self.handler.download(asset)?;
-            debug!("Embedding asset : {:?}", asset);
+            debug!("Adding asset : {:?}", asset);
             let mut content = Vec::new();
             self.handler
                 .read(&asset.location_on_disk, &mut content)
@@ -251,7 +270,7 @@ impl<'a> Generator<'a> {
     }
 
     fn additional_resources(&mut self) -> Result<(), Error> {
-        debug!("Embedding additional resources...");
+        info!("7. Embedding additional resources ==");
 
         let mut count = 0;
         for path in self.config.additional_resources.iter() {
@@ -290,7 +309,12 @@ impl<'a> Generator<'a> {
             let mt = mime_guess::from_path(&full_path).first_or_octet_stream();
 
             let content = File::open(&full_path).map_err(|_| Error::AssetOpen)?;
-            debug!("Adding resource [{}]: {:?} / {:?} ", count, path, mt.to_string());
+            debug!(
+                "Adding resource [{}]: {:?} / {:?} ",
+                count,
+                path,
+                mt.to_string()
+            );
             self.builder.add_resource(path, content, mt.to_string())?;
             count += 1;
         }
@@ -299,7 +323,7 @@ impl<'a> Generator<'a> {
     }
 
     fn add_cover_image(&mut self) -> Result<(), Error> {
-        debug!("Adding cover image...");
+        info!("4. Adding cover image ==");
 
         if let Some(ref path) = self.config.cover_image {
             let full_path: PathBuf;
@@ -372,7 +396,9 @@ impl<'a> Debug for Generator<'a> {
     }
 }
 
+/// Filter is used for replacing remote urls with local images downloaded from internet
 struct AssetLinkFilter<'a> {
+    // Keeps pairs: 'remote url' | 'asset'
     assets: &'a HashMap<String, Asset>,
     depth: usize,
 }
@@ -381,11 +407,15 @@ impl<'a> AssetLinkFilter<'a> {
     fn new(assets: &'a HashMap<String, Asset>, depth: usize) -> Self {
         Self { assets, depth }
     }
+
+    /// Do processing of chapter's content and replace 'remote link' by 'local file name'
     fn apply(&self, event: Event<'a>) -> Event<'a> {
+        trace!("AssetLinkFilter: Processing Event = {:?}", &event);
         match event {
             Event::Start(Tag::Image(ty, ref url, ref title)) => {
                 if let Some(asset) = self.assets.get(&url.to_string()) {
-                    // replace original link with `cache/<hash.ext>` in book.
+                    // PREPARE info for replacing original REMOTE link by `<hash>.ext` value inside chapter content
+                    debug!("Found URL '{}' by Event", &url);
                     let new = self.path_prefix(asset.filename.as_path());
                     Event::Start(Tag::Image(ty, CowStr::from(new), title.to_owned()))
                 } else {
@@ -415,9 +445,12 @@ impl<'a> AssetLinkFilter<'a> {
                     found.dedup();
                     let mut content = html.clone().into_string();
                     for link in found {
+                        // REAL SRC REPLACING happens here...
                         if let Some(asset) = self.assets.get(link.as_str()) {
                             let new = self.path_prefix(asset.filename.as_path());
+                            debug!("{:?} link '{}' is replaced by '{:?}'", asset, &link, &new);
                             content = content.replace(link.as_str(), &CowStr::from(new));
+                            trace!("new content\n{:?}", content);
                         } else {
                             unreachable!("{link} should be replaced, but it doesn't.");
                         }
@@ -428,12 +461,14 @@ impl<'a> AssetLinkFilter<'a> {
             _ => event,
         }
     }
+
     fn path_prefix(&self, path: &Path) -> String {
-        // compatible to Windows, translate to forawrd slash in file path.
+        // compatible to Windows, translate to forward slash in file path.
         let mut fsp = OsString::new();
         for (i, component) in path.components().enumerate() {
             if i > 0 {
-                fsp.push("/");
+                // fsp.push("/");
+                fsp.push(MAIN_SEPARATOR_STR);
             }
             fsp.push(component);
         }
@@ -445,7 +480,8 @@ impl<'a> AssetLinkFilter<'a> {
             .map(|_| "..")
             .chain(iter::once(filename.as_str()))
             .collect::<Vec<_>>()
-            .join("/")
+            // .join("/")
+            .join(MAIN_SEPARATOR_STR)
     }
 }
 
@@ -549,8 +585,8 @@ mod tests {
             .unwrap();
         let should_be_png = book_source.join(png);
         let should_be_svg = book_source.join(svg);
-        let hashed_filename = resources::hash_link(&url.parse::<Url>().unwrap());
-        let should_be_url = destination.path().join("cache").join(hashed_filename);
+        let hashed_filename = utils::hash_link(&url.parse::<Url>().unwrap());
+        let should_be_url = destination.path().join(hashed_filename);
         for should_be in [should_be_svg, should_be_png, should_be_url] {
             mock_client
                 .expect_read()
@@ -584,7 +620,7 @@ mod tests {
             },
         );
         let url = Url::parse(links[1]).unwrap();
-        let hashed_filename = resources::hash_link(&url);
+        let hashed_filename = utils::hash_link(&url);
         let hashed_path = Path::new("cache").join(&hashed_filename);
         assets.insert(
             links[1].to_string(),
@@ -605,8 +641,9 @@ mod tests {
         );
 
         let filter = AssetLinkFilter::new(&assets, 0);
-        let parser = Parser::new(&markdown_str);
+        let parser = utils::create_new_pull_down_parser(&markdown_str);
         let events = parser.map(|ev| filter.apply(ev));
+        trace!("Events = {:?}", events);
         let mut html_buf = String::new();
         html::push_html(&mut html_buf, events);
 
@@ -671,7 +708,7 @@ mod tests {
         assert_eq!(g.assets.len(), 1);
 
         let pat = |heading, prefix| {
-            format!("<h1>{heading}</h1>\n<p><img src=\"{prefix}cache/811c431d49ec880b.svg\"")
+            format!("<h1>{heading}</h1>\n<p><img src=\"{prefix}811c431d49ec880b.svg\"")
         };
         if let BookItem::Chapter(ref ch) = ctx.book.sections[0] {
             let rendered: String = g.render_chapter(ch).unwrap();
