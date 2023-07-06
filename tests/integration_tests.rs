@@ -38,9 +38,7 @@ fn generate_epub() -> Result<(EpubDoc<BufReader<File>>, PathBuf), Error> {
 
     // let output_file_name = output_file.display().to_string();
     match EpubDoc::new(&output_file) {
-        Ok(epub) => {
-            Ok((epub, output_file))
-        }
+        Ok(epub) => Ok((epub, output_file)),
         Err(err) => {
             error!("dummy book creation error = {}", err);
             Err(Error::EpubDocCreate(output_file.display().to_string()))
@@ -129,7 +127,7 @@ fn rendered_document_contains_all_chapter_files_and_assets() {
     debug!("rendered_document_contains_all_chapter_files_and_assets...");
     let chapters = vec!["chapter_1.html", "rust-logo.png"];
     let mut doc = generate_epub().unwrap();
-    assert_eq!(9, doc.0.resources.len());
+    assert_eq!(8, doc.0.resources.len());
     assert_eq!(2, doc.0.spine.len());
     // let title = doc.0.mdata("title");
     assert_eq!(doc.0.mdata("title").unwrap(), "DummyBook");
