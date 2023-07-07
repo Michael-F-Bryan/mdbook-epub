@@ -14,10 +14,10 @@ environment:
 
 install:
   - ps: >-
-      If ($Env:TARGET -eq 'x86_64-pc-windows-gnu') {
-        $Env:PATH += ';C:\msys64\mingw64\bin'
-      } ElseIf ($Env:TARGET -eq 'i686-pc-windows-gnu') {
-        $Env:PATH += ';C:\msys64\mingw32\bin'
+      If ($env:TARGET -eq 'x86_64-pc-windows-gnu') {
+        $env:PATH += ';C:\msys64\mingw64\bin'
+      } ElseIf ($env:TARGET -eq 'i686-pc-windows-gnu') {
+        $env:PATH += ';C:\msys64\mingw32\bin'
       }
   - curl -sSf -o rustup-init.exe https://win.rustup.rs/
   - rustup-init.exe -y --default-host %TARGET% --default-toolchain %RUST_VERSION%
@@ -35,7 +35,7 @@ test_script:
     )
 
 before_deploy:
-  - cargo rustc --target %TARGET% --release --bin mdbook-epub.exe -- -C lto
+  - cargo rustc --target %TARGET% --release --bin %CRATE_NAME% -- -C lto
   - ps: ci\before_deploy.ps1
 
 deploy:
@@ -64,6 +64,10 @@ branches:
 
 notifications:
   - provider: Email
+    to:
+      - blandger@gmail.com
+    subject: 'Build {{status}}'                  # optional
+    message: "{{message}}, {{commitId}}, ..."    # optional
     on_build_success: false
 
 # Building is done in the test phase, so we disable Appveyor's build phase.
