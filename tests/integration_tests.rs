@@ -30,6 +30,7 @@ fn init_logging() {
 
 /// Convenience function for compiling the dummy book into an `EpubDoc`.
 fn generate_epub() -> Result<(EpubDoc<BufReader<File>>, PathBuf), Error> {
+    debug!("generate_epub...");
     let (ctx, _md, temp) = create_dummy_book().unwrap();
     debug!("temp dir = {:?}", &temp);
     mdbook_epub::generate(&ctx)?;
@@ -50,6 +51,7 @@ fn generate_epub() -> Result<(EpubDoc<BufReader<File>>, PathBuf), Error> {
 #[serial]
 fn output_epub_exists() {
     init_logging();
+    debug!("fn output_epub_exists...");
     let (ctx, _md, temp) = create_dummy_book().unwrap();
 
     let output_file = mdbook_epub::output_filename(temp.path(), &ctx.config);
@@ -63,6 +65,7 @@ fn output_epub_exists() {
 #[serial]
 fn output_epub_is_valid() {
     init_logging();
+    debug!("output_epub_is_valid...");
     let (ctx, _md, temp) = create_dummy_book().unwrap();
     mdbook_epub::generate(&ctx).unwrap();
 
@@ -78,6 +81,7 @@ fn output_epub_is_valid() {
 
 fn epub_check(path: &Path) -> Result<(), Error> {
     init_logging();
+    debug!("epub_check...");
     let cmd = Command::new("epubcheck").arg(path).output();
 
     match cmd {
@@ -127,9 +131,10 @@ fn rendered_document_contains_all_chapter_files_and_assets() {
     debug!("rendered_document_contains_all_chapter_files_and_assets...");
     let chapters = vec!["chapter_1.html", "rust-logo.png"];
     let mut doc = generate_epub().unwrap();
+    debug!("Number of internal epub resources = {:?}", doc.0.resources);
+    // number of internal epub resources for dummy test book
     assert_eq!(8, doc.0.resources.len());
     assert_eq!(2, doc.0.spine.len());
-    // let title = doc.0.mdata("title");
     assert_eq!(doc.0.mdata("title").unwrap(), "DummyBook");
     assert_eq!(doc.0.mdata("language").unwrap(), "en");
     debug!(
@@ -174,6 +179,7 @@ fn straight_quotes_transformed_into_curly_quotes() {
 /// Use `MDBook::load()` to load the dummy book into memory, then set up the
 /// `RenderContext` for use the EPUB generator.
 fn create_dummy_book() -> Result<(RenderContext, MDBook, TempDir), Error> {
+    debug!("create_dummy_book...");
     let temp = TempDir::new("mdbook-epub")?;
 
     let dummy_book = Path::new(env!("CARGO_MANIFEST_DIR"))
