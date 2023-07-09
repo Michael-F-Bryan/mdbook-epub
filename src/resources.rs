@@ -581,7 +581,7 @@ mod tests {
     #[test]
     #[should_panic(
        // expected = "Asset was not found: 'wikimedia' by 'tests\\dummy\\third_party\\a.md\\wikimedia', error = Системе не удается найти указанный путь. (os error 3)"
-       expected = "Asset was not found: 'wikimedia' by 'tests\\dummy\\third_party\\a.md\\wikimedia', error = The system cannot find the specified path. (os error 3)"
+       expected = "Asset was not found: 'wikimedia' by 'tests\\dummy\\third_party\\a.md\\wikimedia', error = The system cannot find the path specified. (os error 3)"
     )]
     fn find_asset_fail_when_it_is_a_dir_windows() {
         panic!(
