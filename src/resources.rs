@@ -16,6 +16,12 @@ const UPPER_PARENT_LINUX: &str = concatcp!("..", "/");
 const UPPER_PARENT_STARTS_SLASH: &str = concatcp!(MAIN_SEPARATOR_STR, "..", MAIN_SEPARATOR_STR);
 const UPPER_PARENT_STARTS_SLASH_LINUX: &str = concatcp!("/", "..", "/");
 
+#[cfg(not(target_os = "windows"))]
+const UPPER_FOLDER_PATHS: &[&str] = &[MAIN_SEPARATOR_STR, UPPER_PARENT, UPPER_PARENT_LINUX];
+
+#[cfg(target_os = "windows")]
+const UPPER_FOLDER_PATHS: &[&str] = &[&"/", MAIN_SEPARATOR_STR, UPPER_PARENT, UPPER_PARENT_LINUX];
+
 /// Find all resources in book and put them into HashMap.
 /// The key is a link, value is a composed Asset
 pub(crate) fn find(ctx: &RenderContext) -> Result<HashMap<String, Asset>, Error> {
@@ -159,7 +165,10 @@ impl Asset {
         let chapter_path = src_dir.join(chapter_path);
 
         // compose file name by it's link and chapter path
-        let full_filename = Self::join_src_with_link_to_full_path(link, &chapter_path);
+        let stripped_path = Self::compute_asset_path_by_src_and_link(link, &chapter_path);
+        let normalized_link = utils::normalize_path(PathBuf::from(link).as_path());
+        debug!("Composing full_filename by '{:?}' + '{:?}'", &stripped_path, &normalized_link.clone());
+        let full_filename = stripped_path.join(normalized_link); // compose final result
 
         debug!("Joined full_filename = {:?}", &full_filename.display());
         let absolute_location = full_filename.canonicalize().map_err(|this_error| {
@@ -198,28 +207,48 @@ impl Asset {
         Ok(asset)
     }
 
-    // Analyses input 'link' and composes full path to it using chapter dir data
-    // can pop one folder above the book's src or above one internal sub folder
-    fn join_src_with_link_to_full_path(link: &str, chapter_dir: &PathBuf) -> PathBuf {
+    // Analyses input 'link' and stripes chapter's path to shorter link
+    // can pop one folder above the book's src or above an internal sub folder
+    // 'link' is stripped too for one upper folder on one call
+    fn compute_asset_path_by_src_and_link(link: &str, chapter_dir: &PathBuf) -> PathBuf {
         let mut reassigned_asset_root: PathBuf = PathBuf::from(chapter_dir);
-        let normalized_link = utils::normalize_path(PathBuf::from(link).as_path());
+        let link_string = String::from(link);
         // if chapter is a MD file, remove if from path
         if chapter_dir.is_file() {
             reassigned_asset_root.pop();
         }
-        trace!("join SRC paths, check if parent present by '{}' = '{}' || '{}' || '{}'",
-            link, MAIN_SEPARATOR_STR, UPPER_PARENT, UPPER_PARENT_STARTS_SLASH);
+        trace!("check if parent present by '{}' = '{}' || '{}' || '{}'",
+            link_string, MAIN_SEPARATOR_STR, UPPER_PARENT, UPPER_PARENT_STARTS_SLASH);
         // if link points to upper folder
-        if !link.is_empty()
-            && (link.starts_with(MAIN_SEPARATOR_STR)
-                || link.starts_with(UPPER_PARENT_LINUX)
-                || link.starts_with(UPPER_PARENT)
-                || link.starts_with(UPPER_PARENT_STARTS_SLASH)
-                || link.starts_with(UPPER_PARENT_STARTS_SLASH_LINUX))
+        if !link_string.is_empty()
+            && (link_string.starts_with(MAIN_SEPARATOR_STR)
+                || link_string.starts_with(UPPER_PARENT_LINUX)
+                || link_string.starts_with(UPPER_PARENT)
+                || link_string.starts_with(UPPER_PARENT_STARTS_SLASH)
+                || link_string.starts_with(UPPER_PARENT_STARTS_SLASH_LINUX))
         {
             reassigned_asset_root.pop(); // remove an one folder from asset's path
+            // make a recursive call
+            let new_link = Self::remove_prefixes(link_string, UPPER_FOLDER_PATHS);
+            reassigned_asset_root = Self::compute_asset_path_by_src_and_link(&new_link, &reassigned_asset_root);
         }
-        reassigned_asset_root.join(normalized_link) // compose final result
+        reassigned_asset_root // compose final result
+    }
+
+    // Strip input link by prefixes from &str array
+    // return 'shorter' result or the same
+    fn remove_prefixes<'a>(link_to_strip: String, prefixes: &[&str]) -> String {
+        let mut stripped_link = String::from(link_to_strip.clone());
+        for prefix in prefixes {
+            match link_to_strip.strip_prefix(prefix) {
+                Some(s) => {
+                    stripped_link = s.to_string();
+                    return stripped_link
+                },
+                None => &link_to_strip
+            };
+        };
+        stripped_link
     }
 }
 
@@ -580,8 +609,8 @@ mod tests {
     #[cfg(target_os = "windows")]
     #[test]
     #[should_panic(
-       // expected = "Asset was not found: 'wikimedia' by 'tests\\dummy\\third_party\\a.md\\wikimedia', error = Системе не удается найти указанный путь. (os error 3)"
-       expected = "Asset was not found: 'wikimedia' by 'tests\\dummy\\third_party\\a.md\\wikimedia', error = The system cannot find the path specified. (os error 3)"
+       expected = "Asset was not found: 'wikimedia' by 'tests\\dummy\\third_party\\a.md\\wikimedia', error = Системе не удается найти указанный путь. (os error 3)"
+       //expected = "Asset was not found: 'wikimedia' by 'tests\\dummy\\third_party\\a.md\\wikimedia', error = The system cannot find the path specified. (os error 3)"
     )]
     fn find_asset_fail_when_it_is_a_dir_windows() {
         panic!(
@@ -614,15 +643,17 @@ mod tests {
     }
 
     #[test]
-    fn test_join_chapter_file_with_link_to_full_path() {
+    fn test_compute_asset_path_by_src_and_link_to_full_path() {
         let book_source_root_dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/dummy/src");
         let mut book_chapter_dir = PathBuf::from(book_source_root_dir);
         book_chapter_dir.push(Path::new("chapter_1.md"));
 
         let link = "./asset1.jpg";
-        let asset_path = Asset::join_src_with_link_to_full_path(link, &book_chapter_dir);
+        let asset_path = Asset::compute_asset_path_by_src_and_link(link, &book_chapter_dir);
+        let normalized_link = utils::normalize_path(PathBuf::from(link).as_path());
+        let full_path = asset_path.join(normalized_link); // compose final result
         assert_eq!(
-            asset_path.as_path(),
+            full_path.as_path(),
             Path::new(env!("CARGO_MANIFEST_DIR"))
                 .join("tests/dummy/src")
                 .join("asset1.jpg")
@@ -630,39 +661,114 @@ mod tests {
     }
 
     #[test]
-    fn test_join_chapter_dir_with_link_to_full_path() {
+    fn test_remove_prefixes() {
+        let link_string = String::from("assets/verify.jpeg");
+        let link_string = Asset::remove_prefixes(link_string, UPPER_FOLDER_PATHS);
+        assert_eq!("assets/verify.jpeg", link_string);
+
+        let link_string = String::from("/assets/verify.jpeg");
+        let link_string = Asset::remove_prefixes(link_string, UPPER_FOLDER_PATHS);
+        assert_eq!("assets/verify.jpeg", link_string);
+
+        let link_string = String::from("../../assets/verify.jpeg");
+        let link_string = Asset::remove_prefixes(link_string, UPPER_FOLDER_PATHS);
+        assert_eq!("../assets/verify.jpeg", link_string);
+        let new_link = Asset::remove_prefixes(link_string, UPPER_FOLDER_PATHS);
+        assert_eq!("assets/verify.jpeg", new_link);
+
+        let upper_folder_path = &[UPPER_PARENT_LINUX, UPPER_PARENT, MAIN_SEPARATOR_STR, &"/"];
+        let link_string = String::from("assets/verify.jpeg");
+        let link_string = Asset::remove_prefixes(link_string, upper_folder_path);
+        assert_eq!("assets/verify.jpeg", link_string);
+
+        let link_string = String::from("/assets/verify.jpeg");
+        let link_string = Asset::remove_prefixes(link_string, upper_folder_path);
+        assert_eq!("assets/verify.jpeg", link_string);
+
+        let link_string = String::from("../../assets/verify.jpeg");
+        let link_string = Asset::remove_prefixes(link_string, upper_folder_path);
+        assert_eq!("../assets/verify.jpeg", link_string);
+        let new_link = Asset::remove_prefixes(link_string, upper_folder_path);
+        assert_eq!("assets/verify.jpeg", new_link);
+    }
+
+    #[cfg(target_os = "windows")]
+    #[test]
+    fn test_remove_prefixes_windows() {
+        let link_string = String::from("assets\\verify.jpeg");
+        let link_string = Asset::remove_prefixes(link_string, UPPER_FOLDER_PATHS);
+        assert_eq!("assets\\verify.jpeg", link_string);
+
+        let link_string = String::from("\\assets\\verify.jpeg");
+        let link_string = Asset::remove_prefixes(link_string, UPPER_FOLDER_PATHS);
+        assert_eq!("assets\\verify.jpeg", link_string);
+
+        let link_string = String::from("..\\..\\assets\\verify.jpeg");
+        let link_string = Asset::remove_prefixes(link_string, UPPER_FOLDER_PATHS);
+        assert_eq!("..\\assets\\verify.jpeg", link_string);
+        let new_link = Asset::remove_prefixes(link_string, UPPER_FOLDER_PATHS);
+        assert_eq!("assets\\verify.jpeg", new_link);
+
+        let upper_folder_path = &[UPPER_PARENT_LINUX, UPPER_PARENT, MAIN_SEPARATOR_STR, &"/"];
+        let link_string = String::from("assets\\verify.jpeg");
+        let link_string = Asset::remove_prefixes(link_string, upper_folder_path);
+        assert_eq!("assets\\verify.jpeg", link_string);
+
+        let link_string = String::from("/assets\\verify.jpeg");
+        let link_string = Asset::remove_prefixes(link_string, upper_folder_path);
+        assert_eq!("assets\\verify.jpeg", link_string);
+
+        let link_string = String::from("..\\..\\assets\\verify.jpeg");
+        let link_string = Asset::remove_prefixes(link_string, upper_folder_path);
+        assert_eq!("..\\assets\\verify.jpeg", link_string);
+        let new_link = Asset::remove_prefixes(link_string, upper_folder_path);
+        assert_eq!("assets\\verify.jpeg", new_link);
+    }
+
+    #[test]
+    fn test_compute_asset_path_by_src_and_link() {
         let mut book_or_chapter_src = ["media", "book", "src"].iter().collect::<PathBuf>();
 
         let mut link = "./asset1.jpg";
-        let asset_path = Asset::join_src_with_link_to_full_path(link, &book_or_chapter_src);
+        let mut asset_path = Asset::compute_asset_path_by_src_and_link(link, &book_or_chapter_src);
+        let normalized_link = utils::normalize_path(PathBuf::from(link).as_path());
+        asset_path = asset_path.join(normalized_link); // compose final result
         assert_eq!(
             asset_path.as_path().as_os_str(),
             (["media", "book", "src", "asset1.jpg"]).iter().collect::<PathBuf>().as_os_str()
         );
 
         link = "asset1.jpg";
-        let asset_path = Asset::join_src_with_link_to_full_path(link, &book_or_chapter_src);
+        let mut asset_path = Asset::compute_asset_path_by_src_and_link(link, &book_or_chapter_src);
+        let normalized_link = utils::normalize_path(PathBuf::from(link).as_path());
+        asset_path = asset_path.join(normalized_link); // compose final result
         assert_eq!(
             asset_path.as_path(),
             ["media", "book", "src", "asset1.jpg"].iter().collect::<PathBuf>()
         );
 
         link = "../upper/assets/asset1.jpg";
-        let asset_path = Asset::join_src_with_link_to_full_path(link, &book_or_chapter_src);
+        let mut asset_path = Asset::compute_asset_path_by_src_and_link(link, &book_or_chapter_src);
+        let normalized_link = utils::normalize_path(PathBuf::from(link).as_path());
+        asset_path = asset_path.join(normalized_link); // compose final result
         assert_eq!(
             asset_path.as_path(),
             ["media", "book", "upper", "assets", "asset1.jpg"].iter().collect::<PathBuf>()
         );
 
         link = "assets/asset1.jpg";
-        let asset_path = Asset::join_src_with_link_to_full_path(link, &book_or_chapter_src);
+        let mut asset_path = Asset::compute_asset_path_by_src_and_link(link, &book_or_chapter_src);
+        let normalized_link = utils::normalize_path(PathBuf::from(link).as_path());
+        asset_path = asset_path.join(normalized_link); // compose final result
         assert_eq!(
             asset_path.as_path(),
             ["media", "book", "src", "assets", "asset1.jpg"].iter().collect::<PathBuf>()
         );
 
         link = "./assets/asset1.jpg";
-        let asset_path = Asset::join_src_with_link_to_full_path(link, &book_or_chapter_src);
+        let mut asset_path = Asset::compute_asset_path_by_src_and_link(link, &book_or_chapter_src);
+        let normalized_link = utils::normalize_path(PathBuf::from(link).as_path());
+        asset_path = asset_path.join(normalized_link); // compose final result
         assert_eq!(
             asset_path.as_path(),
             ["media", "book", "src", "assets", "asset1.jpg"].iter().collect::<PathBuf>()
@@ -671,7 +777,19 @@ mod tests {
         book_or_chapter_src = ["media", "book", "src", "chapter1"].iter().collect::<PathBuf>();
 
         link = "../assets/asset1.jpg";
-        let asset_path = Asset::join_src_with_link_to_full_path(link, &book_or_chapter_src);
+        let mut asset_path = Asset::compute_asset_path_by_src_and_link(link, &book_or_chapter_src);
+        let normalized_link = utils::normalize_path(PathBuf::from(link).as_path());
+        asset_path = asset_path.join(normalized_link); // compose final result
+        assert_eq!(
+            asset_path.as_path(),
+            ["media", "book", "src", "assets", "asset1.jpg"].iter().collect::<PathBuf>()
+        );
+
+        book_or_chapter_src = ["media", "book", "src", "chapter1", "inner"].iter().collect::<PathBuf>();
+        link = "../../assets/asset1.jpg";
+        let mut asset_path = Asset::compute_asset_path_by_src_and_link(link, &book_or_chapter_src);
+        let normalized_link = utils::normalize_path(PathBuf::from(link).as_path());
+        asset_path = asset_path.join(normalized_link); // compose final result
         assert_eq!(
             asset_path.as_path(),
             ["media", "book", "src", "assets", "asset1.jpg"].iter().collect::<PathBuf>()
@@ -680,39 +798,49 @@ mod tests {
 
     #[cfg(target_os = "windows")]
     #[test]
-    fn test_join_chapter_dir_with_link_to_full_path_windows() {
+    fn test_compute_asset_path_by_src_and_link_windows() {
         let mut book_or_chapter_src = ["media", "book", "src"].iter().collect::<PathBuf>();
 
         let mut link = ".\\asset1.jpg";
-        let asset_path = Asset::join_src_with_link_to_full_path(link, &book_or_chapter_src);
+        let mut asset_path = Asset::compute_asset_path_by_src_and_link(link, &book_or_chapter_src);
+        let normalized_link = utils::normalize_path(PathBuf::from(link).as_path());
+        asset_path = asset_path.join(normalized_link); // compose final result
         assert_eq!(
             asset_path.as_path().as_os_str(),
             (["media", "book", "src", "asset1.jpg"]).iter().collect::<PathBuf>().as_os_str()
         );
 
         link = "asset1.jpg";
-        let asset_path = Asset::join_src_with_link_to_full_path(link, &book_or_chapter_src);
+        let mut asset_path = Asset::compute_asset_path_by_src_and_link(link, &book_or_chapter_src);
+        let normalized_link = utils::normalize_path(PathBuf::from(link).as_path());
+        asset_path = asset_path.join(normalized_link); // compose final result
         assert_eq!(
             asset_path.as_path(),
             ["media", "book", "src", "asset1.jpg"].iter().collect::<PathBuf>()
         );
 
         link = "..\\upper\\assets\\asset1.jpg";
-        let asset_path = Asset::join_src_with_link_to_full_path(link, &book_or_chapter_src);
+        let mut asset_path = Asset::compute_asset_path_by_src_and_link(link, &book_or_chapter_src);
+        let normalized_link = utils::normalize_path(PathBuf::from(link).as_path());
+        asset_path = asset_path.join(normalized_link); // compose final result
         assert_eq!(
             asset_path.as_path(),
             ["media", "book", "upper", "assets", "asset1.jpg"].iter().collect::<PathBuf>()
         );
 
         link = "assets\\asset1.jpg";
-        let asset_path = Asset::join_src_with_link_to_full_path(link, &book_or_chapter_src);
+        let mut asset_path = Asset::compute_asset_path_by_src_and_link(link, &book_or_chapter_src);
+        let normalized_link = utils::normalize_path(PathBuf::from(link).as_path());
+        asset_path = asset_path.join(normalized_link); // compose final result
         assert_eq!(
             asset_path.as_path(),
             ["media", "book", "src", "assets", "asset1.jpg"].iter().collect::<PathBuf>()
         );
 
         link = ".\\assets\\asset1.jpg";
-        let asset_path = Asset::join_src_with_link_to_full_path(link, &book_or_chapter_src);
+        let mut asset_path = Asset::compute_asset_path_by_src_and_link(link, &book_or_chapter_src);
+        let normalized_link = utils::normalize_path(PathBuf::from(link).as_path());
+        asset_path = asset_path.join(normalized_link); // compose final result
         assert_eq!(
             asset_path.as_path(),
             ["media", "book", "src", "assets", "asset1.jpg"].iter().collect::<PathBuf>()
@@ -721,7 +849,19 @@ mod tests {
         book_or_chapter_src = ["media", "book", "src", "chapter1"].iter().collect::<PathBuf>();
 
         link = "..\\assets\\asset1.jpg";
-        let asset_path = Asset::join_src_with_link_to_full_path(link, &book_or_chapter_src);
+        let mut asset_path = Asset::compute_asset_path_by_src_and_link(link, &book_or_chapter_src);
+        let normalized_link = utils::normalize_path(PathBuf::from(link).as_path());
+        asset_path = asset_path.join(normalized_link); // compose final result
+        assert_eq!(
+            asset_path.as_path(),
+            ["media", "book", "src", "assets", "asset1.jpg"].iter().collect::<PathBuf>()
+        );
+
+        book_or_chapter_src = ["media", "book", "src", "chapter1", "inner"].iter().collect::<PathBuf>();
+        link = "..\\..\\assets\\asset1.jpg";
+        let mut asset_path = Asset::compute_asset_path_by_src_and_link(link, &book_or_chapter_src);
+        let normalized_link = utils::normalize_path(PathBuf::from(link).as_path());
+        asset_path = asset_path.join(normalized_link); // compose final result
         assert_eq!(
             asset_path.as_path(),
             ["media", "book", "src", "assets", "asset1.jpg"].iter().collect::<PathBuf>()
@@ -730,29 +870,37 @@ mod tests {
 
     #[cfg(not(target_os = "windows"))]
     #[test]
-    fn incorrect_input_join_chapter_with_link_to_full_path() {
+    fn incorrect_compute_asset_path_by_src_and_link() {
         let book_or_chapter_src = ["media", "book", "src"].iter().collect::<PathBuf>();
 
         let link = "/assets/asset1.jpg";
-        let asset_path = Asset::join_src_with_link_to_full_path(link, &book_or_chapter_src);
+        let mut asset_path = Asset::compute_asset_path_by_src_and_link(link, &book_or_chapter_src);
+        let normalized_link = utils::normalize_path(PathBuf::from(link).as_path());
+        asset_path = asset_path.join(normalized_link); // compose final result
         assert_eq!(asset_path.as_path(), Path::new("/assets/asset1.jpg"));
 
         let link = "/../assets/asset1.jpg";
-        let asset_path = Asset::join_src_with_link_to_full_path(link, &book_or_chapter_src);
+        let mut asset_path = Asset::compute_asset_path_by_src_and_link(link, &book_or_chapter_src);
+        let normalized_link = utils::normalize_path(PathBuf::from(link).as_path());
+        asset_path = asset_path.join(normalized_link); // compose final result
         assert_eq!(asset_path.as_path(), Path::new("/assets/asset1.jpg"));
     }
 
     #[cfg(target_os = "windows")]
     #[test]
-    fn incorrect_input_join_chapter_with_link_to_full_path() {
+    fn incorrect_compute_asset_path_by_src_and_link_windows() {
         let book_or_chapter_src = ["media", "book", "src"].iter().collect::<PathBuf>();
 
         let link = "\\assets\\asset1.jpg";
-        let asset_path = Asset::join_src_with_link_to_full_path(link, &book_or_chapter_src);
+        let mut asset_path = Asset::compute_asset_path_by_src_and_link(link, &book_or_chapter_src);
+        let normalized_link = utils::normalize_path(PathBuf::from(link).as_path());
+        asset_path = asset_path.join(normalized_link); // compose final result
         assert_eq!(asset_path.as_path(), Path::new("/assets/asset1.jpg"));
 
         let link = "\\..\\assets/asset1.jpg";
-        let asset_path = Asset::join_src_with_link_to_full_path(link, &book_or_chapter_src);
+        let mut asset_path = Asset::compute_asset_path_by_src_and_link(link, &book_or_chapter_src);
+        let normalized_link = utils::normalize_path(PathBuf::from(link).as_path());
+        asset_path = asset_path.join(normalized_link); // compose final result
         assert_eq!(asset_path.as_path(), Path::new("/assets/asset1.jpg"));
     }
 }
