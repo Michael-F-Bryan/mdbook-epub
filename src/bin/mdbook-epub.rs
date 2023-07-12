@@ -32,7 +32,8 @@ fn run(args: &Args) -> Result<(), Error> {
     debug!("run EPUB book build...");
     // get a `RenderContext`, either from stdin (because it's used as a plugin)
     // or by instrumenting MDBook directly
-    let ctx: RenderContext = if !args.plugin {
+    let ctx: RenderContext = if args.standalone {
+        println!("Running mdbook-epub as standalone app...");
         let error = format!(
             "book.toml root file is not found by a path {:?}",
             &args.root.display()
@@ -46,6 +47,7 @@ fn run(args: &Args) -> Result<(), Error> {
         debug!("EPUB book config is : {:?}", md.config);
         RenderContext::new(md.root, md.book, md.config, destination)
     } else {
+        println!("Running mdbook-epub as plugin...");
         serde_json::from_reader(io::stdin()).map_err(|_| Error::RenderContext)?
     };
 
@@ -60,8 +62,14 @@ fn run(args: &Args) -> Result<(), Error> {
 
 #[derive(Debug, Clone, StructOpt)]
 struct Args {
-    #[structopt(short = "p", long = "plugin", help = "Run as a mdbook plugin")]
-    plugin: bool,
+    #[structopt(
+        short = "s",
+        long = "standalone",
+        parse(try_from_str),
+        default_value = "false",
+        help = "Run standalone (i.e. not as a mdbook plugin)"
+    )]
+    standalone: bool,
     #[structopt(help = "The book to render.", parse(from_os_str), default_value = ".")]
     root: PathBuf,
 }
