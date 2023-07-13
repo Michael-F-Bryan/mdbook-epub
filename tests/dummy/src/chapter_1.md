@@ -4,10 +4,14 @@ Here is the Rust logo:
 
 ![Rust Logo](rust-logo.png)
 
+![Image](../third_party/wikimedia/Epub_logo_color.svg)
+
 Listing example:
 {{#rustdoc_include ../listings/ch02-guessing-game-tutorial/no-listing-04-looping/src/main.rs:here}}
 
 <img alt="Rust Logo in html" src="rust-logo.svg" class="center" style="width: 20%;" />
+
+![Image](assets/rust-logo.png)
 
 The following straight quotes should transform into curly quotes:
 

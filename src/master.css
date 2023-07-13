@@ -44,8 +44,6 @@ samp,
 small,
 strike,
 strong,
-sub,
-sup,
 tt,
 var,
 b,
@@ -89,12 +87,6 @@ video {
     border: 0;
     font-size: 100%;
     vertical-align: baseline;
-}
-
-table {
-    /*margin: 1.0em auto;*/
-    border-collapse: collapse;
-    border-spacing: 0;
 }
 
 ol,
@@ -396,6 +388,8 @@ img {
 /*==TABLES==*/
 table {
     margin: 1.0em auto;
+    border-collapse: collapse;
+    border-spacing: 0;
 }
 
 tr,

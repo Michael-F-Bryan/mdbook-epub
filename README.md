@@ -1,7 +1,8 @@
  # MDBook EPUB Backend
 
-[![Build Status](https://travis-ci.org/Michael-F-Bryan/mdbook-epub.svg?branch=master)](https://travis-ci.org/Michael-F-Bryan/mdbook-epub)
-[![Build status](https://ci.appveyor.com/api/projects/status/33y7ewdbvo4ap1i9/branch/master?svg=true)](https://ci.appveyor.com/project/Michael-F-Bryan/mdbook-epub/branch/master)
+ - [![Build Status](https://travis-ci.org/Michael-F-Bryan/mdbook-epub.svg?branch=master)](https://travis-ci.org/Michael-F-Bryan/mdbook-epub)
+ - [![Build status](https://ci.appveyor.com/api/projects/status/33y7ewdbvo4ap1i9/branch/master?svg=true)](https://ci.appveyor.com/project/Michael-F-Bryan/mdbook-epub/branch/master)
+ - [![Rust](https://github.com/blandger/mdbook-epub/actions/workflows/rust.yml/badge.svg)](https://github.com/blandger/mdbook-epub/actions/workflows/rust.yml)
 
 [**(Rendered Docs)**](https://michael-f-bryan.github.io/mdbook-epub/)
 
@@ -49,7 +50,8 @@ the backend can be used without needing to be called by `mdbook`, useful if
 you only want to render the EPUB document.
 
 ```
-$ mdbook-epub --standalone ./path/to/book/dir
+$ mdbook-epub -s true ./path/to/book/dir
+$ mdbook-epub --standalone true ./path/to/book/dir
 ```
 
 

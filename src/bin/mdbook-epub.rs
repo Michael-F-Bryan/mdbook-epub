@@ -19,7 +19,7 @@ fn main() {
     env_logger::init();
     info!("Booting EPUB generator...");
     let args = Args::from_args();
-    debug!("generator args = {:?}", args);
+    debug!("prepared generator args = {:?}", args);
 
     if let Err(e) = run(&args) {
         log::error!("{}", e);
@@ -29,9 +29,11 @@ fn main() {
 }
 
 fn run(args: &Args) -> Result<(), Error> {
-    // get a `RenderContext`, either from stdin (because we're used as a plugin)
-    // or by instrumenting MDBook directly (in standalone mode).
+    debug!("run EPUB book build...");
+    // get a `RenderContext`, either from stdin (because it's used as a plugin)
+    // or by instrumenting MDBook directly
     let ctx: RenderContext = if args.standalone {
+        println!("Running mdbook-epub as standalone app...");
         let error = format!(
             "book.toml root file is not found by a path {:?}",
             &args.root.display()
@@ -45,10 +47,15 @@ fn run(args: &Args) -> Result<(), Error> {
         debug!("EPUB book config is : {:?}", md.config);
         RenderContext::new(md.root, md.book, md.config, destination)
     } else {
+        println!("Running mdbook-epub as plugin...");
         serde_json::from_reader(io::stdin()).map_err(|_| Error::RenderContext)?
     };
 
     mdbook_epub::generate(&ctx)?;
+    info!(
+        "Book is READY in directory: '{}'",
+        ctx.destination.display()
+    );
 
     Ok(())
 }
@@ -58,6 +65,8 @@ struct Args {
     #[structopt(
         short = "s",
         long = "standalone",
+        parse(try_from_str),
+        default_value = "false",
         help = "Run standalone (i.e. not as a mdbook plugin)"
     )]
     standalone: bool,
