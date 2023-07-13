@@ -1,7 +1,7 @@
  # MDBook EPUB Backend
 
  - [![Build Status](https://travis-ci.org/Michael-F-Bryan/mdbook-epub.svg?branch=master)](https://travis-ci.org/Michael-F-Bryan/mdbook-epub)
- - [![Build status](https://ci.appveyor.com/api/projects/status/33y7ewdbvo4ap1i9/branch/master?svg=true)](https://ci.appveyor.com/project/Michael-F-Bryan/mdbook-epub/branch/master)
+ - [![Build status](https://ci.appveyor.com/api/projects/status/94a37o6ffioapgoo/branch/master?svg=true)](https://ci.appveyor.com/project/blandger/mdbook-epub/branch/master)
  - [![Rust](https://github.com/blandger/mdbook-epub/actions/workflows/rust.yml/badge.svg)](https://github.com/blandger/mdbook-epub/actions/workflows/rust.yml)
 
 [**(Rendered Docs)**](https://michael-f-bryan.github.io/mdbook-epub/)
@@ -96,7 +96,7 @@ list is by no means complete, so feature requests are most welcome!
 - [x] Generate a basic TOC
 - [x] Nested chapters - currently they're all inserted at the top level
 - [x] Include a default CSS stylesheet ([master.css])
-   - [ ] Actually make that stylesheet pretty enough for human consumption
+   - [X] Actually make that stylesheet pretty enough for human consumption
 - [x] Include user-defined stylesheets and themes
 - [ ] Allow users to tweak the generated page by providing their own template
 - [x] Ensure the generated document is viewable on the following platforms
