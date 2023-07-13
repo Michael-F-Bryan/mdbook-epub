@@ -65,9 +65,9 @@ branches:
 notifications:
   - provider: Email
     to:
-      - blandger@gmail.com
-    subject: 'Build {{status}}'                  # optional
-    message: "{{message}}, {{commitId}}, ..."    # optional
+      - '{{commitAuthorEmail}}'
+    subject: 'Build {{status}}: {{projectName}} - {{buildVersion}}' # optional
+    message: "Commit {{commitId}} by {{commitAuthor}} on {{commitDate}} : {{commitMessage}}, {{message}}" # optional
     on_build_success: false
 
 # Building is done in the test phase, so we disable Appveyor's build phase.
