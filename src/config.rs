@@ -71,3 +71,33 @@ impl Default for Config {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::path::Path;
+    use super::*;
+
+    #[test]
+    fn test_from_render_context_minimal_settings() {
+        let json = ctx_with_template(
+            "unknown_src",
+            tempdir::TempDir::new("test-mdbook-epub").unwrap().path(),
+        ).to_string();
+        let ctx = RenderContext::from_json(json.as_bytes()).unwrap();
+        let config = Config::from_render_context(&ctx);
+        assert!(config.is_ok());
+    }
+
+    fn ctx_with_template(source: &str, destination: &Path) -> serde_json::Value {
+        json!({
+            "version": mdbook::MDBOOK_VERSION,
+            "root": "tests/dummy",
+            "book": {"sections": [], "__non_exhaustive": null},
+            "config": {
+                "book": {"authors": [], "language": "en", "multilingual": false,
+                    "src": source, "title": "DummyBook"},
+                "output": {"epub": {"optional": true}}},
+            "destination": destination
+        })
+    }
+}
