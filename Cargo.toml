@@ -2,7 +2,7 @@
 authors = ["Michael Bryan <michaelfbryan@gmail.com>"]
 description = "An EPUB renderer for mdbook."
 name = "mdbook-epub"
-version = "0.4.32-beta1"
+version = "0.4.32"
 readme = "README.md"
 license = "MIT"
 repository = "https://github.com/Michael-F-Bryan/mdbook-epub"
