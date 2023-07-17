@@ -91,6 +91,11 @@ impl From<ureq::Error> for Error {
         Error::HttpError(Box::new(e))
     }
 }
+impl From<Box<ureq::Error>> for Error {
+    fn from(e: Box<ureq::Error>) -> Self {
+        Error::HttpError(e)
+    }
+}
 
 /// The exact version of `mdbook` this crate is compiled against.
 pub const MDBOOK_VERSION: &str = mdbook::MDBOOK_VERSION;
