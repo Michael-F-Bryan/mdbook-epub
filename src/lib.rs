@@ -1,6 +1,5 @@
 //! A `mdbook` backend for generating a book in the `EPUB` format.
 
-use ::epub_builder;
 use ::handlebars;
 use ::thiserror::Error;
 #[macro_use]
@@ -75,7 +74,7 @@ pub enum Error {
     #[error(transparent)]
     Semver(#[from] semver::Error),
     #[error(transparent)]
-    EpubBuilder(#[from] epub_builder::Error),
+    EpubBuilder(#[from] eyre::Report),
     #[error(transparent)]
     Render(#[from] handlebars::RenderError),
     #[error(transparent)]
