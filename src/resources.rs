@@ -182,7 +182,7 @@ impl Asset {
             return Err(Error::AssetFile(absolute_location));
         }
         // Use filename as embedded file path with content from absolute_location.
-        let binding = utils::normalize_path(Path::new(link.clone()));
+        let binding = utils::normalize_path(Path::new(link));
         debug!("Extracting file name from = {:?}, binding = '{binding:?}'", &full_filename.display());
         let filename;
         if cfg!(target_os = "windows") { 

@@ -7,4 +7,3 @@ lang = "en"
 
 [output.epub]
 curly-quotes = true
-additional-resources = ["assets/rust-logo.png"]

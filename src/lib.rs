@@ -1,6 +1,5 @@
 //! A `mdbook` backend for generating a book in the `EPUB` format.
 
-use ::epub_builder;
 use ::handlebars;
 use ::thiserror::Error;
 #[macro_use]
@@ -126,6 +125,7 @@ pub fn generate(ctx: &RenderContext) -> Result<(), Error> {
     }
 
     let f = File::create(&outfile)?;
+    debug!("Path to epub file: '{:?}'", f);
     Generator::new(ctx)?.generate(f)?;
 
     Ok(())
