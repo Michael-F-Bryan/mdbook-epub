@@ -23,8 +23,9 @@ name = "mdbook-epub"
 doc = false
 
 [dependencies]
-epub-builder = "0.5"
-thiserror = "1.0.43"
+epub-builder = "0.7"
+thiserror = "1.0.49"
+eyre = "0.6"
 pulldown-cmark = "0.9.3"
 semver = "1.0.17"
 serde = { version = "1.0.163", features = ["derive"] }
@@ -34,13 +35,13 @@ structopt = "0.3.26"
 mime_guess = "2.0"
 env_logger = "0.10.0"
 log = "0.4.17"
-mdbook = { version = "0.4.34", default-features = false }
+mdbook = { version = "0.4.35", default-features = false }
 handlebars = "4.3.7"
 toml = "0.5.11" # downgraded due to parent 'mdbook' dependency and error there
 html_parser = "0.7.0"
 url = "2.3"
 ureq = "2.5"
-const_format = "0.2.30"
+const_format = "0.2.31"
 
 [dev-dependencies]
 tempdir = "0.3.7"
