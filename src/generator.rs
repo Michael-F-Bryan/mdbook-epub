@@ -208,21 +208,18 @@ impl<'a> Generator<'a> {
         let mut remote_assets: HashMap<String, Asset> = HashMap::new();
         for (key, value) in self.assets.clone().into_iter() {
             trace!("{} / {:?}", key, &value);
-            match value.source {
-                AssetKind::Remote(ref remote_url) => {
-                    trace!(
-                        "Adding remote_assets = '{}' / {:?}",
-                        remote_url.to_string(),
-                        &value
-                    );
-                    remote_assets.insert(remote_url.to_string(), value);
-                },
-                _ => {},
-/*                AssetKind::Local(ref _local_path) => {
-                    let relative_path = value.filename.to_str().unwrap();
-                    remote_assets.insert(String::from(relative_path), value);
-                }*/
+            if let AssetKind::Remote(ref remote_url) = value.source {
+                trace!(
+                    "Adding remote_assets = '{}' / {:?}",
+                    remote_url.to_string(),
+                    &value
+                );
+                remote_assets.insert(remote_url.to_string(), value);
             }
+            /* else if let AssetKind::Local(ref _local_path) = value.source {
+                let relative_path = value.filename.to_str().unwrap();
+                remote_assets.insert(String::from(relative_path), value);
+            }*/
         }
         let asset_link_filter = AssetLinkFilter::new(&remote_assets, ch_depth);
         let events = parser
