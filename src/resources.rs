@@ -263,11 +263,8 @@ fn find_assets_in_nested_html_tags(element: &Element) -> Result<Vec<String>, Err
         }
     }
     for item in &element.children {
-        match item {
-            Node::Element(ref nested_element) => {
-                found_asset.extend(find_assets_in_nested_html_tags(nested_element)?.into_iter());
-            }
-            _ => {}
+        if let Node::Element(ref nested_element) = item {
+            found_asset.extend(find_assets_in_nested_html_tags(nested_element)?.into_iter());
         }
     }
 
@@ -290,11 +287,8 @@ fn find_assets_in_markdown(chapter_src_content: &str) -> Result<Vec<String>, Err
 
                 if let Ok(dom) = Dom::parse(&content) {
                     for item in dom.children {
-                        match item {
-                            Node::Element(ref element) => {
-                                    found_asset.extend(find_assets_in_nested_html_tags(element)?.into_iter());
-                            }
-                            _ => {}
+                        if let Node::Element(ref element) = item {
+                            found_asset.extend(find_assets_in_nested_html_tags(element)?.into_iter());
                         }
                     }
                 }

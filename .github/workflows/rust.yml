@@ -17,6 +17,8 @@ jobs:
       uses: actions/checkout@v2
     - name: Install cargo version
       uses: dtolnay/rust-toolchain@stable
+    - name: Install epub checker
+      run: sudo apt-get update -y && sudo apt-get upgrade -y && sudo apt-get install -y epubcheck
 #    - name: Install cargo audit
 #      run: cargo install cargo-audit
     - name: Show rust version
