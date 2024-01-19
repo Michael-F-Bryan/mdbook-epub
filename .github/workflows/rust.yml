@@ -25,8 +25,8 @@ jobs:
       run: cargo build --verbose
     - name: Run tests
       run: cargo test --verbose
-#    - name: Run Clippy
-#      run: cargo clippy -- --no-deps -Dwarnings
+    - name: Run Clippy
+      run: cargo clippy -- --no-deps -Dwarnings
 #    - name: Audit
 #      run: cargo audit
 #    - name: Rust format
