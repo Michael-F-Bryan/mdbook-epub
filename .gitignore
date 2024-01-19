@@ -2,3 +2,4 @@
 **/*.rs.bk
 **/.idea
 **/.vscode/
+tests/dummy/book/*.epub
