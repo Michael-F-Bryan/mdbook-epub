@@ -61,7 +61,7 @@ fn output_epub_exists() {
     assert!(output_file.exists());
 }
 
-#[ignore = "Needs reworking for resource outside src"]
+#[ignore = "Waiting for issue = https://github.com/lise-henry/epub-builder/issues/45"]
 #[test]
 #[serial]
 fn output_epub_is_valid() {
@@ -82,7 +82,7 @@ fn output_epub_is_valid() {
 
 fn epub_check(path: &Path) -> Result<(), Error> {
     init_logging();
-    debug!("epub_check...");
+    debug!("epub_check in path = {}...", &path.display());
     let cmd = Command::new("epubcheck").arg(path).output();
 
     match cmd {
@@ -90,13 +90,15 @@ fn epub_check(path: &Path) -> Result<(), Error> {
             if output.status.success() {
                 Ok(())
             } else {
-                Err(Error::EpubCheck)
+                let error_from_epubcheck = String::from_utf8_lossy(output.stderr.as_slice());
+                error!("Error: {:?}", &error_from_epubcheck);
+                Err(Error::EpubCheck(error_from_epubcheck.to_string()))
             }
         }
-        Err(_) => {
+        Err(err) => {
             // failed to launch epubcheck, it's probably not installed
             debug!("Failed to launch epubcheck, it's probably not installed here...");
-            Err(Error::EpubCheck)
+            Err(Error::EpubCheck(err.to_string()))
         }
     }
 }
