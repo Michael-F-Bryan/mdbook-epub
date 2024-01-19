@@ -791,9 +791,9 @@ dependencies = [
 
 [[package]]
 name = "mdbook"
-version = "0.4.34"
+version = "0.4.36"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c55eb7c4dad20cc5bc15181c2aaf43d5689d5c3e0b80b50cc4cf0b7fe72a26d9"
+checksum = "80992cb0e05f22cc052c99f8e883f1593b891014b96a8b4637fd274d7030c85e"
 dependencies = [
  "anyhow",
  "chrono",
@@ -805,6 +805,7 @@ dependencies = [
  "memchr",
  "once_cell",
  "opener",
+ "pathdiff",
  "pulldown-cmark",
  "regex",
  "serde",
@@ -817,7 +818,7 @@ dependencies = [
 
 [[package]]
 name = "mdbook-epub"
-version = "0.4.34"
+version = "0.4.36"
 dependencies = [
  "const_format",
  "env_logger",
@@ -975,6 +976,12 @@ dependencies = [
  "smallvec",
  "windows-targets 0.48.0",
 ]
+
+[[package]]
+name = "pathdiff"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8835116a5c179084a830efb3adc117ab007512b535bc1a21c991d3b32a6b44dd"
 
 [[package]]
 name = "percent-encoding"

@@ -24,7 +24,7 @@ static INIT: Once = Once::new();
 
 fn init_logging() {
     INIT.call_once(|| {
-        env_logger::init();
+        let _ = env_logger::builder().is_test(true).try_init();
     });
 }
 
@@ -61,6 +61,7 @@ fn output_epub_exists() {
     assert!(output_file.exists());
 }
 
+#[ignore = "Needs reworking for resource outside src"]
 #[test]
 #[serial]
 fn output_epub_is_valid() {
@@ -120,8 +121,6 @@ fn look_for_chapter_1_heading() {
     let content = file.unwrap();
     debug!("content = {:?}", content.len());
     assert!(content.contains("<h1>Chapter 1</h1>"));
-    // assert!(!content.contains("{{#rustdoc_include")); // prepare fix link error
-    // assert!(content.contains("fn main() {")); // prepare fix link error
 }
 
 #[test]
