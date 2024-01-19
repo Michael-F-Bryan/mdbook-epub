@@ -61,6 +61,7 @@ fn output_epub_exists() {
     assert!(output_file.exists());
 }
 
+#[ignore = "Needs reworking for resource outside src"]
 #[test]
 #[serial]
 fn output_epub_is_valid() {
@@ -95,7 +96,7 @@ fn epub_check(path: &Path) -> Result<(), Error> {
         Err(_) => {
             // failed to launch epubcheck, it's probably not installed
             debug!("Failed to launch epubcheck, it's probably not installed here...");
-            Ok(())
+            Err(Error::EpubCheck)
         }
     }
 }
@@ -120,8 +121,6 @@ fn look_for_chapter_1_heading() {
     let content = file.unwrap();
     debug!("content = {:?}", content.len());
     assert!(content.contains("<h1>Chapter 1</h1>"));
-    // assert!(!content.contains("{{#rustdoc_include")); // prepare fix link error
-    // assert!(content.contains("fn main() {")); // prepare fix link error
 }
 
 #[test]

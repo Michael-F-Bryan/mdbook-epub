@@ -161,7 +161,15 @@ impl<'a> Generator<'a> {
             content_path
         );
         let path = content_path.with_extension("html").display().to_string();
-        let mut content = EpubContent::new(path, rendered.as_bytes()).title(format!("{ch}"));
+        let title = if self.config.no_section_label {
+            ch.name.clone()
+        } else if let Some(ref section_number) = ch.number {
+            format!{"{} {}", section_number, ch.name}
+        } else {
+            ch.name.clone()
+        };
+
+        let mut content = EpubContent::new(path, rendered.as_bytes()).title(title);
 
         let level = ch.number.as_ref().map(|n| n.len() as i32 - 1).unwrap_or(0);
         content = content.level(level);
@@ -200,21 +208,18 @@ impl<'a> Generator<'a> {
         let mut remote_assets: HashMap<String, Asset> = HashMap::new();
         for (key, value) in self.assets.clone().into_iter() {
             trace!("{} / {:?}", key, &value);
-            match value.source {
-                AssetKind::Remote(ref remote_url) => {
-                    trace!(
-                        "Adding remote_assets = '{}' / {:?}",
-                        remote_url.to_string(),
-                        &value
-                    );
-                    remote_assets.insert(remote_url.to_string(), value);
-                },
-                _ => {},
-/*                AssetKind::Local(ref _local_path) => {
-                    let relative_path = value.filename.to_str().unwrap();
-                    remote_assets.insert(String::from(relative_path), value);
-                }*/
+            if let AssetKind::Remote(ref remote_url) = value.source {
+                trace!(
+                    "Adding remote_assets = '{}' / {:?}",
+                    remote_url.to_string(),
+                    &value
+                );
+                remote_assets.insert(remote_url.to_string(), value);
             }
+            /* else if let AssetKind::Local(ref _local_path) = value.source {
+                let relative_path = value.filename.to_str().unwrap();
+                remote_assets.insert(String::from(relative_path), value);
+            }*/
         }
         let asset_link_filter = AssetLinkFilter::new(&remote_assets, ch_depth);
         let events = parser

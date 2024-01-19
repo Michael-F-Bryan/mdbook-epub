@@ -2,7 +2,7 @@
 authors = ["Michael Bryan <michaelfbryan@gmail.com>"]
 description = "An EPUB renderer for mdbook."
 name = "mdbook-epub"
-version = "0.4.34"
+version = "0.4.36"
 readme = "README.md"
 license = "MIT"
 repository = "https://github.com/Michael-F-Bryan/mdbook-epub"
@@ -23,6 +23,7 @@ name = "mdbook-epub"
 doc = false
 
 [dependencies]
+eyre = "0.6"
 epub-builder = "0.7"
 thiserror = "1.0.49"
 eyre = "0.6"
@@ -35,7 +36,7 @@ structopt = "0.3.26"
 mime_guess = "2.0"
 env_logger = "0.10.0"
 log = "0.4.17"
-mdbook = { version = "0.4.35", default-features = false }
+mdbook = { version = "0.4.36", default-features = false }
 handlebars = "4.3.7"
 toml = "0.5.11" # downgraded due to parent 'mdbook' dependency and error there
 html_parser = "0.7.0"

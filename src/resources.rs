@@ -1,5 +1,5 @@
 use const_format::concatcp;
-use html_parser::{Dom, Node};
+use html_parser::{Dom, Node, Element};
 use mdbook::book::BookItem;
 use mdbook::renderer::RenderContext;
 use mime_guess::Mime;
@@ -62,12 +62,14 @@ pub(crate) fn find(ctx: &RenderContext) -> Result<HashMap<String, Asset>, Error>
                                 Ok(relative_link_path) => {
                                     let link_key: String =
                                         String::from(relative_link_path.to_str().unwrap());
-                                    if !assets.contains_key(&link_key) {
+                                    if let std::collections::hash_map::Entry::Vacant(e) =
+                                        assets.entry(link_key.to_owned())
+                                    {
                                         debug!(
                                             "Adding asset by link '{:?}' : {:#?}",
                                             link_key, &asset
                                         );
-                                        assets.insert(link_key, asset);
+                                        e.insert(asset);
                                         assets_count += 1;
                                     } else {
                                         debug!("Skipped asset for '{}'", link_key);
@@ -184,13 +186,12 @@ impl Asset {
         // Use filename as embedded file path with content from absolute_location.
         let binding = utils::normalize_path(Path::new(link));
         debug!("Extracting file name from = {:?}, binding = '{binding:?}'", &full_filename.display());
-        let filename;
-        if cfg!(target_os = "windows") { 
-            filename = binding.as_os_str().to_os_string()
-            .into_string().expect("Error getting filename for Local Asset").replace("\\", "/"); 
+        let filename = if cfg!(target_os = "windows") {
+            binding.as_os_str().to_os_string()
+            .into_string().expect("Error getting filename for Local Asset").replace('\\', "/")
         } else {
-            filename = String::from(binding.as_path().to_str().unwrap());
-        }
+            String::from(binding.as_path().to_str().unwrap())
+        };
 
         let asset = Asset::new(
             filename,
@@ -237,8 +238,8 @@ impl Asset {
 
     // Strip input link by prefixes from &str array
     // return 'shorter' result or the same
-    fn remove_prefixes<'a>(link_to_strip: String, prefixes: &[&str]) -> String {
-        let mut stripped_link = String::from(link_to_strip.clone());
+    fn remove_prefixes(link_to_strip: String, prefixes: &[&str]) -> String {
+        let mut stripped_link = link_to_strip.clone();
         for prefix in prefixes {
             match link_to_strip.strip_prefix(prefix) {
                 Some(s) => {
@@ -250,6 +251,27 @@ impl Asset {
         };
         stripped_link
     }
+}
+
+// Look up resources in nested HTML element
+fn find_assets_in_nested_html_tags(element: &Element) -> Result<Vec<String>, Error> {
+    let mut found_asset = Vec::new();
+
+    if element.name == "img" {
+        if let Some(dest) = &element.attributes["src"] {
+            found_asset.push(dest.clone());
+        }
+    }
+    for item in &element.children {
+        match item {
+            Node::Element(ref nested_element) => {
+                found_asset.extend(find_assets_in_nested_html_tags(nested_element)?.into_iter());
+            }
+            _ => {}
+        }
+    }
+
+    Ok(found_asset)
 }
 
 // Look up resources in chapter md content
@@ -269,10 +291,8 @@ fn find_assets_in_markdown(chapter_src_content: &str) -> Result<Vec<String>, Err
                 if let Ok(dom) = Dom::parse(&content) {
                     for item in dom.children {
                         match item {
-                            Node::Element(ref element) if element.name == "img" => {
-                                if let Some(dest) = &element.attributes["src"] {
-                                    found_asset.push(dest.clone());
-                                }
+                            Node::Element(ref element) => {
+                                    found_asset.extend(find_assets_in_nested_html_tags(element)?.into_iter());
                             }
                             _ => {}
                         }
