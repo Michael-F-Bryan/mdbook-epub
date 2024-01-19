@@ -1,5 +1,5 @@
 use const_format::concatcp;
-use html_parser::{Dom, Node};
+use html_parser::{Dom, Node, Element};
 use mdbook::book::BookItem;
 use mdbook::renderer::RenderContext;
 use mime_guess::Mime;
@@ -252,6 +252,27 @@ impl Asset {
     }
 }
 
+// Look up resources in nested HTML element
+fn find_assets_in_nested_html_tags(element: &Element) -> Result<Vec<String>, Error> {
+    let mut found_asset = Vec::new();
+
+    if element.name == "img" {
+        if let Some(dest) = &element.attributes["src"] {
+            found_asset.push(dest.clone());
+        }
+    }
+    for item in &element.children {
+        match item {
+            Node::Element(ref nested_element) => {
+                found_asset.extend(find_assets_in_nested_html_tags(nested_element)?.into_iter());
+            }
+            _ => {}
+        }
+    }
+
+    Ok(found_asset)
+}
+
 // Look up resources in chapter md content
 fn find_assets_in_markdown(chapter_src_content: &str) -> Result<Vec<String>, Error> {
     let mut found_asset = Vec::new();
@@ -269,10 +290,8 @@ fn find_assets_in_markdown(chapter_src_content: &str) -> Result<Vec<String>, Err
                 if let Ok(dom) = Dom::parse(&content) {
                     for item in dom.children {
                         match item {
-                            Node::Element(ref element) if element.name == "img" => {
-                                if let Some(dest) = &element.attributes["src"] {
-                                    found_asset.push(dest.clone());
-                                }
+                            Node::Element(ref element) => {
+                                    found_asset.extend(find_assets_in_nested_html_tags(element)?.into_iter());
                             }
                             _ => {}
                         }
