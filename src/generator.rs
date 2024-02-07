@@ -18,7 +18,7 @@ use url::Url;
 
 use crate::config::Config;
 use crate::resources::retrieve::{ContentRetriever, ResourceHandler};
-use crate::resources::resources::{self};
+use crate::resources::resource::{self};
 use crate::DEFAULT_CSS;
 use crate::{Error, utils};
 use crate::resources::asset::{Asset, AssetKind};
@@ -114,7 +114,7 @@ impl<'a> Generator<'a> {
         let error = String::from("Failed finding/fetch resource taken from content? Look up content for possible error...");
         // resources::find can emit very unclear error based on internal MD content,
         // so let's give a tip to user in error message
-        let assets = resources::find(self.ctx).map_err(|e| {
+        let assets = resource::find(self.ctx).map_err(|e| {
             error!("{} Caused by: {}", error, e);
             e
         })?;

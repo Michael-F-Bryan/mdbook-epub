@@ -2,7 +2,7 @@ use std::path::{MAIN_SEPARATOR_STR, Path, PathBuf};
 use url::Url;
 use mime_guess::Mime;
 use crate::errors::Error;
-use crate::resources::resources::{UPPER_FOLDER_PATHS, UPPER_PARENT, UPPER_PARENT_LINUX, UPPER_PARENT_STARTS_SLASH, UPPER_PARENT_STARTS_SLASH_LINUX};
+use crate::resources::resource::{UPPER_FOLDER_PATHS, UPPER_PARENT, UPPER_PARENT_LINUX, UPPER_PARENT_STARTS_SLASH, UPPER_PARENT_STARTS_SLASH_LINUX};
 use crate::utils;
 
 /// The type of asset, remote or local
