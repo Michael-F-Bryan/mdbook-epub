@@ -13,14 +13,15 @@ use handlebars::{Handlebars, RenderError};
 use html_parser::{Dom, Node};
 use mdbook::book::{BookItem, Chapter};
 use mdbook::renderer::RenderContext;
-use pulldown_cmark::{html, CowStr, Event, Tag};
+use pulldown_cmark::{CowStr, Event, html, Tag};
 use url::Url;
 
 use crate::config::Config;
-use crate::resources::handler::{ContentRetriever, ResourceHandler};
-use crate::resources::{self, Asset, AssetKind};
+use crate::resources::retrieve::{ContentRetriever, ResourceHandler};
+use crate::resources::resources::{self};
 use crate::DEFAULT_CSS;
-use crate::{utils, Error};
+use crate::{Error, utils};
+use crate::resources::asset::{Asset, AssetKind};
 
 /// The actual EPUB book renderer.
 pub struct Generator<'a> {
@@ -561,7 +562,8 @@ mod tests {
     use std::path::Path;
 
     use super::*;
-    use crate::resources::{handler::MockContentRetriever, AssetKind};
+    use crate::resources::asset::AssetKind;
+    use crate::resources::retrieve::MockContentRetriever;
 
     #[test]
     fn load_assets() {
