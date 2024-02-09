@@ -12,7 +12,6 @@ jobs:
   release:
     strategy:
       matrix:
-        max-parallel: 1
         include:
           - os: ubuntu-latest
             artifact_name: ${{ github.event.repository.name }}
