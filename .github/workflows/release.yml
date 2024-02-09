@@ -1,53 +1,43 @@
-on:
-  release:
-    types: [created]
-  push:
+name: Release
 
+permissions:
+  contents: write
+
+on:
+  push:
+    tags:
+      - v[0-9]+.*
 
 jobs:
   release:
-    name: release ${{ matrix.target }} (with non-required env)
-    runs-on: ubuntu-latest
-    if: github.event_name == 'release'
     strategy:
-      fail-fast: false
       matrix:
+        max-parallel: 1
         include:
-          - target: x86_64-pc-windows-gnu
-            archive: zip
-          - target: x86_64-unknown-linux-musl
-            archive: tar.gz
-          - target: x86_64-apple-darwin
-            archive: zip
-          - target: wasm32-wasi
-            archive: zip tar.gz
+          - os: ubuntu-latest
+            artifact_name: ${{ github.event.repository.name }}
+            asset_name: ${{ github.event.repository.name }}-linux-amd64
+          - os: windows-latest
+            artifact_name: ${{ github.event.repository.name }}.exe
+            asset_name: ${{ github.event.repository.name }}-windows-amd64.exe
+          - os: macos-latest
+            artifact_name: ${{ github.event.repository.name }}
+            asset_name: ${{ github.event.repository.name }}-macos-amd64
+    runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@master
-      - name: Compile and release
-        uses: rust-build/rust-build.action@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
         with:
-          RUSTTARGET: ${{ matrix.target }}
-          EXTRA_FILES: "README.md"
-          SRC_DIR: "src"
-          ARCHIVE_TYPES: ${{ matrix.archive }}
-#          PRE_BUILD: "pre_build.sh"
-#          POST_BUILD: "test/post_build.sh"
-          MINIFY: "yes"
-  release_without_not_required:
-    name: release ${{ matrix.target }}
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: true
-      matrix:
-        target: [x86_64-unknown-linux-musl]
-    steps:
-      - uses: actions/checkout@master
-      - name: Compile and release
-        uses: rust-build/rust-build.action@master
+          toolchain: stable
+      - name: Build release
+        run: >-
+          cargo build --release
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@v2
         with:
-          RUSTTARGET: ${{ matrix.target }}
-          UPLOAD_MODE: none
-      - name: Checkout output
-        run: ls -laR
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: target/release/${{ matrix.artifact_name }}
+          asset_name: ${{ matrix.asset_name }}
+          tag: ${{ github.ref }}
