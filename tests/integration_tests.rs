@@ -1,24 +1,25 @@
-use ::epub;
-use ::mdbook;
-use ::mdbook_epub;
-use ::tempdir;
-use std::env;
-use std::fs::File;
-use std::io::BufReader;
-
 #[macro_use]
 extern crate log;
 #[macro_use]
 extern crate serial_test;
 
-use epub::doc::EpubDoc;
-use mdbook::renderer::RenderContext;
-use mdbook::MDBook;
-use mdbook_epub::Error;
+use std::env;
+use std::fs::File;
+use std::io::BufReader;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::Once;
+
+use ::epub;
+use ::mdbook;
+use ::tempdir;
+use epub::doc::EpubDoc;
+use mdbook::renderer::RenderContext;
+use mdbook::MDBook;
 use tempdir::TempDir;
+
+use ::mdbook_epub;
+use mdbook_epub::errors::Error;
 
 static INIT: Once = Once::new();
 

@@ -1,93 +1,36 @@
 //! A `mdbook` backend for generating a book in the `EPUB` format.
 
-use ::handlebars;
-use ::thiserror::Error;
 #[macro_use]
 extern crate log;
-use ::mdbook;
-use ::semver;
 #[macro_use]
 extern crate serde_derive;
 #[macro_use]
 extern crate serde_json;
 
-use mdbook::config::Config as MdConfig;
-use mdbook::renderer::RenderContext;
-use semver::{Version, VersionReq};
 use std::fs::{create_dir_all, File};
 use std::path::{Path, PathBuf};
 
-mod config;
-mod generator;
-mod resources;
-mod utils;
+use ::mdbook;
+use ::semver;
+use ::thiserror::Error;
+use mdbook::config::Config as MdConfig;
+use mdbook::renderer::RenderContext;
+use semver::{Version, VersionReq};
+
+use errors::Error;
 
 pub use crate::config::Config;
 pub use crate::generator::Generator;
 
+
+mod config;
+pub mod errors;
+mod generator;
+mod resources;
+mod utils;
+
 /// The default stylesheet used to make the rendered document pretty.
 pub const DEFAULT_CSS: &str = include_str!("master.css");
-
-#[derive(Error, Debug)]
-pub enum Error {
-    #[error("Incompatible mdbook version got {0} expected {1}")]
-    IncompatibleVersion(String, String),
-
-    #[error("{0}")]
-    EpubDocCreate(String),
-
-    #[error("Could not parse the template")]
-    TemplateParse,
-
-    #[error("Content file was not found: \'{0}\'")]
-    ContentFileNotFound(String),
-
-    #[error("{0}")]
-    AssetFileNotFound(String),
-
-    #[error("Asset was not a file {0}")]
-    AssetFile(PathBuf),
-
-    #[error("Could not open css file {0}")]
-    CssOpen(PathBuf),
-
-    #[error("Unable to open template {0}")]
-    OpenTemplate(PathBuf),
-
-    #[error("Unable to parse render context")]
-    RenderContext,
-
-    #[error("Unable to open asset")]
-    AssetOpen,
-
-    #[error("Error reading stylesheet")]
-    StylesheetRead,
-
-    #[error("epubcheck has failed: {0}")]
-    EpubCheck(String),
-
-    #[error(transparent)]
-    Io(#[from] std::io::Error),
-
-    #[error(transparent)]
-    Book(#[from] mdbook::errors::Error),
-    #[error(transparent)]
-    Semver(#[from] semver::Error),
-    #[error(transparent)]
-    EpubBuilder(#[from] eyre::Report),
-    #[error(transparent)]
-    Render(#[from] handlebars::RenderError),
-    #[error(transparent)]
-    TomlDeser(#[from] toml::de::Error),
-    #[error(transparent)]
-    HttpError(#[from] Box<ureq::Error>),
-}
-
-impl From<ureq::Error> for Error {
-    fn from(e: ureq::Error) -> Self {
-        Error::HttpError(Box::new(e))
-    }
-}
 
 /// The exact version of `mdbook` this crate is compiled against.
 pub const MDBOOK_VERSION: &str = mdbook::MDBOOK_VERSION;
