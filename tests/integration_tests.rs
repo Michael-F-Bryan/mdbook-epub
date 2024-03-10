@@ -12,11 +12,10 @@ use std::sync::Once;
 
 use ::epub;
 use ::mdbook;
-use ::tempdir;
 use epub::doc::EpubDoc;
 use mdbook::renderer::RenderContext;
 use mdbook::MDBook;
-use tempdir::TempDir;
+use tempfile::TempDir;
 
 use ::mdbook_epub;
 use mdbook_epub::errors::Error;
@@ -42,7 +41,7 @@ fn generate_epub() -> Result<(EpubDoc<BufReader<File>>, PathBuf), Error> {
     match EpubDoc::new(&output_file) {
         Ok(epub) => Ok((epub, output_file)),
         Err(err) => {
-            error!("dummy book creation error = {}", err);
+            error!("dummy book creation error = {:?}", err);
             Err(Error::EpubDocCreate(output_file.display().to_string()))
         }
     }
@@ -182,7 +181,7 @@ fn straight_quotes_transformed_into_curly_quotes() {
 /// `RenderContext` for use the EPUB generator.
 fn create_dummy_book() -> Result<(RenderContext, MDBook, TempDir), Error> {
     debug!("create_dummy_book...");
-    let temp = TempDir::new("mdbook-epub")?;
+    let temp = TempDir::with_prefix_in("mdbook-epub", ".")?;
 
     let dummy_book = Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("tests")
