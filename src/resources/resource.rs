@@ -168,6 +168,7 @@ fn find_assets_in_markdown(chapter_src_content: &str) -> Result<Vec<String>, Err
 mod tests {
     use std::path::{Path, PathBuf};
     use serde_json::{json, Value};
+    use tempfile::TempDir;
     use super::*;
 
     #[test]
@@ -209,8 +210,9 @@ mod tests {
         // not_found_link3 path won't be found because it's outside of src/
         let not_found_link3 = "../third_party/wikimedia/Epub_logo_color.svg";
 
-        let temp = tempdir::TempDir::new("mdbook-epub").unwrap();
-        let dest_dir = temp.path().to_string_lossy().to_string();
+        let tmp_dir = TempDir::new().unwrap();
+        let temp = tmp_dir.path().join("mdbook-epub");
+        let dest_dir = temp.as_path().to_string_lossy().to_string();
         let chapters = json!([{
             "Chapter": {
             "name": "Chapter 1",
@@ -273,8 +275,9 @@ mod tests {
         let link2 = "https://www.rust-lang.org/static/images/rust-logo-blk.png";
         let link_parsed = Url::parse(link).unwrap();
         let link_parsed2 = Url::parse(link2).unwrap();
-        let temp = tempdir::TempDir::new("mdbook-epub").unwrap();
-        let dest_dir = temp.path().to_string_lossy().to_string();
+        let tmp_dir = TempDir::new().unwrap();
+        let temp = tmp_dir.path().join("mdbook-epub");
+        let dest_dir = temp.as_path().to_string_lossy().to_string();
         let chapters = json!([
         {"Chapter": {
             "name": "Chapter 1",
@@ -300,7 +303,7 @@ mod tests {
                     } else {
                         filename = PathBuf::from("").join(utils::hash_link(&link_parsed2));
                     }
-                    let absolute_location = temp.path().join(&filename);
+                    let absolute_location = temp.as_path().join(&filename);
                     let source = AssetKind::Remote(internal_url);
                     let should_be = Asset::new(filename, absolute_location, source);
                     assert_eq!(got, should_be);
@@ -315,8 +318,9 @@ mod tests {
 
     #[test]
     fn find_draft_chapter_without_error() {
-        let temp = tempdir::TempDir::new("mdbook-epub").unwrap();
-        let dest_dir = temp.into_path().to_string_lossy().to_string();
+        let tmp_dir = TempDir::new().unwrap();
+        let temp = tmp_dir.path().join("mdbook-epub");
+        let dest_dir = temp.as_path().to_string_lossy().to_string();
         let chapters = json!([
         {"Chapter": {
             "name": "Chapter 1",

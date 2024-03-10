@@ -53,7 +53,7 @@ impl ContentRetriever for ResourceHandler {
 
 #[cfg(test)]
 mod tests {
-    use tempdir::TempDir;
+    use tempfile::TempDir;
 
     use crate::errors::Error;
     use crate::resources::asset::Asset;
@@ -118,7 +118,8 @@ mod tests {
     }
 
     fn temp_remote_asset(url: &str) -> Result<Asset, Error> {
-        let dest_dir = TempDir::new("mdbook-epub")?;
-        Asset::from_url(url::Url::parse(url).unwrap(), dest_dir.path())
+        let tmp_dir = TempDir::new().unwrap();
+        let dest_dir = tmp_dir.path().join("mdbook-epub");
+        Asset::from_url(url::Url::parse(url).unwrap(), dest_dir.as_path())
     }
 }

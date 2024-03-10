@@ -560,6 +560,7 @@ fn convert_quotes_to_curly(original_text: &str) -> String {
 mod tests {
     use mime_guess::mime;
     use std::path::Path;
+    use tempfile::TempDir;
 
     use super::*;
     use crate::resources::asset::AssetKind;
@@ -576,8 +577,9 @@ mod tests {
             ![Rust Logo remote]({url})\n\n\
             <img alt=\"Rust Logo in html\" src=\"{svg}\" />\n"
         );
-        let destination = tempdir::TempDir::new("mdbook-epub").unwrap();
-        let json = ctx_with_template(&content, "src", destination.path()).to_string();
+        let tmp_dir = TempDir::new().unwrap();
+        let destination = tmp_dir.path().join("mdbook-epub");
+        let json = ctx_with_template(&content, "src", destination.as_path()).to_string();
         let ctx = RenderContext::from_json(json.as_bytes()).unwrap();
 
         let mut mock_client = MockContentRetriever::new();
@@ -590,7 +592,7 @@ mod tests {
         let should_be_png = book_source.join(png);
         let should_be_svg = book_source.join(svg);
         let hashed_filename = utils::hash_link(&url.parse::<Url>().unwrap());
-        let should_be_url = destination.path().join(hashed_filename);
+        let should_be_url = destination.as_path().join(hashed_filename);
         for should_be in [should_be_svg, should_be_png, should_be_url] {
             mock_client
                 .expect_read()
@@ -612,12 +614,13 @@ mod tests {
             "http://server/remote.svg",
             "http://server/link.png",
         ];
-        let root = tempdir::TempDir::new("mdbook-epub").unwrap();
+        let tmp_dir = TempDir::new().unwrap();
+        let root = tmp_dir.path().join("mdbook-epub");
         let mut assets = HashMap::new();
         assets.insert(
             links[0].to_string(),
             Asset {
-                location_on_disk: root.path().join("src").join(links[0]),
+                location_on_disk: root.as_path().join("src").join(links[0]),
                 filename: PathBuf::from(links[0]),
                 mimetype: "image/webp".parse::<mime::Mime>().unwrap(),
                 source: AssetKind::Local(PathBuf::from(links[0])),
@@ -629,7 +632,7 @@ mod tests {
         assets.insert(
             links[1].to_string(),
             Asset {
-                location_on_disk: root.path().join("book").join(&hashed_path),
+                location_on_disk: root.as_path().join("book").join(&hashed_path),
                 filename: hashed_path,
                 mimetype: "image/svg+xml".parse::<mime::Mime>().unwrap(),
                 source: AssetKind::Remote(url),
@@ -669,7 +672,8 @@ mod tests {
     #[test]
     fn render_remote_assets_in_sub_chapter() {
         let link = "https://mdbook.epub/dummy.svg";
-        let dest_dir = tempdir::TempDir::new("mdbook-epub").unwrap();
+        let tmp_dir = TempDir::new().unwrap();
+        let dest_dir = tmp_dir.path().join("mdbook-epub");
         let ch1_1 = json!({
             "Chapter": {
                 "name": "subchapter",
@@ -700,7 +704,7 @@ mod tests {
                 "parent_names": []
             }
         });
-        let mut json = ctx_with_template("", "src", dest_dir.path());
+        let mut json = ctx_with_template("", "src", dest_dir.as_path());
         let chvalue = json["book"]["sections"].as_array_mut().unwrap();
         chvalue.clear();
         chvalue.push(ch1);
@@ -739,10 +743,11 @@ mod tests {
     #[test]
     #[should_panic]
     fn find_assets_with_wrong_src_dir() {
+        let tmp_dir = TempDir::new().unwrap();
         let json = ctx_with_template(
             "# Chapter 1\n\n",
             "nosuchsrc",
-            tempdir::TempDir::new("mdbook-epub").unwrap().path(),
+            tmp_dir.path().join("mdbook-epub").as_path(),
         )
         .to_string();
         let ctx = RenderContext::from_json(json.as_bytes()).unwrap();

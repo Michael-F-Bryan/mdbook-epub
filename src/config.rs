@@ -75,13 +75,15 @@ impl Default for Config {
 #[cfg(test)]
 mod tests {
     use std::path::Path;
+    use tempfile::TempDir;
     use super::*;
 
     #[test]
     fn test_from_render_context_minimal_settings() {
+        let tmp_dir = TempDir::new().unwrap();
         let json = ctx_with_template(
             "unknown_src",
-            tempdir::TempDir::new("test-mdbook-epub").unwrap().path(),
+            tmp_dir.path().join("test-mdbook-epub").as_path(),
         ).to_string();
         let ctx = RenderContext::from_json(json.as_bytes()).unwrap();
         let config = Config::from_render_context(&ctx);
