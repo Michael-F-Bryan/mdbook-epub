@@ -40,7 +40,7 @@ handlebars = "4.3.7"
 toml = "0.5.11" # downgraded due to parent 'mdbook' dependency and error there
 html_parser = "0.7.0"
 url = "2.3"
-ureq = "2.5"
+ureq = "2.9"
 const_format = "0.2.31"
 
 [dev-dependencies]
