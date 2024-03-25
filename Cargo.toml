@@ -42,6 +42,7 @@ html_parser = "0.7.0"
 url = "2.3"
 ureq = "2.9"
 const_format = "0.2.31"
+uuid = "1.8"
 
 [dev-dependencies]
 tempfile = "3"

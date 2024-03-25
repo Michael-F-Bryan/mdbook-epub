@@ -117,6 +117,27 @@ mod tests {
         panic!("{}", r.unwrap_err().to_string());
     }
 
+    #[test]
+    fn download_parametrized_avatar_image() {
+        use std::io::Read;
+
+        struct TestHandler;
+        impl ContentRetriever for TestHandler {
+            fn retrieve(&self, _url: &str) -> Result<BoxRead, Error> {
+                Ok(Box::new("Downloaded content".as_bytes()))
+            }
+        }
+        let cr = TestHandler {};
+        let a = temp_remote_asset("https://avatars.githubusercontent.com/u/274803?v=4").unwrap();
+        let r = cr.download(&a);
+        assert!(r.is_ok());
+
+        let mut buffer = String::new();
+        let mut f = std::fs::File::open(&a.location_on_disk).unwrap();
+        f.read_to_string(&mut buffer).unwrap();
+        assert_eq!(buffer, "Downloaded content");
+    }
+
     fn temp_remote_asset(url: &str) -> Result<Asset, Error> {
         let tmp_dir = TempDir::new().unwrap();
         let dest_dir = tmp_dir.path().join("mdbook-epub");
