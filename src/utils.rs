@@ -2,6 +2,7 @@ use pulldown_cmark::{Options, Parser};
 use std::ffi::OsStr;
 use std::path::{Component, Path, PathBuf};
 use url::Url;
+use uuid::Uuid;
 
 pub(crate) fn create_new_pull_down_parser(text: &str) -> Parser<'_, '_> {
     let mut opts = Options::empty();
@@ -40,6 +41,10 @@ pub fn normalize_path(path: &Path) -> PathBuf {
     ret
 }
 
+/// Generate file name + extension from supplied remote URL.
+/// If url does not contain file extension because of 'parametrized url'
+/// then file's extension is generated as UUID4 value and file name
+/// is hashed from URL itself.
 pub(crate) fn hash_link(url: &Url) -> String {
     use std::collections::hash_map::DefaultHasher;
     use std::hash::{Hash, Hasher};
@@ -47,16 +52,31 @@ pub(crate) fn hash_link(url: &Url) -> String {
     let mut hasher = DefaultHasher::new();
     url.hash(&mut hasher);
     let path = PathBuf::from(url.path());
+    let _generated_file_extension = Uuid::new_v4().to_string();
     let ext = path
         .extension()
         .and_then(OsStr::to_str)
-        .unwrap_or_else(|| panic!("Unable to extract file ext from {url}"));
+        .unwrap_or(_generated_file_extension.as_str());
     format!("{:x}.{}", hasher.finish(), ext)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_hash_named_url_with_extention() {
+        let test_url = "https://www.rust-lang.org/static/images/rust-logo-blk.svg";
+        let hashed_filename = hash_link(&test_url.parse::<Url>().unwrap());
+        assert_eq!("b20b2723e874918.svg", hashed_filename);
+    }
+
+    #[test]
+    fn test_hash_parametrized_url_no_extension() {
+        let test_avatar_url = "https://avatars.githubusercontent.com/u/274803?v=4";
+        let hashed_filename = hash_link(&test_avatar_url.parse::<Url>().unwrap());
+        assert!(hashed_filename.starts_with("4dbdb25800b6fa1b."));
+    }
 
     #[cfg(not(target_os = "windows"))]
     #[test]
