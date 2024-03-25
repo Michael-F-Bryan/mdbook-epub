@@ -22,7 +22,7 @@ pub(crate) trait ContentRetriever {
                     fs::create_dir_all(cache_dir)?;
                 }
                 debug!("Downloading asset : {}", url);
-                let mut file = OpenOptions::new().create(true).write(true).open(dest)?;
+                let mut file = OpenOptions::new().create(true).truncate(true).write(true).open(dest)?;
                 let mut resp = self.retrieve(url.as_str())?;
                 io::copy(&mut resp, &mut file)?;
                 debug!("Downloaded asset by '{}'", url);

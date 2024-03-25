@@ -56,7 +56,7 @@ pub(crate) fn hash_link(url: &Url) -> String {
     let ext = path
         .extension()
         .and_then(OsStr::to_str)
-        .unwrap_or_else(|| _generated_file_extension.as_str());
+        .unwrap_or(_generated_file_extension.as_str());
     format!("{:x}.{}", hasher.finish(), ext)
 }
 
