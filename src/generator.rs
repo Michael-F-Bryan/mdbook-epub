@@ -15,6 +15,7 @@ use mdbook::book::{BookItem, Chapter};
 use mdbook::renderer::RenderContext;
 use pulldown_cmark::{CowStr, Event, html, Tag};
 use url::Url;
+use urlencoding::encode;
 
 use crate::config::Config;
 use crate::resources::retrieve::{ContentRetriever, ResourceHandler};
@@ -451,12 +452,27 @@ impl<'a> AssetLinkFilter<'a> {
                     let mut content = html.clone().into_string();
                     for link in found {
                         // REAL SRC REPLACING happens here...
-                        if let Some(asset) = self.assets.get(link.as_str()) {
+                        let mut link_as_string = link.clone();
+                        if !link_as_string.is_ascii() {
+                            // convert any 'non acsii' char inside URL into 'ascii encoded' variant
+                            link_as_string = link_as_string.chars().map(|char_item| {
+                                if !char_item.is_ascii() {
+                                    encode(&char_item.to_string()).to_string()
+                                } else {
+                                    char_item.to_string()
+                                }
+                            }).collect::<String>();
+                            trace!("URL link is converted into ASCII version = {}", link_as_string);
+                        }
+                        let link_as_str= link_as_string.as_str();
+
+                        if let Some(asset) = self.assets.get(link_as_str) {
                             let new = self.path_prefix(asset.filename.as_path());
                             debug!("{:?} link '{}' is replaced by '{:?}'", asset, &link, &new);
-                            content = content.replace(link.as_str(), &CowStr::from(new));
+                            content = content.replace(link_as_str, &CowStr::from(new));
                             trace!("new content\n{:?}", content);
                         } else {
+                            error!("Asset was not found by link: {}", link_as_str);
                             unreachable!("{link} should be replaced, but it doesn't.");
                         }
                     }
@@ -561,6 +577,7 @@ mod tests {
     use mime_guess::mime;
     use std::path::Path;
     use tempfile::TempDir;
+    use urlencoding::encode;
 
     use super::*;
     use crate::resources::asset::AssetKind;
@@ -774,5 +791,29 @@ mod tests {
                 "output": {"epub": {"curly-quotes": true}}},
             "destination": destination
         })
+    }
+
+    #[test]
+    fn test_encoding_non_ascii() {
+        let source = "studyrust公众号";
+        assert!(!source.is_ascii());
+        let encoded_target = encode(source);
+        let original = "studyrust%E5%85%AC%E4%BC%97%E5%8F%B7";
+        assert_eq!(original, encoded_target);
+    }
+
+    #[test]
+    fn test_encoding_nonn_ascii_url() {
+        let source = "https://github.com/sunface/rust-course/blob/main/assets/studyrust公众号.png?raw=true";
+        assert!(!source.is_ascii());
+        let encoded_target = source.chars().map(|char_item| {
+            if !char_item.is_ascii() {
+                encode(&char_item.to_string()).to_string()
+            } else {
+                char_item.to_string()
+            }
+        }).collect::<String>();
+        let original = "https://github.com/sunface/rust-course/blob/main/assets/studyrust%E5%85%AC%E4%BC%97%E5%8F%B7.png?raw=true";
+        assert_eq!(original, encoded_target);
     }
 }
