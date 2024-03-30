@@ -134,7 +134,7 @@ fn rendered_document_contains_all_chapter_files_and_assets() {
     let mut doc = generate_epub().unwrap();
     debug!("Number of internal epub resources = {:?}", doc.0.resources);
     // number of internal epub resources for dummy test book
-    assert_eq!(9, doc.0.resources.len());
+    assert_eq!(10, doc.0.resources.len());
     assert_eq!(2, doc.0.spine.len());
     assert_eq!(doc.0.mdata("title").unwrap(), "DummyBook");
     assert_eq!(doc.0.mdata("language").unwrap(), "en");

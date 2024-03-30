@@ -1,5 +1,7 @@
 # Chapter 1
 
+<img src="https://github.com/sunface/rust-course/blob/main/assets/studyrust公众号.png?raw=true" />
+
 Here is the Rust logo:
 
 ![Rust Logo](rust-logo.png)
