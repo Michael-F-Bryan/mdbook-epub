@@ -51,7 +51,7 @@ fn run(args: &Args) -> Result<(), Error> {
         println!("Running mdbook-epub as plugin...");
         serde_json::from_reader(io::stdin()).map_err(|_| Error::RenderContext)?
     };
-    // calling the main code for epub creation
+    debug!("calling the main code for epub creation");
     mdbook_epub::generate(&ctx)?;
     info!(
         "Book is READY in directory: '{}'",
