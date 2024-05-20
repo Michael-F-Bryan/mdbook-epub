@@ -86,6 +86,23 @@ no-section-label = true
 curly-quotes = true
 ```
 
+## Logging, seeing progress
+
+In order to enable logging to the screen you need to set the `RUST_LOG` environment variable to `debug` or `info`.
+
+On Linux and macOS this can be done in the following way:
+
+```
+RUST_LOG=debug  mdbook-epub
+```
+
+On Windows CMD you need to set it on a separate line:
+
+```
+set RUST_LOG=debug
+mdbook-epub
+```
+
 
 ## Planned Features
 
