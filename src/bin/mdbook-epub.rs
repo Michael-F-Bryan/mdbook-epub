@@ -66,8 +66,6 @@ struct Args {
     #[structopt(
         short = "s",
         long = "standalone",
-        parse(try_from_str), // can that cause mdbook-epub install error??
-        default_value = "false", // can that cause mdbook-epub install error??
         help = "Run standalone (i.e. not as a mdbook plugin)"
     )]
     standalone: bool,
