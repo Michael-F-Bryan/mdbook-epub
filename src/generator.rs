@@ -9,11 +9,11 @@ use std::{
 };
 
 use epub_builder::{EpubBuilder, EpubContent, ZipLibrary};
-use handlebars::{Handlebars, RenderError};
+use handlebars::{Handlebars, RenderError, RenderErrorReason};
 use html_parser::{Dom, Node};
 use mdbook::book::{BookItem, Chapter};
 use mdbook::renderer::RenderContext;
-use pulldown_cmark::{CowStr, Event, html, Tag};
+use pulldown_cmark::{CowStr, Event, html, Tag, TagEnd};
 use url::Url;
 use urlencoding::encode;
 
@@ -193,13 +193,18 @@ impl<'a> Generator<'a> {
     fn render_chapter(&self, ch: &Chapter) -> Result<String, RenderError> {
         let chapter_dir = if let Some(chapter_file_path) = &ch.path {
             chapter_file_path.parent().ok_or_else(|| {
-                RenderError::new(format!("No CSS found by a path = {:?}", ch.path))
+                RenderError::from(
+                    RenderErrorReason::Other(format!("No CSS found by a path = {:?}", ch.path))
+                )
             })?
         } else {
-            return Err(RenderError::new(format!(
-                "Draft chapter: '{}' could not be rendered.",
-                ch.name
-            )));
+            return Err(
+                RenderError::from(
+                    RenderErrorReason::Other(format!(
+                        "Draft chapter: '{}' could not be rendered.",
+                        ch.name
+                    )))
+            );
         };
         let mut body = String::new();
         let parser = utils::create_new_pull_down_parser(&ch.content);
@@ -418,12 +423,12 @@ impl<'a> AssetLinkFilter<'a> {
     fn apply(&self, event: Event<'a>) -> Event<'a> {
         trace!("AssetLinkFilter: Processing Event = {:?}", &event);
         match event {
-            Event::Start(Tag::Image(ty, ref url, ref title)) => {
-                if let Some(asset) = self.assets.get(&url.to_string()) {
+            Event::Start(Tag::Image{link_type, ref dest_url, ref title, ref id}) => {
+                if let Some(asset) = self.assets.get(&dest_url.to_string()) {
                     // PREPARE info for replacing original REMOTE link by `<hash>.ext` value inside chapter content
-                    debug!("Found URL '{}' by Event", &url);
+                    debug!("Found URL '{}' by Event", &dest_url);
                     let new = self.path_prefix(asset.filename.as_path());
-                    Event::Start(Tag::Image(ty, CowStr::from(new), title.to_owned()))
+                    Event::Start(Tag::Image{link_type, dest_url: CowStr::from(new), title: title.to_owned(), id: id.to_owned()})
                 } else {
                     event
                 }
@@ -528,7 +533,7 @@ impl EventQuoteConverter {
                 self.convert_text = false;
                 event
             }
-            Event::End(Tag::CodeBlock(_)) => {
+            Event::End(TagEnd::CodeBlock) => {
                 self.convert_text = true;
                 event
             }

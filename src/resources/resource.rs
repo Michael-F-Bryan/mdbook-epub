@@ -137,10 +137,10 @@ fn find_assets_in_markdown(chapter_src_content: &str) -> Result<Vec<String>, Err
     // that will process chapter content and find assets
     for event in pull_down_parser {
         match event {
-            Event::Start(Tag::Image(_, dest, _)) => {
-                found_asset.push(dest.to_string());
+            Event::Start(Tag::Image{link_type: _, dest_url, title: _, id: _}) => {
+                found_asset.push(dest_url.to_string());
             }
-            Event::Html(html) => {
+            Event::Html(html) | Event::InlineHtml(html) => {
                 let content = html.into_string();
 
                 if let Ok(dom) = Dom::parse(&content) {

@@ -4,7 +4,7 @@ use std::path::{Component, Path, PathBuf};
 use url::Url;
 use uuid::Uuid;
 
-pub(crate) fn create_new_pull_down_parser(text: &str) -> Parser<'_, '_> {
+pub(crate) fn create_new_pull_down_parser(text: &str) -> Parser<'_> {
     let mut opts = Options::empty();
     opts.insert(Options::ENABLE_TABLES);
     opts.insert(Options::ENABLE_FOOTNOTES);
