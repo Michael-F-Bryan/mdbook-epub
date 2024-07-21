@@ -8,7 +8,7 @@ use std::process;
 use ::env_logger;
 use ::mdbook;
 use ::serde_json;
-use clap::{value_parser, Parser};
+use clap::Parser;
 use mdbook::renderer::RenderContext;
 use mdbook::MDBook;
 
@@ -47,12 +47,12 @@ fn run(args: &Args) -> Result<(), Error> {
         debug!("EPUB book config is : {:?}", md.config);
         RenderContext::new(md.root, md.book, md.config, destination)
     } else {
-        println!("Running mdbook-epub as plugin...");
+        println!("Running mdbook-epub as plugin waiting on the STDIN input. If you wanted to process the files in the current folder, use the -s flag from documentation, See: mdbook-epub --help");
         serde_json::from_reader(io::stdin()).map_err(|_| Error::RenderContext)?
     };
     debug!("calling the main code for epub creation");
     mdbook_epub::generate(&ctx)?;
-    info!(
+    println!(
         "Book is READY in directory: '{}'",
         ctx.destination.display()
     );
@@ -61,6 +61,10 @@ fn run(args: &Args) -> Result<(), Error> {
 }
 
 #[derive(Debug, Clone, Parser)]
+#[clap(
+name = "MDBook epub utility",
+about = "MDBook epub utility makes EPUB file from MD source files described by book.toml",
+)]
 #[command(version, about, long_about = None)]
 struct Args {
     #[arg(
@@ -70,6 +74,52 @@ struct Args {
     )]
     standalone: bool,
 
-    #[arg(help = "The book to render.", value_parser = value_parser!(PathBuf), default_value = ".")]
+    #[arg(
+        help = "Root folder the book to render from",
+        value_parser = clap::value_parser!(PathBuf),
+        default_value = ".",
+        name = "root"
+    )]
     root: PathBuf,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::path::PathBuf;
+
+    #[test]
+    fn test_standalone_only() {
+        let args = Args::try_parse_from(&["test", "--standalone"]).unwrap();
+        debug_assert!(args.standalone);
+        debug_assert_eq!(args.root, PathBuf::from("."));
+    }
+
+    #[test]
+    fn test_standalone_with_root_path() {
+        let args = Args::try_parse_from(&["test", "--standalone", "/some/path"]).unwrap();
+        debug_assert!(args.standalone);
+        debug_assert_eq!(args.root, PathBuf::from("/some/path"));
+    }
+
+    #[test]
+    fn test_default_root_default_short() {
+        let args = Args::try_parse_from(&["test"]).unwrap();
+        debug_assert!(!args.standalone);
+        debug_assert_eq!(args.root, PathBuf::from("."));
+    }
+
+    #[test]
+    fn test_short_flag() {
+        let args = Args::try_parse_from(&["test", "-s"]).unwrap();
+        debug_assert!(args.standalone);
+        debug_assert_eq!(args.root, PathBuf::from("."));
+    }
+
+    #[test]
+    fn test_with_root_only() {
+        let args = Args::try_parse_from(&["test", "/another/path"]).unwrap();
+        debug_assert!(!args.standalone);
+        debug_assert_eq!(args.root, PathBuf::from("/another/path"));
+    }
 }
