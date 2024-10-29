@@ -75,6 +75,11 @@ its section number.
 `curly-quotes`: Enable converting straight quotes `'x'` and `"x"` to `‘x’` and
 `“x”` (aka *smart quotes*).
 
+`epub-version`: Specifies the EPUB version to use. If omitted, the epub-builder
+default version is used.
+ - `2` — EPUB 2.0.1
+ - `3` — EPUB 3.0.1
+
 ```toml
 [output.epub]
 additional-css = ["./path/to/main.css"]
@@ -83,6 +88,7 @@ cover-image = "ebook-cover.png"
 additional-resources = ["./assets/Open-Sans-Regular.ttf"]
 no-section-label = true
 curly-quotes = true
+epub-version = 3
 ```
 
 ## Logging, seeing progress
