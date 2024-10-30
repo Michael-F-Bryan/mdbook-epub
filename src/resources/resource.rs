@@ -48,9 +48,15 @@ pub(crate) fn find(ctx: &RenderContext) -> Result<HashMap<String, Asset>, Error>
                     continue;
                 }
                 for link in find_assets_in_markdown(&ch.content)? {
-                    let asset = match Url::parse(&link) {
-                        Ok(url) => Asset::from_url(url, &ctx.destination),
-                        Err(_) => Asset::from_local(&link, &src_dir, ch.path.as_ref().unwrap()),
+                    let asset = if let Ok(url) = Url::parse(&link) {
+                        Asset::from_url(url, &ctx.destination)
+                    } else {
+                        let result = Asset::from_local(&link, &src_dir, ch.path.as_ref().unwrap());
+                        if let Err(Error::AssetOutsideSrcDir(_)) = result {
+                            warn!("Asset '{link}' is outside source dir '{src_dir:?}' and ignored");
+                            continue;
+                        };
+                        result
                     }?;
 
                     // that is CORRECT generation way

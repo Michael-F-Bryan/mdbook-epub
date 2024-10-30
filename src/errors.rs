@@ -1,5 +1,5 @@
-use thiserror::Error;
 use std::path::PathBuf;
+use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum Error {
@@ -41,6 +41,9 @@ pub enum Error {
 
     #[error(transparent)]
     Io(#[from] std::io::Error),
+
+    #[error(transparent)]
+    AssetOutsideSrcDir(#[from] std::path::StripPrefixError),
 
     #[error(transparent)]
     Book(#[from] mdbook::errors::Error),
