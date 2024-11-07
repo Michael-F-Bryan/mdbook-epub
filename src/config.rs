@@ -23,7 +23,8 @@ pub struct Config {
     pub no_section_label: bool,
     /// Use "smart quotes" instead of the usual `"` character.
     pub curly_quotes: bool,
-    /// Add backreference links to footnote definitions.
+    /// Add backreference links to footnote definitions and allow pop-up footnote behaviour.
+    /// Requires `epub-version = 3`, in which case it is enabled by default.
     pub footnote_backrefs: bool,
     /// EPUB version to use if specified, otherwise defaults to the epub-builder default.
     pub epub_version: Option<u8>,
