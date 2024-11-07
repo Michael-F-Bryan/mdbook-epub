@@ -23,6 +23,8 @@ pub struct Config {
     pub no_section_label: bool,
     /// Use "smart quotes" instead of the usual `"` character.
     pub curly_quotes: bool,
+    /// Add backreference links to footnote definitions.
+    pub footnote_backrefs: bool,
     /// EPUB version to use if specified, otherwise defaults to the epub-builder default.
     pub epub_version: Option<u8>,
 }
@@ -70,6 +72,7 @@ impl Default for Config {
             additional_resources: Vec::new(),
             no_section_label: false,
             curly_quotes: false,
+            footnote_backrefs: true,
             epub_version: None,
         }
     }

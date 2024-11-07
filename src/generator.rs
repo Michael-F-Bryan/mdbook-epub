@@ -137,17 +137,18 @@ impl<'a> Generator<'a> {
     fn generate_chapters(&mut self) -> Result<(), Error> {
         info!("3. Generate chapters == ");
 
-        for item in &self.ctx.book.sections {
+        for (idx, item) in self.ctx.book.sections.iter().enumerate() {
+            let is_first = if idx == 0 { true } else { false };
             if let BookItem::Chapter(ref ch) = *item {
                 trace!("Adding chapter \"{}\"", ch);
-                self.add_chapter(ch)?;
+                self.add_chapter(ch, Some(is_first))?;
             }
         }
 
         Ok(())
     }
 
-    fn add_chapter(&mut self, ch: &Chapter) -> Result<(), Error> {
+    fn add_chapter(&mut self, ch: &Chapter, is_first: Option<bool>) -> Result<(), Error> {
         info!("Adding chapter = '{}'", &ch.name);
         let rendered_result = self.render_chapter(ch);
         // let's skip chapter without content (drafts)
@@ -182,7 +183,18 @@ impl<'a> Generator<'a> {
             ch.name.clone()
         };
 
-        let mut content = EpubContent::new(path, rendered.as_bytes()).title(title);
+        // If this is the first chapter, mark its type as Text (i.e. "bodymatter") for render_nav().
+        let mut content = match is_first {
+            Some(true) => {
+                EpubContent::new(path, rendered.as_bytes())
+                    .title(title)
+                    .reftype(epub_builder::ReferenceType::Text)
+            },
+            _ => {
+                EpubContent::new(path, rendered.as_bytes())
+                    .title(title)
+            },
+        };
 
         let level = ch.number.as_ref().map(|n| n.len() as i32 - 1).unwrap_or(0);
         content = content.level(level);
@@ -193,7 +205,7 @@ impl<'a> Generator<'a> {
         for sub_item in &ch.sub_items {
             if let BookItem::Chapter(ref sub_ch) = *sub_item {
                 trace!("add sub-item = {:?}", sub_ch.name);
-                self.add_chapter(sub_ch)?;
+                self.add_chapter(sub_ch, None)?;
             }
         }
 
@@ -217,8 +229,109 @@ impl<'a> Generator<'a> {
                     )))
             );
         };
+
         let mut body = String::new();
-        let parser = utils::create_new_pull_down_parser(&ch.content);
+
+        if self.config.epub_version == Some(3) && self.config.footnote_backrefs {
+            body.push_str(&self.render_with_footnote_backrefs(chapter_dir, ch));
+        } else {
+            let parser = utils::create_new_pull_down_parser(&ch.content);
+            let mut quote_converter = EventQuoteConverter::new(self.config.curly_quotes);
+            let ch_depth = chapter_dir.components().count();
+
+            // create 'Remote Assets' copy to be processed by AssetLinkFilter
+            let mut remote_assets: HashMap<String, Asset> = HashMap::new();
+            for (key, value) in self.assets.clone().into_iter() {
+                trace!("{} / {:?}", key, &value);
+                if let AssetKind::Remote(ref remote_url) = value.source {
+                    trace!(
+                        "Adding remote_assets = '{}' / {:?}",
+                        remote_url.to_string(),
+                        &value
+                    );
+                    remote_assets.insert(remote_url.to_string(), value);
+                }
+                /* else if let AssetKind::Local(ref _local_path) = value.source {
+                let relative_path = value.filename.to_str().unwrap();
+                remote_assets.insert(String::from(relative_path), value);
+                } */
+            }
+            let asset_link_filter = AssetLinkFilter::new(&remote_assets, ch_depth);
+            let events = parser
+                .map(|event| quote_converter.convert(event))
+                .map(|event| asset_link_filter.apply(event));
+            trace!("Found Rendering events map = [{:?}]", &events);
+
+            html::push_html(&mut body, events);
+        }
+
+        trace!("Chapter content after Events processing = [{:?}]", body);
+
+        let stylesheet_path = chapter_dir
+            .components()
+            .map(|_| "..")
+            .chain(iter::once("stylesheet.css"))
+            .collect::<Vec<_>>()
+            .join("/");
+
+        let epub_version_3 = if self.config.epub_version == Some(3) { true } else { false };
+
+        let ctx = json!({
+            "epub_version_3": epub_version_3,
+            "title": ch.name,
+            "body": body,
+            "stylesheet": stylesheet_path
+        });
+
+        self.hbs.render("index", &ctx)
+    }
+
+    fn render_with_footnote_backrefs(&self, chapter_dir: &Path, ch: &Chapter) -> String {
+        let mut body = String::new();
+
+        // Based on
+        // https://github.com/pulldown-cmark/pulldown-cmark/blob/master/pulldown-cmark/examples/footnote-rewrite.rs
+
+        // To generate this style, you have to collect the footnotes at the end, while parsing.
+        // You also need to count usages.
+        let mut footnotes = Vec::new();
+        let mut in_footnote = Vec::new();
+        let mut footnote_numbers = HashMap::new();
+
+        let parser = utils::create_new_pull_down_parser(&ch.content)
+            .filter_map(|event| {
+                match event {
+                    Event::Start(Tag::FootnoteDefinition(_)) => {
+                        in_footnote.push(vec![event]);
+                        None
+                    }
+                    Event::End(TagEnd::FootnoteDefinition) => {
+                        let mut f = in_footnote.pop().unwrap();
+                        f.push(event);
+                        footnotes.push(f);
+                        None
+                    }
+                    Event::FootnoteReference(name) => {
+                        let n = footnote_numbers.len() + 1;
+                        let (n, nr) = footnote_numbers.entry(name.clone()).or_insert((n, 0usize));
+                        *nr += 1;
+                        // The [] brackets slightly increase the linked area and help to tap on the footnote reference.
+                        let html = Event::Html(format!(r##"<sup class="footnote-reference" id="fr-{name}-{nr}"><a href="#fn-{name}">[{n}]</a></sup>"##).into());
+                        if in_footnote.is_empty() {
+                            Some(html)
+                        } else {
+                            in_footnote.last_mut().unwrap().push(html);
+                            None
+                        }
+                    }
+                    _ if !in_footnote.is_empty() => {
+                        in_footnote.last_mut().unwrap().push(event);
+                        None
+                    }
+                    _ => Some(event),
+                }
+            });
+
         let mut quote_converter = EventQuoteConverter::new(self.config.curly_quotes);
         let ch_depth = chapter_dir.components().count();
 
@@ -235,9 +348,9 @@ impl<'a> Generator<'a> {
                 remote_assets.insert(remote_url.to_string(), value);
             }
             /* else if let AssetKind::Local(ref _local_path) = value.source {
-                let relative_path = value.filename.to_str().unwrap();
-                remote_assets.insert(String::from(relative_path), value);
-            }*/
+            let relative_path = value.filename.to_str().unwrap();
+            remote_assets.insert(String::from(relative_path), value);
+        }*/
         }
         let asset_link_filter = AssetLinkFilter::new(&remote_assets, ch_depth);
         let events = parser
@@ -246,18 +359,76 @@ impl<'a> Generator<'a> {
         trace!("Found Rendering events map = [{:?}]", &events);
 
         html::push_html(&mut body, events);
-        trace!("Chapter content after Events processing = [{:?}]", body);
 
-        let stylesheet_path = chapter_dir
-            .components()
-            .map(|_| "..")
-            .chain(iter::once("stylesheet.css"))
-            .collect::<Vec<_>>()
-            .join("/");
+        // To make the footnotes look right, we need to sort them by their appearance order, not by
+        // the in-tree order of their actual definitions. Unused items are omitted entirely.
+        if !footnotes.is_empty() {
+            footnotes.retain(|f| match f.first() {
+                Some(Event::Start(Tag::FootnoteDefinition(name))) => {
+                    footnote_numbers.get(name).unwrap_or(&(0, 0)).1 != 0
+                }
+                _ => false,
+            });
+            footnotes.sort_by_cached_key(|f| match f.first() {
+                Some(Event::Start(Tag::FootnoteDefinition(name))) => {
+                    footnote_numbers.get(name).unwrap_or(&(0, 0)).0
+                }
+                _ => unreachable!(),
+            });
 
-        let ctx = json!({ "title": ch.name, "body": body, "stylesheet": stylesheet_path });
+            body.push_str("<div class=\"footnotes\" epub:type=\"footnotes\">\n");
 
-        self.hbs.render("index", &ctx)
+            html::push_html(
+                &mut body,
+                footnotes.into_iter().flat_map(|fl| {
+                    // To write backrefs, the name needs kept until the end of the footnote definition.
+                    let mut name = CowStr::from("");
+
+                    let mut has_written_backrefs = false;
+                    let fl_len = fl.len();
+                    let footnote_numbers = &footnote_numbers;
+                    fl.into_iter().enumerate().map(move |(i, f)| match f {
+                        Event::Start(Tag::FootnoteDefinition(current_name)) => {
+                            name = current_name;
+                            let fn_number = footnote_numbers.get(&name).unwrap().0;
+                            has_written_backrefs = false;
+                            // Place the footnote-definition-label outside the <aside> so that it doesn't take up vertical space in the Kindle pop-up.
+                            Event::Html(format!(r##"<p><span class="footnote-definition-label">{fn_number}</span></p><aside class="footnote-definition" id="fn-{name}" epub:type="footnote">"##).into())
+                        }
+                        Event::End(TagEnd::FootnoteDefinition) | Event::End(TagEnd::Paragraph)
+                            if !has_written_backrefs && i >= fl_len - 2 =>
+                        {
+                            let usage_count = footnote_numbers.get(&name).unwrap().1;
+                            let mut end = String::with_capacity(
+                                name.len() + (r##" <a href="#fr--1">↩</a></aside>"##.len() * usage_count),
+                            );
+                            for usage in 1..=usage_count {
+                                if usage == 1 {
+                                    end.push_str(&format!(r##" <a href="#fr-{name}-{usage}">↩</a>"##));
+                                } else {
+                                    end.push_str(&format!(r##" <a href="#fr-{name}-{usage}">↩{usage}</a>"##));
+                                }
+                            }
+                            has_written_backrefs = true;
+                            if f == Event::End(TagEnd::FootnoteDefinition) {
+                                end.push_str("</aside>\n");
+                            } else {
+                                end.push_str("</p>\n");
+                            }
+                            Event::Html(end.into())
+                        }
+                        Event::End(TagEnd::FootnoteDefinition) => Event::Html("</aside>\n".into()),
+                        Event::FootnoteReference(_) => unreachable!("converted to HTML earlier"),
+                        f => f,
+                    })
+                }),
+            );
+
+            // Closing div.footnotes
+            body.push_str("</div>\n");
+        }
+
+        body
     }
 
     /// Generate the stylesheet and add it to the document.
