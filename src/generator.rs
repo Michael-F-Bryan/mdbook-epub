@@ -184,6 +184,8 @@ impl<'a> Generator<'a> {
         };
 
         // If this is the first chapter, mark its type as Text (i.e. "bodymatter") for render_nav().
+        // This ensures at least one item in the nav.xhtml <nav epub:type="landmarks"><ol> list,
+        // otherwise epubcheck shows an error.
         let mut content = match is_first {
             Some(true) => {
                 EpubContent::new(path, rendered.as_bytes())
