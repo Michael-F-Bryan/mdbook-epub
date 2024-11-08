@@ -138,7 +138,7 @@ impl<'a> Generator<'a> {
         info!("3. Generate chapters == ");
 
         for (idx, item) in self.ctx.book.sections.iter().enumerate() {
-            let is_first = if idx == 0 { true } else { false };
+            let is_first = idx == 0;
             if let BookItem::Chapter(ref ch) = *item {
                 trace!("Adding chapter \"{}\"", ch);
                 self.add_chapter(ch, Some(is_first))?;
@@ -274,7 +274,7 @@ impl<'a> Generator<'a> {
             .collect::<Vec<_>>()
             .join("/");
 
-        let epub_version_3 = if self.config.epub_version == Some(3) { true } else { false };
+        let epub_version_3 = self.config.epub_version == Some(3);
 
         let ctx = json!({
             "epub_version_3": epub_version_3,
@@ -813,7 +813,7 @@ mod tests {
 
     #[test]
     fn render_assets() {
-        let links = vec![
+        let links = [
             "local.webp",
             "http://server/remote.svg",
             "http://server/link.png",

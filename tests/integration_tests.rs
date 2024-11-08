@@ -154,7 +154,7 @@ fn rendered_document_contains_all_chapter_files_and_assets() {
         debug!("path = {}", &path);
         let got = doc.0.get_resource_by_path(&path);
         // data length
-        assert!(got.unwrap().len() > 0);
+        assert!(!got.unwrap().is_empty());
     }
 }
 

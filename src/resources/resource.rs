@@ -297,12 +297,11 @@ mod tests {
                 AssetKind::Remote(internal_url) => {
                     let key_to_remove = value.location_on_disk.to_str().unwrap();
                     let got = assets.remove(key_to_remove).unwrap();
-                    let filename;
-                    if key_to_remove.contains(".svg") {
-                        filename = PathBuf::from("").join(utils::hash_link(&link_parsed));
+                    let filename = if key_to_remove.contains(".svg") {
+                        PathBuf::from("").join(utils::hash_link(&link_parsed))
                     } else {
-                        filename = PathBuf::from("").join(utils::hash_link(&link_parsed2));
-                    }
+                        PathBuf::from("").join(utils::hash_link(&link_parsed2))
+                    };
                     let absolute_location = temp.as_path().join(&filename);
                     let source = AssetKind::Remote(internal_url);
                     let should_be = Asset::new(filename, absolute_location, source);
@@ -417,7 +416,7 @@ mod tests {
     #[test]
     fn test_compute_asset_path_by_src_and_link_to_full_path() {
         let book_source_root_dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/dummy/src");
-        let mut book_chapter_dir = PathBuf::from(book_source_root_dir);
+        let mut book_chapter_dir = book_source_root_dir.clone();
         book_chapter_dir.push(Path::new("chapter_1.md"));
 
         let link = "./asset1.jpg";
@@ -448,7 +447,7 @@ mod tests {
         let new_link = Asset::remove_prefixes(link_string, UPPER_FOLDER_PATHS);
         assert_eq!("assets/verify.jpeg", new_link);
 
-        let upper_folder_path = &[UPPER_PARENT_LINUX, UPPER_PARENT, MAIN_SEPARATOR_STR, &"/"];
+        let upper_folder_path = &[UPPER_PARENT_LINUX, UPPER_PARENT, MAIN_SEPARATOR_STR, "/"];
         let link_string = String::from("assets/verify.jpeg");
         let link_string = Asset::remove_prefixes(link_string, upper_folder_path);
         assert_eq!("assets/verify.jpeg", link_string);
