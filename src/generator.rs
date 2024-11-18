@@ -389,13 +389,31 @@ impl<'a> Generator<'a> {
                     let mut has_written_backrefs = false;
                     let fl_len = fl.len();
                     let footnote_numbers = &footnote_numbers;
+                    let mut written_footnote_numbers: Vec<usize> = Vec::new();
                     fl.into_iter().enumerate().map(move |(i, f)| match f {
+                        Event::Start(Tag::Paragraph) => {
+                            let fn_number = footnote_numbers.get(&name).unwrap().0;
+                            if written_footnote_numbers.contains(&fn_number) {
+                                Event::Html("<p>".into())
+                            } else {
+                                // At this point we have started rendering a Tag::FootnoteDefinition, so already wrote an
+                                // opening <aside> tag, and starting to write the paragraphs of the definition.
+                                //
+                                // If we haven't written this footnote reference number yet, then write it at the beginning of
+                                // the paragraph in a <span>.
+                                //
+                                // This will include the footnote number in the <aside>, but NOT as a block element, and
+                                // hence it correcly shows up in footnote pop-ups.
+                                //
+                                // Tested on a Kindle Paperwhite and KOReader on ReMarkable 2.
+                                written_footnote_numbers.push(fn_number);
+                                Event::Html(format!(r##"<p><span class="footnote-definition-label">[{fn_number}]</span> "##).into())
+                            }
+                        }
                         Event::Start(Tag::FootnoteDefinition(current_name)) => {
                             name = current_name;
-                            let fn_number = footnote_numbers.get(&name).unwrap().0;
                             has_written_backrefs = false;
-                            // Place the footnote-definition-label outside the <aside> so that it doesn't take up vertical space in the Kindle pop-up.
-                            Event::Html(format!(r##"<p><span class="footnote-definition-label">{fn_number}</span></p><aside class="footnote-definition" id="fn-{name}" epub:type="footnote">"##).into())
+                            Event::Html(format!(r##"<aside class="footnote-definition" id="fn-{name}" epub:type="footnote">"##).into())
                         }
                         Event::End(TagEnd::FootnoteDefinition) | Event::End(TagEnd::Paragraph)
                             if !has_written_backrefs && i >= fl_len - 2 =>
