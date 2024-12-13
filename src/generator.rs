@@ -397,15 +397,17 @@ impl<'a> Generator<'a> {
                                 Event::Html("<p>".into())
                             } else {
                                 // At this point we have started rendering a Tag::FootnoteDefinition, so already wrote an
-                                // opening <aside> tag, and starting to write the paragraphs of the definition.
+                                // opening <div> tag, and starting to write the paragraphs of the definition.
                                 //
                                 // If we haven't written this footnote reference number yet, then write it at the beginning of
                                 // the paragraph in a <span>.
                                 //
-                                // This will include the footnote number in the <aside>, but NOT as a block element, and
+                                // This will include the footnote number in the <div>, but NOT as a block element, and
                                 // hence it correcly shows up in footnote pop-ups.
                                 //
-                                // Tested on a Kindle Paperwhite and KOReader on ReMarkable 2.
+                                // Use a <div> instead of an <aside> tag, because iBooks doesn't display <aside>.
+                                //
+                                // Tested on: ReadEra and Moon+ Reader on Android, Kindle Paperwhite, iBooks, KOReader on ReMarkable 2.
                                 written_footnote_numbers.push(fn_number);
                                 Event::Html(format!(r##"<p><span class="footnote-definition-label">[{fn_number}]</span> "##).into())
                             }
@@ -413,14 +415,14 @@ impl<'a> Generator<'a> {
                         Event::Start(Tag::FootnoteDefinition(current_name)) => {
                             name = current_name;
                             has_written_backrefs = false;
-                            Event::Html(format!(r##"<aside class="footnote-definition" id="fn-{name}" epub:type="footnote">"##).into())
+                            Event::Html(format!(r##"<div class="footnote-definition" id="fn-{name}" epub:type="footnote">"##).into())
                         }
                         Event::End(TagEnd::FootnoteDefinition) | Event::End(TagEnd::Paragraph)
                             if !has_written_backrefs && i >= fl_len - 2 =>
                         {
                             let usage_count = footnote_numbers.get(&name).unwrap().1;
                             let mut end = String::with_capacity(
-                                name.len() + (r##" <a href="#fr--1">↩</a></aside>"##.len() * usage_count),
+                                name.len() + (r##" <a href="#fr--1">↩</a></div>"##.len() * usage_count),
                             );
                             for usage in 1..=usage_count {
                                 if usage == 1 {
@@ -431,13 +433,13 @@ impl<'a> Generator<'a> {
                             }
                             has_written_backrefs = true;
                             if f == Event::End(TagEnd::FootnoteDefinition) {
-                                end.push_str("</aside>\n");
+                                end.push_str("</div>\n");
                             } else {
                                 end.push_str("</p>\n");
                             }
                             Event::Html(end.into())
                         }
-                        Event::End(TagEnd::FootnoteDefinition) => Event::Html("</aside>\n".into()),
+                        Event::End(TagEnd::FootnoteDefinition) => Event::Html("</div>\n".into()),
                         Event::FootnoteReference(_) => unreachable!("converted to HTML earlier"),
                         f => f,
                     })
