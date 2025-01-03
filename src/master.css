@@ -424,6 +424,14 @@ table tbody tr td code {
     text-decoration: none;
 }
 
+.footnote-definition-label {
+    font-weight: bold;
+}
+
+.noteref {
+    font-size: 0.75em;
+    vertical-align: super;
+}
 
 /*==DROP CAPS==*/
 
