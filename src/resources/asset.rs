@@ -82,14 +82,7 @@ impl Asset {
             return Err(Error::AssetFile(absolute_location));
         }
         // Use filename as embedded file path with content from absolute_location.
-        let binding = utils::normalize_path(Path::new(link));
-        debug!("Extracting file name from = {:?}, binding = '{binding:?}'", &full_filename.display());
-        let filename = if cfg!(target_os = "windows") {
-            binding.as_os_str().to_os_string()
-                .into_string().expect("Error getting filename for Local Asset").replace('\\', "/")
-        } else {
-            String::from(binding.as_path().to_str().unwrap())
-        };
+        let filename = full_filename.strip_prefix(src_dir)?;
 
         let asset = Asset::new(
             filename,
@@ -112,7 +105,13 @@ impl Asset {
     pub(crate) fn compute_asset_path_by_src_and_link(link: &str, chapter_dir: &PathBuf) -> PathBuf {
         let mut reassigned_asset_root: PathBuf = PathBuf::from(chapter_dir);
         let link_string = String::from(link);
-        // if chapter is a MD file, remove if from path
+        // mdbook built-in link preprocessor have `README.md` renamed and `index.md` is not exist
+        // strip the converted filename in the path 
+        if chapter_dir.ends_with("index.md") && !chapter_dir.exists() {
+            debug!("It seems a `README.md` chapter, adjust the chapter root.");
+            reassigned_asset_root.pop();
+        }
+        // if chapter is a MD file or not exist, remove if from path
         if chapter_dir.is_file() {
             reassigned_asset_root.pop();
         }

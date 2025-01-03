@@ -8,7 +8,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use epub_builder::{EpubBuilder, EpubContent, ZipLibrary};
+use epub_builder::{EpubBuilder, EpubContent, EpubVersion, ZipLibrary};
 use handlebars::{Handlebars, RenderError, RenderErrorReason};
 use html_parser::{Dom, Node};
 use mdbook::book::{BookItem, Chapter};
@@ -44,8 +44,19 @@ impl<'a> Generator<'a> {
         handler: impl ContentRetriever + 'static,
     ) -> Result<Generator<'a>, Error> {
         let handler = Box::new(handler);
-        let builder = EpubBuilder::new(ZipLibrary::new()?)?;
         let config = Config::from_render_context(ctx)?;
+
+        let epub_version = match config.epub_version {
+            Some(2) => Some(EpubVersion::V20),
+            Some(3) => Some(EpubVersion::V30),
+            Some(v) => return Err(Error::EpubDocCreate(format!("Unsupported epub version specified in book.toml: {}", v))),
+            None => None,
+        };
+
+        let mut builder = EpubBuilder::new(ZipLibrary::new()?)?;
+        if let Some(version) = epub_version {
+            builder.epub_version(version);
+        }
 
         let mut hbs = Handlebars::new();
         hbs.register_template_string("index", config.template()?)
