@@ -144,7 +144,7 @@ fn look_for_chapter_1_heading() {
 #[serial]
 fn look_for_chapter_2_image_link_in_readme() {
     init_logging();
-    let mut doc = generate_epub().unwrap();
+    let mut doc = generate_epub(false).unwrap();
 
     let path = if cfg!(target_os = "linux") {
         Path::new("OEBPS").join("02_advanced").join("README.html") // linux
