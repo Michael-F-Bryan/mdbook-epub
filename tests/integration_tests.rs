@@ -29,9 +29,10 @@ fn init_logging() {
 }
 
 /// Convenience function for compiling the dummy book into an `EpubDoc`.
-fn generate_epub() -> Result<(EpubDoc<BufReader<File>>, PathBuf), Error> {
-    debug!("generate_epub...");
-    let (ctx, _md, temp) = create_dummy_book().unwrap();
+fn generate_epub(epub3: bool) -> Result<(EpubDoc<BufReader<File>>, PathBuf), Error> {
+    debug!("generate_epub, epub3 = {:?}...", epub3);
+    let name = if epub3 { "dummy_epub3" } else { "dummy" };
+    let (ctx, _md, temp) = create_dummy_book(name).unwrap();
     debug!("temp dir = {:?}", &temp);
     mdbook_epub::generate(&ctx)?;
     let output_file = mdbook_epub::output_filename(temp.path(), &ctx.config);
@@ -52,7 +53,21 @@ fn generate_epub() -> Result<(EpubDoc<BufReader<File>>, PathBuf), Error> {
 fn output_epub_exists() {
     init_logging();
     debug!("fn output_epub_exists...");
-    let (ctx, _md, temp) = create_dummy_book().unwrap();
+    let (ctx, _md, temp) = create_dummy_book("dummy").unwrap();
+
+    let output_file = mdbook_epub::output_filename(temp.path(), &ctx.config);
+
+    assert!(!output_file.exists());
+    mdbook_epub::generate(&ctx).unwrap();
+    assert!(output_file.exists());
+}
+
+#[test]
+#[serial]
+fn output_epub3_exists() {
+    init_logging();
+    debug!("fn output_epub3_exists...");
+    let (ctx, _md, temp) = create_dummy_book("dummy_epub3").unwrap();
 
     let output_file = mdbook_epub::output_filename(temp.path(), &ctx.config);
 
@@ -67,7 +82,7 @@ fn output_epub_exists() {
 fn output_epub_is_valid() {
     init_logging();
     debug!("output_epub_is_valid...");
-    let (ctx, _md, temp) = create_dummy_book().unwrap();
+    let (ctx, _md, temp) = create_dummy_book("dummy").unwrap();
     mdbook_epub::generate(&ctx).unwrap();
 
     let output_file = mdbook_epub::output_filename(temp.path(), &ctx.config);
@@ -108,7 +123,7 @@ fn epub_check(path: &Path) -> Result<(), Error> {
 fn look_for_chapter_1_heading() {
     init_logging();
     debug!("look_for_chapter_1_heading...");
-    let mut doc = generate_epub().unwrap();
+    let mut doc = generate_epub(false).unwrap();
     debug!("doc current path = {:?}", doc.1);
 
     let path = if cfg!(target_os = "linux") {
@@ -131,7 +146,7 @@ fn rendered_document_contains_all_chapter_files_and_assets() {
     init_logging();
     debug!("rendered_document_contains_all_chapter_files_and_assets...");
     let chapters = vec!["chapter_1.html", "rust-logo.png"];
-    let mut doc = generate_epub().unwrap();
+    let mut doc = generate_epub(false).unwrap();
     debug!("Number of internal epub resources = {:?}", doc.0.resources);
     // number of internal epub resources for dummy test book
     assert_eq!(10, doc.0.resources.len());
@@ -163,7 +178,7 @@ fn rendered_document_contains_all_chapter_files_and_assets() {
 fn straight_quotes_transformed_into_curly_quotes() {
     init_logging();
     debug!("straight_quotes_transformed_into_curly_quotes...");
-    let mut doc = generate_epub().unwrap();
+    let mut doc = generate_epub(false).unwrap();
     debug!("doc current path = {:?}", doc.1);
 
     let path = if cfg!(target_os = "linux") {
@@ -177,20 +192,77 @@ fn straight_quotes_transformed_into_curly_quotes() {
     assert!(content.contains("<p>“One morning, when Gregor Samsa woke from troubled dreams, he found himself ‘transformed’ in his bed into a horrible vermin.”</p>"));
 }
 
+#[test]
+#[serial]
+fn footnote_has_linked_label() {
+    init_logging();
+    debug!("footnote_has_linked_label...");
+    let mut doc = generate_epub(true).unwrap();
+    debug!("doc current path = {:?}", doc.1);
+
+    let path = if cfg!(target_os = "linux") {
+        Path::new("OEBPS").join("chapter_1.html") // linux
+    } else {
+        Path::new("OEBPS/chapter_1.html").to_path_buf() // windows with 'forward slash' /
+    };
+    let file = doc.0.get_resource_str_by_path(path);
+    let content = file.unwrap();
+    debug!("content = {:?}", content);
+    assert!(content.contains("footnotes<sup class=\"footnote-reference\" id=\"fr-example-1\"><a href=\"#fn-example\">[1]</a></sup> with back-references"));
+}
+
+#[test]
+#[serial]
+fn footnote_definition_has_backreference_link() {
+    init_logging();
+    debug!("footnote_definition_has_backreference_link...");
+    let mut doc = generate_epub(true).unwrap();
+    debug!("doc current path = {:?}", doc.1);
+
+    let path = if cfg!(target_os = "linux") {
+        Path::new("OEBPS").join("chapter_1.html") // linux
+    } else {
+        Path::new("OEBPS/chapter_1.html").to_path_buf() // windows with 'forward slash' /
+    };
+    let file = doc.0.get_resource_str_by_path(path);
+    let content = file.unwrap();
+    debug!("content = {:?}", content);
+    assert!(content.contains("<a href=\"#fr-example-1\">↩</a></p>"));
+}
+
+#[test]
+#[serial]
+fn footnote_definition_label() {
+    init_logging();
+    debug!("footnote_definition_label...");
+    let mut doc = generate_epub(true).unwrap();
+    debug!("doc current path = {:?}", doc.1);
+
+    let path = if cfg!(target_os = "linux") {
+        Path::new("OEBPS").join("chapter_1.html") // linux
+    } else {
+        Path::new("OEBPS/chapter_1.html").to_path_buf() // windows with 'forward slash' /
+    };
+    let file = doc.0.get_resource_str_by_path(path);
+    let content = file.unwrap();
+    debug!("content = {:?}", content);
+    assert!(content.contains("<div class=\"footnotes\" epub:type=\"footnotes\">\n<div class=\"footnote-definition\" id=\"fn-example\" epub:type=\"footnote\"><p><span class=\"footnote-definition-label\">[1]</span>"));
+}
+
 /// Use `MDBook::load()` to load the dummy book into memory, then set up the
 /// `RenderContext` for use the EPUB generator.
-fn create_dummy_book() -> Result<(RenderContext, MDBook, TempDir), Error> {
-    debug!("create_dummy_book...");
+fn create_dummy_book(name: &str) -> Result<(RenderContext, MDBook, TempDir), Error> {
+    debug!("create_{:?}...", name);
     let temp = TempDir::with_prefix_in("mdbook-epub", ".")?;
 
     let dummy_book = Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("tests")
-        .join("dummy");
-    debug!("dummy_book = {:?}", &dummy_book.display().to_string());
+        .join(name);
+    debug!("{:?} = {:?}", name, &dummy_book.display().to_string());
 
     let md = MDBook::load(dummy_book);
 
-    let book = md.expect("dummy MDBook is not loaded");
+    let book = md.expect(&format!("{:?} MDBook is not loaded", name));
     let ctx = RenderContext::new(
         book.root.clone(),
         book.book.clone(),
