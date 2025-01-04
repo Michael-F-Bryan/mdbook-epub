@@ -288,6 +288,44 @@ impl<'a> Generator<'a> {
         self.hbs.render("index", &ctx)
     }
 
+    fn footnote_reference_event<'b>(&self,
+                                    event: Event<'b>,
+                                    in_footnote: & mut Vec<Vec<Event<'b>>>,
+                                    footnotes: & mut Vec<Vec<Event<'b>>>,
+                                    footnote_numbers: &mut HashMap<CowStr<'b>, (usize, usize)>)
+                                    -> Option<Event<'b>> {
+            match event {
+                Event::Start(Tag::FootnoteDefinition(_)) => {
+                    in_footnote.push(vec![event]);
+                    None
+                }
+                Event::End(TagEnd::FootnoteDefinition) => {
+                    let mut f = in_footnote.pop().unwrap();
+                    f.push(event);
+                    footnotes.push(f);
+                    None
+                }
+                Event::FootnoteReference(name) => {
+                    let n = footnote_numbers.len() + 1;
+                    let (n, nr) = footnote_numbers.entry(name.clone()).or_insert((n, 0usize));
+                    *nr += 1;
+                    // The [] brackets slightly increase the linked area and help to tap on the footnote reference.
+                    let html = Event::Html(format!(r##"<sup class="footnote-reference" id="fr-{name}-{nr}"><a href="#fn-{name}">[{n}]</a></sup>"##).into());
+                    if in_footnote.is_empty() {
+                        Some(html)
+                    } else {
+                        in_footnote.last_mut().unwrap().push(html);
+                        None
+                    }
+                }
+                _ if !in_footnote.is_empty() => {
+                    in_footnote.last_mut().unwrap().push(event);
+                    None
+                }
+                _ => Some(event),
+            }
+    }
+
     fn render_with_footnote_backrefs(&self, chapter_dir: &Path, ch: &Chapter) -> String {
         let mut body = String::new();
 
@@ -301,38 +339,10 @@ impl<'a> Generator<'a> {
         let mut footnote_numbers = HashMap::new();
 
         let parser = utils::create_new_pull_down_parser(&ch.content)
-            .filter_map(|event| {
-                match event {
-                    Event::Start(Tag::FootnoteDefinition(_)) => {
-                        in_footnote.push(vec![event]);
-                        None
-                    }
-                    Event::End(TagEnd::FootnoteDefinition) => {
-                        let mut f = in_footnote.pop().unwrap();
-                        f.push(event);
-                        footnotes.push(f);
-                        None
-                    }
-                    Event::FootnoteReference(name) => {
-                        let n = footnote_numbers.len() + 1;
-                        let (n, nr) = footnote_numbers.entry(name.clone()).or_insert((n, 0usize));
-                        *nr += 1;
-                        // The [] brackets slightly increase the linked area and help to tap on the footnote reference.
-                        let html = Event::Html(format!(r##"<sup class="footnote-reference" id="fr-{name}-{nr}"><a href="#fn-{name}">[{n}]</a></sup>"##).into());
-                        if in_footnote.is_empty() {
-                            Some(html)
-                        } else {
-                            in_footnote.last_mut().unwrap().push(html);
-                            None
-                        }
-                    }
-                    _ if !in_footnote.is_empty() => {
-                        in_footnote.last_mut().unwrap().push(event);
-                        None
-                    }
-                    _ => Some(event),
-                }
-            });
+            .filter_map(|event| self.footnote_reference_event(event,
+                                                              &mut in_footnote,
+                                                              &mut footnotes,
+                                                              &mut footnote_numbers));
 
         let mut quote_converter = EventQuoteConverter::new(self.config.curly_quotes);
         let ch_depth = chapter_dir.components().count();
