@@ -13,16 +13,16 @@ use handlebars::{Handlebars, RenderError, RenderErrorReason};
 use html_parser::{Dom, Node};
 use mdbook::book::{BookItem, Chapter};
 use mdbook::renderer::RenderContext;
-use pulldown_cmark::{CowStr, Event, html, Tag, TagEnd};
+use pulldown_cmark::{html, CowStr, Event, Tag, TagEnd};
 use url::Url;
-use urlencoding::encode;
 
 use crate::config::Config;
-use crate::resources::retrieve::{ContentRetriever, ResourceHandler};
-use crate::resources::resource::{self};
-use crate::DEFAULT_CSS;
-use crate::{Error, utils};
 use crate::resources::asset::{Asset, AssetKind};
+use crate::resources::resource::{self};
+use crate::resources::retrieve::{ContentRetriever, ResourceHandler};
+use crate::utils::encode_non_ascii_symbols;
+use crate::DEFAULT_CSS;
+use crate::{utils, Error};
 
 /// The actual EPUB book renderer.
 pub struct Generator<'a> {
@@ -49,7 +49,12 @@ impl<'a> Generator<'a> {
         let epub_version = match config.epub_version {
             Some(2) => Some(EpubVersion::V20),
             Some(3) => Some(EpubVersion::V30),
-            Some(v) => return Err(Error::EpubDocCreate(format!("Unsupported epub version specified in book.toml: {}", v))),
+            Some(v) => {
+                return Err(Error::EpubDocCreate(format!(
+                    "Unsupported epub version specified in book.toml: {}",
+                    v
+                )))
+            }
             None => None,
         };
 
@@ -178,7 +183,7 @@ impl<'a> Generator<'a> {
         let title = if self.config.no_section_label {
             ch.name.clone()
         } else if let Some(ref section_number) = ch.number {
-            format!{"{} {}", section_number, ch.name}
+            format! {"{} {}", section_number, ch.name}
         } else {
             ch.name.clone()
         };
@@ -218,18 +223,16 @@ impl<'a> Generator<'a> {
     fn render_chapter(&self, ch: &Chapter) -> Result<String, RenderError> {
         let chapter_dir = if let Some(chapter_file_path) = &ch.path {
             chapter_file_path.parent().ok_or_else(|| {
-                RenderError::from(
-                    RenderErrorReason::Other(format!("No CSS found by a path = {:?}", ch.path))
-                )
+                RenderError::from(RenderErrorReason::Other(format!(
+                    "No CSS found by a path = {:?}",
+                    ch.path
+                )))
             })?
         } else {
-            return Err(
-                RenderError::from(
-                    RenderErrorReason::Other(format!(
-                        "Draft chapter: '{}' could not be rendered.",
-                        ch.name
-                    )))
-            );
+            return Err(RenderError::from(RenderErrorReason::Other(format!(
+                "Draft chapter: '{}' could not be rendered.",
+                ch.name
+            ))));
         };
 
         let mut body = String::new();
@@ -474,7 +477,10 @@ impl<'a> Generator<'a> {
     }
 
     fn additional_assets(&mut self) -> Result<(), Error> {
-        info!("6. Embedding, downloading additional assets == [{:?}]", self.assets.len());
+        info!(
+            "6. Embedding, downloading additional assets == [{:?}]",
+            self.assets.len()
+        );
 
         // TODO: have a list of Asset URLs and try to download all of them (in parallel?)
         // to a temporary location.
@@ -637,12 +643,22 @@ impl<'a> AssetLinkFilter<'a> {
     fn apply(&self, event: Event<'a>) -> Event<'a> {
         trace!("AssetLinkFilter: Processing Event = {:?}", &event);
         match event {
-            Event::Start(Tag::Image{link_type, ref dest_url, ref title, ref id}) => {
+            Event::Start(Tag::Image {
+                link_type,
+                ref dest_url,
+                ref title,
+                ref id,
+            }) => {
                 if let Some(asset) = self.assets.get(&dest_url.to_string()) {
                     // PREPARE info for replacing original REMOTE link by `<hash>.ext` value inside chapter content
                     debug!("Found URL '{}' by Event", &dest_url);
                     let new = self.path_prefix(asset.filename.as_path());
-                    Event::Start(Tag::Image{link_type, dest_url: CowStr::from(new), title: title.to_owned(), id: id.to_owned()})
+                    Event::Start(Tag::Image {
+                        link_type,
+                        dest_url: CowStr::from(new),
+                        title: title.to_owned(),
+                        id: id.to_owned(),
+                    })
                 } else {
                     event
                 }
@@ -670,28 +686,21 @@ impl<'a> AssetLinkFilter<'a> {
                     found.dedup();
                     let mut content = html.clone().into_string();
                     for link in found {
-                        // REAL SRC REPLACING happens here...
-                        let mut link_as_string = link.clone();
-                        if !link_as_string.is_ascii() {
-                            // convert any 'non acsii' char inside URL into 'ascii encoded' variant
-                            link_as_string = link_as_string.chars().map(|char_item| {
-                                if !char_item.is_ascii() {
-                                    encode(&char_item.to_string()).to_string()
-                                } else {
-                                    char_item.to_string()
-                                }
-                            }).collect::<String>();
-                            trace!("URL link is converted into ASCII version = {}", link_as_string);
-                        }
-                        let link_as_str= link_as_string.as_str();
+                        let encoded_link_key = encode_non_ascii_symbols(&link);
+                        debug!("encoded_link_key = '{}'", &encoded_link_key);
 
-                        if let Some(asset) = self.assets.get(link_as_str) {
+                        if let Some(asset) = self.assets.get(&encoded_link_key) {
                             let new = self.path_prefix(asset.filename.as_path());
-                            debug!("{:?} link '{}' is replaced by '{:?}'", asset, &link, &new);
-                            content = content.replace(link_as_str, &CowStr::from(new));
-                            trace!("new content\n{:?}", content);
+                            trace!("old content before replacement\n{}", &content);
+                            trace!("{:?}, link '{}' is replaced by '{}'", asset, &link, &new);
+                            // REAL SRC REPLACING happens here...
+                            content = content.replace(&link, new.as_str());
+                            trace!("new content after replacement\n{}", &content);
                         } else {
-                            error!("Asset was not found by link: {}", link_as_str);
+                            error!(
+                                "Asset was not found by encoded_link key: {}",
+                                encoded_link_key
+                            );
                             unreachable!("{link} should be replaced, but it doesn't.");
                         }
                     }
@@ -796,7 +805,6 @@ mod tests {
     use mime_guess::mime;
     use std::path::Path;
     use tempfile::TempDir;
-    use urlencoding::encode;
 
     use super::*;
     use crate::resources::asset::AssetKind;
@@ -1010,29 +1018,5 @@ mod tests {
                 "output": {"epub": {"curly-quotes": true}}},
             "destination": destination
         })
-    }
-
-    #[test]
-    fn test_encoding_non_ascii() {
-        let source = "studyrust公众号";
-        assert!(!source.is_ascii());
-        let encoded_target = encode(source);
-        let original = "studyrust%E5%85%AC%E4%BC%97%E5%8F%B7";
-        assert_eq!(original, encoded_target);
-    }
-
-    #[test]
-    fn test_encoding_nonn_ascii_url() {
-        let source = "https://github.com/sunface/rust-course/blob/main/assets/studyrust公众号.png?raw=true";
-        assert!(!source.is_ascii());
-        let encoded_target = source.chars().map(|char_item| {
-            if !char_item.is_ascii() {
-                encode(&char_item.to_string()).to_string()
-            } else {
-                char_item.to_string()
-            }
-        }).collect::<String>();
-        let original = "https://github.com/sunface/rust-course/blob/main/assets/studyrust%E5%85%AC%E4%BC%97%E5%8F%B7.png?raw=true";
-        assert_eq!(original, encoded_target);
     }
 }
