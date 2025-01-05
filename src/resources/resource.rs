@@ -95,10 +95,7 @@ pub(crate) fn find(ctx: &RenderContext) -> Result<HashMap<String, Asset>, Error>
                             // remote asset kind
                             let link_key: String =
                                 String::from(asset.location_on_disk.to_str().unwrap());
-                            debug!(
-                                "Adding Remote asset by link '{:?}' : {:#?}",
-                                link_key, &asset
-                            );
+                            debug!("Adding Remote asset by link '{}' : {:#?}", link_key, &asset);
                             assets.insert(link_key, asset);
                             assets_count += 1;
                         }
@@ -143,7 +140,12 @@ fn find_assets_in_markdown(chapter_src_content: &str) -> Result<Vec<String>, Err
     // that will process chapter content and find assets
     for event in pull_down_parser {
         match event {
-            Event::Start(Tag::Image{link_type: _, dest_url, title: _, id: _}) => {
+            Event::Start(Tag::Image {
+                link_type: _,
+                dest_url,
+                title: _,
+                id: _,
+            }) => {
                 found_asset.push(dest_url.to_string());
             }
             Event::Html(html) | Event::InlineHtml(html) => {
@@ -172,10 +174,10 @@ fn find_assets_in_markdown(chapter_src_content: &str) -> Result<Vec<String>, Err
 
 #[cfg(test)]
 mod tests {
-    use std::path::{Path, PathBuf};
-    use serde_json::{json, Value};
-    use tempfile::TempDir;
     use super::*;
+    use serde_json::{json, Value};
+    use std::path::{Path, PathBuf};
+    use tempfile::TempDir;
 
     #[test]
     fn test_find_images() {
