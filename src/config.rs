@@ -73,7 +73,7 @@ impl Default for Config {
             additional_resources: Vec::new(),
             no_section_label: false,
             curly_quotes: false,
-            footnote_backrefs: true,
+            footnote_backrefs: false,
             epub_version: None,
         }
     }
