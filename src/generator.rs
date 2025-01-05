@@ -413,7 +413,7 @@ impl<'a> Generator<'a> {
     }
 }
 
-impl<'a> Debug for Generator<'a> {
+impl Debug for Generator<'_> {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         f.debug_struct("Generator")
             .field("ctx", &self.ctx)
