@@ -31,7 +31,7 @@ fn init_logging() {
 /// Convenience function for compiling the dummy book into an `EpubDoc`.
 fn generate_epub(epub3: bool) -> Result<(EpubDoc<BufReader<File>>, PathBuf), Error> {
     debug!("generate_epub, epub3 = {:?}...", epub3);
-    let name = if epub3 { "dummy_epub3" } else { "dummy" };
+    let name = if epub3 { "footnote_epub3_example" } else { "dummy" };
     let (ctx, _md, temp) = create_dummy_book(name).unwrap();
     debug!("temp dir = {:?}", &temp);
     mdbook_epub::generate(&ctx)?;
@@ -67,7 +67,7 @@ fn output_epub_exists() {
 fn output_epub3_exists() {
     init_logging();
     debug!("fn output_epub3_exists...");
-    let (ctx, _md, temp) = create_dummy_book("dummy_epub3").unwrap();
+    let (ctx, _md, temp) = create_dummy_book("footnote_epub3_example").unwrap();
 
     let output_file = mdbook_epub::output_filename(temp.path(), &ctx.config);
 
