@@ -75,6 +75,8 @@ its section number.
 `curly-quotes`: Enable converting straight quotes `'x'` and `"x"` to `‘x’` and
 `“x”` (aka *smart quotes*).
 
+`footnote-backrefs`: Add backreference links to footnote definitions and allow pop-up footnote behaviour. Requires `epub-version = 3`.
+
 `epub-version`: Specifies the EPUB version to use. If omitted, the epub-builder
 default version is used.
  - `2` — EPUB 2.0.1
@@ -89,6 +91,7 @@ additional-resources = ["./assets/Open-Sans-Regular.ttf"]
 no-section-label = true
 curly-quotes = true
 epub-version = 3
+footnote-backrefs = true
 ```
 
 ## Logging, seeing progress

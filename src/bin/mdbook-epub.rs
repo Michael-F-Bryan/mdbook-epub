@@ -90,35 +90,35 @@ mod tests {
 
     #[test]
     fn test_standalone_only() {
-        let args = Args::try_parse_from(&["test", "--standalone"]).unwrap();
+        let args = Args::try_parse_from(["test", "--standalone"]).unwrap();
         debug_assert!(args.standalone);
         debug_assert_eq!(args.root, PathBuf::from("."));
     }
 
     #[test]
     fn test_standalone_with_root_path() {
-        let args = Args::try_parse_from(&["test", "--standalone", "/some/path"]).unwrap();
+        let args = Args::try_parse_from(["test", "--standalone", "/some/path"]).unwrap();
         debug_assert!(args.standalone);
         debug_assert_eq!(args.root, PathBuf::from("/some/path"));
     }
 
     #[test]
     fn test_default_root_default_short() {
-        let args = Args::try_parse_from(&["test"]).unwrap();
+        let args = Args::try_parse_from(["test"]).unwrap();
         debug_assert!(!args.standalone);
         debug_assert_eq!(args.root, PathBuf::from("."));
     }
 
     #[test]
     fn test_short_flag() {
-        let args = Args::try_parse_from(&["test", "-s"]).unwrap();
+        let args = Args::try_parse_from(["test", "-s"]).unwrap();
         debug_assert!(args.standalone);
         debug_assert_eq!(args.root, PathBuf::from("."));
     }
 
     #[test]
     fn test_with_root_only() {
-        let args = Args::try_parse_from(&["test", "/another/path"]).unwrap();
+        let args = Args::try_parse_from(["test", "/another/path"]).unwrap();
         debug_assert!(!args.standalone);
         debug_assert_eq!(args.root, PathBuf::from("/another/path"));
     }
