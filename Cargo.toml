@@ -10,7 +10,7 @@ documentation = "https://docs.rs/mdbook-epub"
 keywords = ["epub", "mdbook", "documentation", "markdown"]
 categories = ["command-line-interface", "development-tools"]
 edition = "2021"
-exclude = ["/tests/dummy/*"]
+#exclude = ["/tests/long_book_example/*"]
 rust-version = "1.83"
 
 [package.metadata.release]
@@ -44,7 +44,6 @@ url = "2.5"
 ureq = "2.9"
 urlencoding = "2.1"
 const_format = "0.2"
-uuid = "1.11"
 
 [dev-dependencies]
 tempfile = "3.15"

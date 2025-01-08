@@ -1,10 +1,11 @@
 [book]
-title = "Footnote Epub3"
+title = "Long Book"
 authors = []
 multilingual = false
 src = "src"
 lang = "en"
 
 [output.epub]
+curly-quotes = true
 epub-version = 3
 footnote-backrefs = true
