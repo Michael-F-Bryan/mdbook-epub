@@ -15,13 +15,21 @@ jobs:
             epubcheck-path: epubcheck
           - os: windows-latest
             install-epubcheck: |
-              mkdir epubcheck
-              cd epubcheck
-              curl -L -o epubcheck.zip https://github.com/w3c/epubcheck/releases/download/v5.2.0/epubcheck-5.2.0.zip
-              7z x epubcheck.zip
-              # Use GITHUB_WORKSPACE to make absolute path
-              echo "EPUBCHECK_JAR=$GITHUB_WORKSPACE\epubcheck\epubcheck-5.2.0\epubcheck.jar" >> $GITHUB_ENV
-              dir "$GITHUB_WORKSPACE\epubcheck\epubcheck-5.2.0\epubcheck.jar"
+            # Create dir in root
+            mkdir $GITHUB_WORKSPACE\tools
+            cd $GITHUB_WORKSPACE\tools
+            # Download and unzip
+            curl -L -o epubcheck.zip https://github.com/w3c/epubcheck/releases/download/v5.2.0/epubcheck-5.2.0.zip
+            7z x epubcheck.zip
+            # Create bat file for start
+            echo @echo off > epubcheck.bat
+            echo java -jar "%GITHUB_WORKSPACE%\tools\epubcheck-5.2.0\epubcheck.jar" %%* >> epubcheck.bat
+            # Add the path to the bat file to PATH
+            echo "$GITHUB_WORKSPACE\tools" >> $GITHUB_PATH
+            # Save the path to the jar file
+            echo "EPUBCHECK_JAR=$GITHUB_WORKSPACE\tools\epubcheck-5.2.0\epubcheck.jar" >> $GITHUB_ENV
+            # Check installation
+            dir "$GITHUB_WORKSPACE\tools"
             epubcheck-path: "%EPUBCHECK_JAR%"
           - os: macos-latest
             install-epubcheck: brew install epubcheck
