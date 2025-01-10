@@ -6,26 +6,55 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, windows-latest, macos-latest ]
+        include:
+          - os: ubuntu-latest
+            install-epubcheck: sudo apt-get update -y && sudo apt-get upgrade -y && sudo apt-get install -y epubcheck
+          - os: windows-latest
+            install-epubcheck: |
+              mkdir epubcheck
+              cd epubcheck
+              curl -L -o epubcheck.zip https://github.com/w3c/epubcheck/releases/download/v5.2.0/epubcheck-5.2.0.zip
+              7z x epubcheck.zip
+              echo "$PWD" >> $GITHUB_PATH
+          - os: macos-latest
+            install-epubcheck: brew install epubcheck
+
+    runs-on: ${{ matrix.os }}
 
     steps:
-    - name: Set up Rust
-      uses: actions/checkout@v4
-    - name: Install cargo version
-      uses: dtolnay/rust-toolchain@stable
-    - name: Install epub checker
-      run: sudo apt-get update -y && sudo apt-get upgrade -y && sudo apt-get install -y epubcheck
-    - name: Install cargo audit
-      run: cargo install cargo-audit
-    - name: Show rust version
-      run: cargo --version
-    - name: Build
-      run: cargo build --verbose
-    - name: Run tests
-      run: cargo test --verbose
-    - name: Run Clippy
-      run: cargo clippy -- --no-deps -Dwarnings
-    - name: Audit
-      run: cargo audit
-#    - name: Rust format
-#      run: cargo fmt --check
+      - name: Set up Rust
+        uses: actions/checkout@v4
+
+      - name: Install cargo version
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Install epubcheck
+        run: ${{ matrix.install-epubcheck }}
+        shell: bash
+
+      - name: Install cargo audit
+        run: cargo install cargo-audit
+
+      - name: Show rust version
+        run: cargo --version
+
+      - name: Build
+        run: cargo build --verbose
+
+      - name: Run tests
+        run: cargo test --verbose
+
+      - name: Run Clippy
+        run: cargo clippy -- --no-deps -Dwarnings
+
+      - name: Audit
+        run: cargo audit
