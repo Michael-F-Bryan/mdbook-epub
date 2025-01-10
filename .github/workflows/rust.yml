@@ -16,14 +16,11 @@ jobs:
           - os: windows-latest
             install-epubcheck: |
               # Create dir in root
-              cmd.exe /c "mkdir %GITHUB_WORKSPACE%\tools"
-              cd "%GITHUB_WORKSPACE%\tools"
-              # Download and unzip
-              curl -L -o epubcheck.zip https://github.com/w3c/epubcheck/releases/download/v5.2.0/epubcheck-5.2.0.zip
-              7z x epubcheck.zip
+              CMD="/c mkdir %GITHUB_WORKSPACE%\tools && cd %GITHUB_WORKSPACE%\tools && curl -L -o epubcheck.zip https://github.com/w3c/epubcheck/releases/download/v5.2.0/epubcheck-5.2.0.zip && 7z x epubcheck.zip"
+              cmd.exe $CMD
               # Create bat file for start
-              cmd.exe /c "echo @echo off > epubcheck.bat"
-              cmd.exe /c "echo java -jar %GITHUB_WORKSPACE%\tools\epubcheck-5.2.0\epubcheck.jar %%* >> epubcheck.bat"
+              CMD="/c echo @echo off > %GITHUB_WORKSPACE%\tools\epubcheck.bat && echo java -jar %GITHUB_WORKSPACE%\tools\epubcheck-5.2.0\epubcheck.jar %%* >> %GITHUB_WORKSPACE%\tools\epubcheck.bat"
+              cmd.exe $CMD
               # Add the path to the bat file to PATH
               echo "%GITHUB_WORKSPACE%\tools" >> $GITHUB_PATH
               # Save the path to the jar file
