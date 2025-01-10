@@ -60,10 +60,16 @@ pub fn epub_check(path: &Path) -> Result<(), Error> {
     let epubcheck_cmd = if cfg!(windows) {
         // On Windows run epubcheck via : java -jar
         let epubcheck_path =
-            std::env::var("EPUBCHECK_PATH").unwrap_or_else(|_| "epubcheck".to_string());
+            std::env::var("EPUBCHECK_JAR").expect("EPUBCHECK_JAR environment variable not set");
+
+        debug!("Running epubcheck with jar path: {}", &epubcheck_path);
 
         Command::new("java")
-            .args(&["-jar", &epubcheck_path, path.to_str().unwrap()])
+            .args(&[
+                "-jar",
+                &epubcheck_path.replace('\\', "/"),
+                path.to_str().unwrap(),
+            ])
             .output()
     } else {
         // Unix systems run epubcheck directly
@@ -72,11 +78,18 @@ pub fn epub_check(path: &Path) -> Result<(), Error> {
 
     match epubcheck_cmd {
         Ok(output) => {
+            // logging for debug
+            if !output.status.success() {
+                let stdout = String::from_utf8_lossy(&output.stdout);
+                let stderr = String::from_utf8_lossy(&output.stderr);
+                debug!("epubcheck stdout: {}", stdout);
+                debug!("epubcheck stderr: {}", stderr);
+            }
             if output.status.success() {
                 Ok(())
             } else {
                 let error_from_epubcheck = String::from_utf8_lossy(output.stderr.as_slice());
-                error!("Error: {:?}", &error_from_epubcheck);
+                error!("Error running epubcheck: {:?}", &error_from_epubcheck);
                 Err(Error::EpubCheck(error_from_epubcheck.to_string()))
             }
         }
