@@ -17,7 +17,7 @@ jobs:
             install-epubcheck: |
               mkdir epubcheck
               cd epubcheck
-              curl -L -o epubcheck.zip https://github.com/w3c/epubcheck/releases/download/v4.2.6/epubcheck-4.2.6.zip
+              curl -L -o epubcheck.zip https://github.com/w3c/epubcheck/releases/download/v5.2.0/epubcheck-5.2.0.zip
               7z x epubcheck.zip
               echo "${PWD}/epubcheck-4.2.6" >> $GITHUB_PATH
             epubcheck-path: epubcheck-4.2.6/epubcheck.jar
