@@ -55,9 +55,22 @@ pub fn create_dummy_book(name: &str) -> Result<(RenderContext, MDBook, TempDir),
 pub fn epub_check(path: &Path) -> Result<(), Error> {
     init_logging();
     debug!("epub_check in path = {}...", &path.display());
-    let cmd = Command::new("epubcheck").arg(path).output();
 
-    match cmd {
+    // windows workaround
+    let epubcheck_cmd = if cfg!(windows) {
+        // On Windows run epubcheck via : java -jar
+        let epubcheck_path =
+            std::env::var("EPUBCHECK_PATH").unwrap_or_else(|_| "epubcheck".to_string());
+
+        Command::new("java")
+            .args(&["-jar", &epubcheck_path, path.to_str().unwrap()])
+            .output()
+    } else {
+        // Unix systems run epubcheck directly
+        Command::new("epubcheck").arg(path).output()
+    };
+
+    match epubcheck_cmd {
         Ok(output) => {
             if output.status.success() {
                 Ok(())

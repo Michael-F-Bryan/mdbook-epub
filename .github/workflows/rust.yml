@@ -12,17 +12,22 @@ jobs:
         include:
           - os: ubuntu-latest
             install-epubcheck: sudo apt-get update -y && sudo apt-get upgrade -y && sudo apt-get install -y epubcheck
+            epubcheck-path: epubcheck
           - os: windows-latest
             install-epubcheck: |
               mkdir epubcheck
               cd epubcheck
-              curl -L -o epubcheck.zip https://github.com/w3c/epubcheck/releases/download/v5.2.0/epubcheck-5.2.0.zip
+              curl -L -o epubcheck.zip https://github.com/w3c/epubcheck/releases/download/v4.2.6/epubcheck-4.2.6.zip
               7z x epubcheck.zip
-              echo "$PWD" >> $GITHUB_PATH
+              echo "${PWD}/epubcheck-4.2.6" >> $GITHUB_PATH
+            epubcheck-path: epubcheck-4.2.6/epubcheck.jar
           - os: macos-latest
             install-epubcheck: brew install epubcheck
+            epubcheck-path: epubcheck
 
     runs-on: ${{ matrix.os }}
+    env:
+      EPUBCHECK_PATH: ${{ matrix.epubcheck-path }}
 
     steps:
       - name: Set up Rust
