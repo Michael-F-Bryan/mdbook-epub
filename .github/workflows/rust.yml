@@ -19,8 +19,8 @@ jobs:
               cd epubcheck
               curl -L -o epubcheck.zip https://github.com/w3c/epubcheck/releases/download/v5.2.0/epubcheck-5.2.0.zip
               7z x epubcheck.zip
-              echo "${PWD}/epubcheck-5.2.0" >> $GITHUB_PATH
-            epubcheck-path: epubcheck-5.2.0/epubcheck.jar
+              echo "EPUBCHECK_JAR=${{github.workspace}}/epubcheck/epubcheck-5.2.0/epubcheck.jar" >> $GITHUB_ENV
+            epubcheck-path: "%EPUBCHECK_JAR%"
           - os: macos-latest
             install-epubcheck: brew install epubcheck
             epubcheck-path: epubcheck
