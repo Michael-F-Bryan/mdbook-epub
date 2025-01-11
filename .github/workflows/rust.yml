@@ -22,22 +22,29 @@ jobs:
               cmd.exe /c "echo Current directory: %CD%"
               
               cmd.exe /c "mkdir %GITHUB_WORKSPACE%\epubcheck"
-              cmd.exe /c "cd %GITHUB_WORKSPACE%\epubcheck"
+              cmd.exe /c "echo Created directory at: %GITHUB_WORKSPACE%\epubcheck"
               
               # Donwloading and unpack 
-              curl -L -o epubcheck.zip https://github.com/w3c/epubcheck/releases/download/v5.2.0/epubcheck-5.2.0.zip
+              curl -L -o %GITHUB_WORKSPACE%\epubcheck\epubcheck.zip https://github.com/w3c/epubcheck/releases/download/v5.2.0/epubcheck-5.2.0.zip
+              cd %GITHUB_WORKSPACE%\epubcheck
+              cmd.exe /c "echo Changed to directory: %CD%"
+              
               7z x epubcheck.zip
               
               # Current dir content
-              cmd.exe /c "echo EPUBCHECK_JAR=%GITHUB_WORKSPACE%\epubcheck\epubcheck-5.2.0\epubcheck.jar >> %GITHUB_ENV%"
+              cmd.exe /c "echo Contents of epubcheck directory:"
+              cmd.exe /c "dir /s"
               
-              # Сохраним полный путь к jar файлу
-              # echo "EPUBCHECK_JAR_2=${PWD}/epubcheck-5.2.0/epubcheck.jar" >> $GITHUB_ENV
-              echo "EPUBCHECK_JAR=${{github.workspace}}/epubcheck/epubcheck-5.2.0/epubcheck.jar" >> $GITHUB_ENV
+              echo "EPUBCHECK_PATH=%GITHUB_WORKSPACE%\epubcheck\epubcheck-5.2.0\epubcheck.jar" >> $GITHUB_ENV
+              cmd.exe /c "echo Set EPUBCHECK_PATH to: %GITHUB_WORKSPACE%\epubcheck\epubcheck-5.2.0\epubcheck.jar"
+              
+              # Setup full path to jar file
+              echo "EPUBCHECK_PATH=%GITHUB_WORKSPACE%\epubcheck\epubcheck-5.2.0\epubcheck.jar" >> $GITHUB_ENV
+              cmd.exe /c "echo Set EPUBCHECK_PATH to: %GITHUB_WORKSPACE%\epubcheck\epubcheck-5.2.0\epubcheck.jar"
 
               # Check if file exists
-              cmd.exe /c "if exist %GITHUB_WORKSPACE%\epubcheck\epubcheck-5.2.0\epubcheck.jar (echo JAR file exists) else (echo JAR file not found)"
-            epubcheck-path: "%EPUBCHECK_JAR%"
+              cmd.exe /c "if exist %GITHUB_WORKSPACE%\epubcheck\epubcheck-5.2.0\epubcheck.jar (echo JAR file found at: %GITHUB_WORKSPACE%\epubcheck\epubcheck-5.2.0\epubcheck.jar)"
+            epubcheck-path: "${{ env.EPUBCHECK_PATH }}"
           - os: macos-latest
             install-epubcheck: brew install epubcheck
             epubcheck-path: epubcheck
