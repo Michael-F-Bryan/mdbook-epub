@@ -1,26 +1,24 @@
+use epub_builder::{EpubBuilder, EpubContent, EpubVersion, ZipLibrary};
+use handlebars::{Handlebars, RenderError, RenderErrorReason};
+use mdbook::book::{BookItem, Chapter};
+use mdbook::renderer::RenderContext;
+use pulldown_cmark::html;
 use std::{
     collections::HashMap,
-    ffi::OsString,
     fmt::{self, Debug, Formatter},
     fs::File,
     io::{Read, Write},
     iter,
-    path::{Path, PathBuf},
+    path::PathBuf,
 };
 
-use epub_builder::{EpubBuilder, EpubContent, EpubVersion, ZipLibrary};
-use handlebars::{Handlebars, RenderError, RenderErrorReason};
-use html_parser::{Dom, Node};
-use mdbook::book::{BookItem, Chapter};
-use mdbook::renderer::RenderContext;
-use pulldown_cmark::{html, CowStr, Event, Tag, TagEnd};
-use url::Url;
-
 use crate::config::Config;
+use crate::filters::asset_link::AssetRemoteLinkFilter;
+use crate::filters::footnote::FootnoteFilter;
+use crate::filters::quote_converter::QuoteConverterFilter;
 use crate::resources::asset::{Asset, AssetKind};
 use crate::resources::resource::{self};
 use crate::resources::retrieve::{ContentRetriever, ResourceHandler};
-use crate::utils::encode_non_ascii_symbols;
 use crate::DEFAULT_CSS;
 use crate::{utils, Error};
 
@@ -192,15 +190,10 @@ impl<'a> Generator<'a> {
         // This ensures at least one item in the nav.xhtml <nav epub:type="landmarks"><ol> list,
         // otherwise epubcheck shows an error.
         let mut content = match is_first {
-            Some(true) => {
-                EpubContent::new(path, rendered.as_bytes())
-                    .title(title)
-                    .reftype(epub_builder::ReferenceType::Text)
-            },
-            _ => {
-                EpubContent::new(path, rendered.as_bytes())
-                    .title(title)
-            },
+            Some(true) => EpubContent::new(path, rendered.as_bytes())
+                .title(title)
+                .reftype(epub_builder::ReferenceType::Text),
+            _ => EpubContent::new(path, rendered.as_bytes()).title(title),
         };
 
         let level = ch.number.as_ref().map(|n| n.len() as i32 - 1).unwrap_or(0);
@@ -235,39 +228,55 @@ impl<'a> Generator<'a> {
             ))));
         };
 
-        let mut body = String::new();
+        let mut body = String::with_capacity(3000); // big enough arbitrary size
 
-        if self.config.epub_version == Some(3) && self.config.footnote_backrefs {
-            body.push_str(&self.render_with_footnote_backrefs(chapter_dir, ch));
-        } else {
-            let parser = utils::create_new_pull_down_parser(&ch.content);
-            let mut quote_converter = EventQuoteConverter::new(self.config.curly_quotes);
-            let ch_depth = chapter_dir.components().count();
+        // if self.config.epub_version == Some(3) && self.config.footnote_backrefs {
+        // body.push_str(&self.render_with_footnote_backrefs(chapter_dir, ch));
+        // } else {
+        let parser = utils::create_new_pull_down_parser(&ch.content);
+        let mut quote_converter = QuoteConverterFilter::new(self.config.curly_quotes);
+        let ch_depth = chapter_dir.components().count();
 
-            // create 'Remote Assets' copy to be processed by AssetLinkFilter
-            let mut remote_assets: HashMap<String, Asset> = HashMap::new();
-            for (key, value) in self.assets.clone().into_iter() {
-                trace!("{} / {:?}", key, &value);
-                if let AssetKind::Remote(ref remote_url) = value.source {
-                    trace!(
-                        "Adding remote_assets = '{}' / {:?}",
-                        remote_url.to_string(),
-                        &value
-                    );
-                    remote_assets.insert(remote_url.to_string(), value);
-                }
-                /* else if let AssetKind::Local(ref _local_path) = value.source {
-                let relative_path = value.filename.to_str().unwrap();
-                remote_assets.insert(String::from(relative_path), value);
-                } */
+        // create 'Remote Assets' copy to be processed by AssetLinkFilter
+        let mut remote_assets: HashMap<String, Asset> = HashMap::new();
+        for (key, value) in self.assets.clone().into_iter() {
+            trace!("{} / {:?}", key, &value);
+            if let AssetKind::Remote(ref remote_url) = value.source {
+                trace!(
+                    "Adding remote_assets = '{}' / {:?}",
+                    remote_url.to_string(),
+                    &value
+                );
+                remote_assets.insert(remote_url.to_string(), value);
             }
-            let asset_link_filter = AssetLinkFilter::new(&remote_assets, ch_depth);
-            let events = parser
-                .map(|event| quote_converter.convert(event))
-                .map(|event| asset_link_filter.apply(event));
-            trace!("Found Rendering events map = [{:?}]", &events);
+        }
+        let asset_link_filter = AssetRemoteLinkFilter::new(&remote_assets, ch_depth);
 
+        let mut footnote_filter =
+            if self.config.epub_version == Some(3) && self.config.footnote_backrefs {
+                FootnoteFilter::new(self.config.footnote_backrefs)
+            } else {
+                FootnoteFilter::new(false)
+            };
+
+        let events = parser
+            .map(|event| quote_converter.apply(event))
+            .map(|event| asset_link_filter.apply(event))
+            .filter_map(|event| footnote_filter.apply(event));
+
+        trace!("Found Rendering events map = [{:?}]", &events);
+
+        html::push_html(&mut body, events);
+
+        if !footnote_filter.is_empty() {
+            footnote_filter.retain();
+            footnote_filter.sort_by_cached_key();
+            body.push_str("<div class=\"footnotes\" epub:type=\"footnotes\">\n");
+            // let events = parser.filter_map(|event| footnote_filter.apply(event));
+            let events = footnote_filter.get_events();
             html::push_html(&mut body, events);
+            // body.push_str("</ol>\n");
+            body.push_str("</div>\n");
         }
 
         trace!("Chapter content after Events processing = [{:?}]", body);
@@ -289,181 +298,6 @@ impl<'a> Generator<'a> {
         });
 
         self.hbs.render("index", &ctx)
-    }
-
-    fn footnote_reference_event<'b>(&self,
-                                    event: Event<'b>,
-                                    in_footnote: & mut Vec<Vec<Event<'b>>>,
-                                    footnotes: & mut Vec<Vec<Event<'b>>>,
-                                    footnote_numbers: &mut HashMap<CowStr<'b>, (usize, usize)>)
-                                    -> Option<Event<'b>> {
-            match event {
-                Event::Start(Tag::FootnoteDefinition(_)) => {
-                    in_footnote.push(vec![event]);
-                    None
-                }
-                Event::End(TagEnd::FootnoteDefinition) => {
-                    let mut f = in_footnote.pop().unwrap();
-                    f.push(event);
-                    footnotes.push(f);
-                    None
-                }
-                Event::FootnoteReference(name) => {
-                    let n = footnote_numbers.len() + 1;
-                    let (n, nr) = footnote_numbers.entry(name.clone()).or_insert((n, 0usize));
-                    *nr += 1;
-                    // The [] brackets slightly increase the linked area and help to tap on the footnote reference.
-                    let html = Event::Html(format!(r##"<sup class="footnote-reference" id="fr-{name}-{nr}"><a href="#fn-{name}">[{n}]</a></sup>"##).into());
-                    if in_footnote.is_empty() {
-                        Some(html)
-                    } else {
-                        in_footnote.last_mut().unwrap().push(html);
-                        None
-                    }
-                }
-                _ if !in_footnote.is_empty() => {
-                    in_footnote.last_mut().unwrap().push(event);
-                    None
-                }
-                _ => Some(event),
-            }
-    }
-
-    fn render_with_footnote_backrefs(&self, chapter_dir: &Path, ch: &Chapter) -> String {
-        let mut body = String::new();
-
-        // Based on
-        // https://github.com/pulldown-cmark/pulldown-cmark/blob/master/pulldown-cmark/examples/footnote-rewrite.rs
-
-        // To generate this style, you have to collect the footnotes at the end, while parsing.
-        // You also need to count usages.
-        let mut footnotes = Vec::new();
-        let mut in_footnote = Vec::new();
-        let mut footnote_numbers = HashMap::new();
-
-        let parser = utils::create_new_pull_down_parser(&ch.content)
-            .filter_map(|event| self.footnote_reference_event(event,
-                                                              &mut in_footnote,
-                                                              &mut footnotes,
-                                                              &mut footnote_numbers));
-
-        let mut quote_converter = EventQuoteConverter::new(self.config.curly_quotes);
-        let ch_depth = chapter_dir.components().count();
-
-        // create 'Remote Assets' copy to be processed by AssetLinkFilter
-        let mut remote_assets: HashMap<String, Asset> = HashMap::new();
-        for (key, value) in self.assets.clone().into_iter() {
-            trace!("{} / {:?}", key, &value);
-            if let AssetKind::Remote(ref remote_url) = value.source {
-                trace!(
-                    "Adding remote_assets = '{}' / {:?}",
-                    remote_url.to_string(),
-                    &value
-                );
-                remote_assets.insert(remote_url.to_string(), value);
-            }
-            /* else if let AssetKind::Local(ref _local_path) = value.source {
-            let relative_path = value.filename.to_str().unwrap();
-            remote_assets.insert(String::from(relative_path), value);
-        }*/
-        }
-        let asset_link_filter = AssetLinkFilter::new(&remote_assets, ch_depth);
-        let events = parser
-            .map(|event| quote_converter.convert(event))
-            .map(|event| asset_link_filter.apply(event));
-        trace!("Found Rendering events map = [{:?}]", &events);
-
-        html::push_html(&mut body, events);
-
-        // To make the footnotes look right, we need to sort them by their appearance order, not by
-        // the in-tree order of their actual definitions. Unused items are omitted entirely.
-        if !footnotes.is_empty() {
-            footnotes.retain(|f| match f.first() {
-                Some(Event::Start(Tag::FootnoteDefinition(name))) => {
-                    footnote_numbers.get(name).unwrap_or(&(0, 0)).1 != 0
-                }
-                _ => false,
-            });
-            footnotes.sort_by_cached_key(|f| match f.first() {
-                Some(Event::Start(Tag::FootnoteDefinition(name))) => {
-                    footnote_numbers.get(name).unwrap_or(&(0, 0)).0
-                }
-                _ => unreachable!(),
-            });
-
-            body.push_str("<div class=\"footnotes\" epub:type=\"footnotes\">\n");
-
-            html::push_html(
-                &mut body,
-                footnotes.into_iter().flat_map(|fl| {
-                    // To write backrefs, the name needs kept until the end of the footnote definition.
-                    let mut name = CowStr::from("");
-
-                    let mut has_written_backrefs = false;
-                    let fl_len = fl.len();
-                    let footnote_numbers = &footnote_numbers;
-                    let mut written_footnote_numbers: Vec<usize> = Vec::new();
-                    fl.into_iter().enumerate().map(move |(i, f)| match f {
-                        Event::Start(Tag::Paragraph) => {
-                            let fn_number = footnote_numbers.get(&name).unwrap().0;
-                            if written_footnote_numbers.contains(&fn_number) {
-                                Event::Html("<p>".into())
-                            } else {
-                                // At this point we have started rendering a Tag::FootnoteDefinition, so already wrote an
-                                // opening <div> tag, and starting to write the paragraphs of the definition.
-                                //
-                                // If we haven't written this footnote reference number yet, then write it at the beginning of
-                                // the paragraph in a <span>.
-                                //
-                                // This will include the footnote number in the <div>, but NOT as a block element, and
-                                // hence it correcly shows up in footnote pop-ups.
-                                //
-                                // Use a <div> instead of an <aside> tag, because iBooks doesn't display <aside>.
-                                //
-                                // Tested on: ReadEra and Moon+ Reader on Android, Kindle Paperwhite, iBooks, KOReader on ReMarkable 2.
-                                written_footnote_numbers.push(fn_number);
-                                Event::Html(format!(r##"<p><span class="footnote-definition-label">[{fn_number}]</span> "##).into())
-                            }
-                        }
-                        Event::Start(Tag::FootnoteDefinition(current_name)) => {
-                            name = current_name;
-                            has_written_backrefs = false;
-                            Event::Html(format!(r##"<div class="footnote-definition" id="fn-{name}" epub:type="footnote">"##).into())
-                        }
-                        Event::End(TagEnd::FootnoteDefinition) | Event::End(TagEnd::Paragraph)
-                            if !has_written_backrefs && i >= fl_len - 2 =>
-                        {
-                            let usage_count = footnote_numbers.get(&name).unwrap().1;
-                            let mut end = String::with_capacity(
-                                name.len() + (r##" <a href="#fr--1">↩</a></div>"##.len() * usage_count),
-                            );
-                            for usage in 1..=usage_count {
-                                if usage == 1 {
-                                    end.push_str(&format!(r##" <a href="#fr-{name}-{usage}">↩</a>"##));
-                                } else {
-                                    end.push_str(&format!(r##" <a href="#fr-{name}-{usage}">↩{usage}</a>"##));
-                                }
-                            }
-                            has_written_backrefs = true;
-                            if f == Event::End(TagEnd::FootnoteDefinition) {
-                                end.push_str("</div>\n");
-                            } else {
-                                end.push_str("</p>\n");
-                            }
-                            Event::Html(end.into())
-                        }
-                        Event::End(TagEnd::FootnoteDefinition) => Event::Html("</div>\n".into()),
-                        Event::FootnoteReference(_) => unreachable!("converted to HTML earlier"),
-                        f => f,
-                    })
-                }),
-            );
-
-            // Closing div.footnotes
-            body.push_str("</div>\n");
-        }
-
-        body
     }
 
     /// Generate the stylesheet and add it to the document.
@@ -627,188 +461,15 @@ impl Debug for Generator<'_> {
     }
 }
 
-/// Filter is used for replacing remote urls with local images downloaded from internet
-struct AssetLinkFilter<'a> {
-    // Keeps pairs: 'remote url' | 'asset'
-    assets: &'a HashMap<String, Asset>,
-    depth: usize,
-}
-
-impl<'a> AssetLinkFilter<'a> {
-    fn new(assets: &'a HashMap<String, Asset>, depth: usize) -> Self {
-        Self { assets, depth }
-    }
-
-    /// Do processing of chapter's content and replace 'remote link' by 'local file name'
-    fn apply(&self, event: Event<'a>) -> Event<'a> {
-        trace!("AssetLinkFilter: Processing Event = {:?}", &event);
-        match event {
-            Event::Start(Tag::Image {
-                link_type,
-                ref dest_url,
-                ref title,
-                ref id,
-            }) => {
-                if let Some(asset) = self.assets.get(&dest_url.to_string()) {
-                    // PREPARE info for replacing original REMOTE link by `<hash>.ext` value inside chapter content
-                    debug!("Found URL '{}' by Event", &dest_url);
-                    let new = self.path_prefix(asset.filename.as_path());
-                    Event::Start(Tag::Image {
-                        link_type,
-                        dest_url: CowStr::from(new),
-                        title: title.to_owned(),
-                        id: id.to_owned(),
-                    })
-                } else {
-                    event
-                }
-            }
-            Event::Html(ref html) => {
-                let mut found = Vec::new();
-                if let Ok(dom) = Dom::parse(&html.clone().into_string()) {
-                    for item in dom.children {
-                        match item {
-                            Node::Element(ref element) if element.name == "img" => {
-                                if let Some(dest) = &element.attributes["src"] {
-                                    if Url::parse(dest).is_ok() {
-                                        debug!("Found a valid remote img src:\"{}\".", dest);
-                                        found.push(dest.to_owned());
-                                    }
-                                }
-                            }
-                            _ => {}
-                        }
-                    }
-                }
-                if found.is_empty() {
-                    event
-                } else {
-                    found.dedup();
-                    let mut content = html.clone().into_string();
-                    for link in found {
-                        let encoded_link_key = encode_non_ascii_symbols(&link);
-                        debug!("encoded_link_key = '{}'", &encoded_link_key);
-
-                        if let Some(asset) = self.assets.get(&encoded_link_key) {
-                            let new = self.path_prefix(asset.filename.as_path());
-                            trace!("old content before replacement\n{}", &content);
-                            trace!("{:?}, link '{}' is replaced by '{}'", asset, &link, &new);
-                            // REAL SRC REPLACING happens here...
-                            content = content.replace(&link, new.as_str());
-                            trace!("new content after replacement\n{}", &content);
-                        } else {
-                            error!(
-                                "Asset was not found by encoded_link key: {}",
-                                encoded_link_key
-                            );
-                            unreachable!("{link} should be replaced, but it doesn't.");
-                        }
-                    }
-                    Event::Html(CowStr::from(content))
-                }
-            }
-            _ => event,
-        }
-    }
-
-    fn path_prefix(&self, path: &Path) -> String {
-        // compatible to Windows, translate to forward slash in file path.
-        let mut fsp = OsString::new();
-        for (i, component) in path.components().enumerate() {
-            if i > 0 {
-                fsp.push("/");
-            }
-            fsp.push(component);
-        }
-        let filename = match fsp.into_string() {
-            Ok(s) => s,
-            Err(orig) => orig.to_string_lossy().to_string(),
-        };
-        (0..self.depth)
-            .map(|_| "..")
-            .chain(iter::once(filename.as_str()))
-            .collect::<Vec<_>>()
-            .join("/")
-    }
-}
-
-/// From `mdbook/src/utils/mod.rs`, where this is a private struct.
-struct EventQuoteConverter {
-    enabled: bool,
-    convert_text: bool,
-}
-
-impl EventQuoteConverter {
-    fn new(enabled: bool) -> Self {
-        EventQuoteConverter {
-            enabled,
-            convert_text: true,
-        }
-    }
-
-    fn convert<'a>(&mut self, event: Event<'a>) -> Event<'a> {
-        if !self.enabled {
-            return event;
-        }
-
-        match event {
-            Event::Start(Tag::CodeBlock(_)) => {
-                self.convert_text = false;
-                event
-            }
-            Event::End(TagEnd::CodeBlock) => {
-                self.convert_text = true;
-                event
-            }
-            Event::Text(ref text) if self.convert_text => {
-                Event::Text(CowStr::from(convert_quotes_to_curly(text)))
-            }
-            _ => event,
-        }
-    }
-}
-
-fn convert_quotes_to_curly(original_text: &str) -> String {
-    // We'll consider the start to be "whitespace".
-    let mut preceded_by_whitespace = true;
-
-    original_text
-        .chars()
-        .map(|original_char| {
-            let converted_char = match original_char {
-                '\'' => {
-                    if preceded_by_whitespace {
-                        '‘'
-                    } else {
-                        '’'
-                    }
-                }
-                '"' => {
-                    if preceded_by_whitespace {
-                        '“'
-                    } else {
-                        '”'
-                    }
-                }
-                _ => original_char,
-            };
-
-            preceded_by_whitespace = original_char.is_whitespace();
-
-            converted_char
-        })
-        .collect()
-}
-
 #[cfg(test)]
 mod tests {
-    use mime_guess::mime;
-    use std::path::Path;
-    use tempfile::TempDir;
-
     use super::*;
     use crate::resources::asset::AssetKind;
     use crate::resources::retrieve::MockContentRetriever;
+    use mime_guess::mime;
+    use std::path::Path;
+    use tempfile::TempDir;
+    use url::Url;
 
     #[test]
     fn load_assets() {
@@ -832,7 +493,13 @@ mod tests {
         let book_source = PathBuf::from(&ctx.root)
             .join(&ctx.config.book.src)
             .canonicalize()
-            .unwrap();
+            .expect(
+                format!(
+                    "book source root is not found: {}",
+                    &ctx.config.book.src.display()
+                )
+                .as_str(),
+            );
         let should_be_png = book_source.join(png);
         let should_be_svg = book_source.join(svg);
         let hashed_filename = utils::hash_link(&url.parse::<Url>().unwrap());
@@ -891,7 +558,7 @@ mod tests {
             links[2], links[0], links[1]
         );
 
-        let filter = AssetLinkFilter::new(&assets, 0);
+        let filter = AssetRemoteLinkFilter::new(&assets, 0);
         let parser = utils::create_new_pull_down_parser(&markdown_str);
         let events = parser.map(|ev| filter.apply(ev));
         trace!("Events = {:?}", events);
@@ -1002,7 +669,7 @@ mod tests {
     fn ctx_with_template(content: &str, source: &str, destination: &Path) -> serde_json::Value {
         json!({
             "version": mdbook::MDBOOK_VERSION,
-            "root": "tests/dummy",
+            "root": "tests/long_book_example",
             "book": {"sections": [{
                 "Chapter": {
                     "name": "Chapter 1",

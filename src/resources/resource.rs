@@ -24,7 +24,7 @@ pub(crate) const UPPER_FOLDER_PATHS: &[&str] =
 
 #[cfg(target_os = "windows")]
 pub(crate) const UPPER_FOLDER_PATHS: &[&str] =
-    &[&"/", MAIN_SEPARATOR_STR, UPPER_PARENT, UPPER_PARENT_LINUX];
+    &["/", MAIN_SEPARATOR_STR, UPPER_PARENT, UPPER_PARENT_LINUX];
 
 /// Find all resources in book and put them into HashMap.
 /// The key is a link, value is a composed Asset
@@ -181,8 +181,9 @@ mod tests {
 
     #[test]
     fn test_find_images() {
-        let parent_dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/dummy/src");
-        let upper_parent_dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/dummy");
+        let parent_dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/long_book_example/src");
+        let upper_parent_dir =
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/long_book_example");
         let src =
             "![Image 1](./rust-logo.png)\n[a link](to/nowhere) ![Image 2][2]\n\n[2]: reddit.svg\n\
             \n\n<img alt=\"Rust Logo in html\" src=\"reddit.svg\" class=\"center\" style=\"width: 20%;\" />\n\n\
@@ -361,23 +362,27 @@ mod tests {
     fn find_asset_fail_when_chapter_dir_not_exist_linux() {
         panic!(
             "{}",
-            Asset::from_local("a.png", Path::new("tests/dummy/src"), Path::new("ch/a.md"))
-                .unwrap_err()
-                .to_string()
+            Asset::from_local(
+                "a.png",
+                Path::new("tests/long_book_example/src"),
+                Path::new("ch/a.md")
+            )
+            .unwrap_err()
+            .to_string()
         );
     }
 
     #[cfg(not(target_os = "windows"))]
     #[test]
     #[should_panic(
-        expected = "Asset was not found: 'wikimedia' by 'tests/dummy/third_party/a.md/wikimedia', error = No such file or directory (os error 2)"
+        expected = "Asset was not found: 'wikimedia' by 'tests/long_book_example/third_party/a.md/wikimedia', error = No such file or directory (os error 2)"
     )]
     fn find_asset_fail_when_it_is_a_dir() {
         panic!(
             "{}",
             Asset::from_local(
                 "wikimedia",
-                Path::new("tests/dummy"),
+                Path::new("tests/long_book_example"),
                 Path::new("third_party/a.md")
             )
             .unwrap_err()
@@ -410,7 +415,7 @@ mod tests {
     ) -> Result<RenderContext, mdbook::errors::Error> {
         let json_ctx = json!({
             "version": mdbook::MDBOOK_VERSION,
-            "root": "tests/dummy",
+            "root": "tests/long_book_example",
             "book": {"sections": chapters, "__non_exhaustive": null},
             "config": {
                 "book": {"authors": [], "language": "en", "multilingual": false,
@@ -423,7 +428,8 @@ mod tests {
 
     #[test]
     fn test_compute_asset_path_by_src_and_link_to_full_path() {
-        let book_source_root_dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/dummy/src");
+        let book_source_root_dir =
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/long_book_example/src");
         let mut book_chapter_dir = book_source_root_dir.clone();
         book_chapter_dir.push(Path::new("chapter_1.md"));
 
@@ -434,7 +440,7 @@ mod tests {
         assert_eq!(
             full_path.as_path(),
             Path::new(env!("CARGO_MANIFEST_DIR"))
-                .join("tests/dummy/src")
+                .join("tests/long_book_example/src")
                 .join("asset1.jpg")
         );
     }

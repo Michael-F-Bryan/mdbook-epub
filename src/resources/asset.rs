@@ -1,9 +1,12 @@
-use std::path::{MAIN_SEPARATOR_STR, Path, PathBuf};
-use url::Url;
-use mime_guess::Mime;
 use crate::errors::Error;
-use crate::resources::resource::{UPPER_FOLDER_PATHS, UPPER_PARENT, UPPER_PARENT_LINUX, UPPER_PARENT_STARTS_SLASH, UPPER_PARENT_STARTS_SLASH_LINUX};
+use crate::resources::resource::{
+    UPPER_FOLDER_PATHS, UPPER_PARENT, UPPER_PARENT_LINUX, UPPER_PARENT_STARTS_SLASH,
+    UPPER_PARENT_STARTS_SLASH_LINUX,
+};
 use crate::utils;
+use mime_guess::Mime;
+use std::path::{Path, PathBuf, MAIN_SEPARATOR_STR};
+use url::Url;
 
 /// The type of asset, remote or local
 #[derive(Clone, PartialEq, Debug)]
@@ -26,10 +29,10 @@ pub(crate) struct Asset {
 
 impl Asset {
     pub(crate) fn new<P, Q, K>(filename: P, absolute_location: Q, source: K) -> Self
-        where
-            P: Into<PathBuf>,
-            Q: Into<PathBuf>,
-            K: Into<AssetKind>,
+    where
+        P: Into<PathBuf>,
+        Q: Into<PathBuf>,
+        K: Into<AssetKind>,
     {
         let location_on_disk = absolute_location.into();
         let mt = mime_guess::from_path(&location_on_disk).first_or_octet_stream();
@@ -57,7 +60,11 @@ impl Asset {
     }
 
     // Create Asset by using local link, source and Chapter path are used for composing fields
-    pub(crate) fn from_local(link: &str, src_dir: &Path, chapter_path: &Path) -> Result<Asset, Error> {
+    pub(crate) fn from_local(
+        link: &str,
+        src_dir: &Path,
+        chapter_path: &Path,
+    ) -> Result<Asset, Error> {
         debug!(
             "Composing asset path for {:?} + {:?} in chapter = {:?}",
             src_dir, link, chapter_path
@@ -67,7 +74,11 @@ impl Asset {
         // compose file name by it's link and chapter path
         let stripped_path = Self::compute_asset_path_by_src_and_link(link, &chapter_path);
         let normalized_link = utils::normalize_path(PathBuf::from(link).as_path());
-        debug!("Composing full_filename by '{:?}' + '{:?}'", &stripped_path, &normalized_link.clone());
+        debug!(
+            "Composing full_filename by '{:?}' + '{:?}'",
+            &stripped_path,
+            &normalized_link.clone()
+        );
         let full_filename = stripped_path.join(normalized_link); // compose final result
 
         debug!("Joined full_filename = {:?}", &full_filename.display());
@@ -106,7 +117,7 @@ impl Asset {
         let mut reassigned_asset_root: PathBuf = PathBuf::from(chapter_dir);
         let link_string = String::from(link);
         // mdbook built-in link preprocessor have `README.md` renamed and `index.md` is not exist
-        // strip the converted filename in the path 
+        // strip the converted filename in the path
         if chapter_dir.ends_with("index.md") && !chapter_dir.exists() {
             debug!("It seems a `README.md` chapter, adjust the chapter root.");
             reassigned_asset_root.pop();
@@ -115,20 +126,26 @@ impl Asset {
         if chapter_dir.is_file() {
             reassigned_asset_root.pop();
         }
-        trace!("check if parent present by '{}' = '{}' || '{}' || '{}'",
-            link_string, MAIN_SEPARATOR_STR, UPPER_PARENT, UPPER_PARENT_STARTS_SLASH);
+        trace!(
+            "check if parent present by '{}' = '{}' || '{}' || '{}'",
+            link_string,
+            MAIN_SEPARATOR_STR,
+            UPPER_PARENT,
+            UPPER_PARENT_STARTS_SLASH
+        );
         // if link points to upper folder
         if !link_string.is_empty()
             && (link_string.starts_with(MAIN_SEPARATOR_STR)
-            || link_string.starts_with(UPPER_PARENT_LINUX)
-            || link_string.starts_with(UPPER_PARENT)
-            || link_string.starts_with(UPPER_PARENT_STARTS_SLASH)
-            || link_string.starts_with(UPPER_PARENT_STARTS_SLASH_LINUX))
+                || link_string.starts_with(UPPER_PARENT_LINUX)
+                || link_string.starts_with(UPPER_PARENT)
+                || link_string.starts_with(UPPER_PARENT_STARTS_SLASH)
+                || link_string.starts_with(UPPER_PARENT_STARTS_SLASH_LINUX))
         {
             reassigned_asset_root.pop(); // remove an one folder from asset's path
-            // make a recursive call
+                                         // make a recursive call
             let new_link = Self::remove_prefixes(link_string, UPPER_FOLDER_PATHS);
-            reassigned_asset_root = Self::compute_asset_path_by_src_and_link(&new_link, &reassigned_asset_root);
+            reassigned_asset_root =
+                Self::compute_asset_path_by_src_and_link(&new_link, &reassigned_asset_root);
         }
         reassigned_asset_root // compose final result
     }
@@ -141,11 +158,11 @@ impl Asset {
             match link_to_strip.strip_prefix(prefix) {
                 Some(s) => {
                     stripped_link = s.to_string();
-                    return stripped_link
-                },
-                None => &link_to_strip
+                    return stripped_link;
+                }
+                None => &link_to_strip,
             };
-        };
+        }
         stripped_link
     }
 }

@@ -22,9 +22,9 @@ use errors::Error;
 pub use crate::config::Config;
 pub use crate::generator::Generator;
 
-
 mod config;
 pub mod errors;
+mod filters;
 mod generator;
 mod resources;
 mod utils;

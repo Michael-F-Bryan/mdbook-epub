@@ -62,8 +62,8 @@ fn run(args: &Args) -> Result<(), Error> {
 
 #[derive(Debug, Clone, Parser)]
 #[clap(
-name = "MDBook epub utility",
-about = "MDBook epub utility makes EPUB file from MD source files described by book.toml",
+    name = "MDBook epub utility",
+    about = "MDBook epub utility makes EPUB file from MD source files described by book.toml"
 )]
 #[command(version, about, long_about = None)]
 struct Args {

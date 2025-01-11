@@ -927,7 +927,6 @@ dependencies = [
  "ureq",
  "url",
  "urlencoding",
- "uuid",
 ]
 
 [[package]]
