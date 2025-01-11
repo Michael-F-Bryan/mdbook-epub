@@ -15,9 +15,7 @@ jobs:
             epubcheck-path: epubcheck
           - os: windows-latest
             install-epubcheck: |
-              cmd.exe /c "ver"
-              cmd.exe /c "echo Current workspace path: ${{ github.workspace }}"
-              cmd.exe /c "cd"
+              cmd.exe /c "ver & echo Current workspace path: %CD% & cd"
               
               #              cmd.exe /c "mkdir ${{ github.workspace }}\epubcheck"
               #              cmd.exe /c "echo Created directory at: ${{ github.workspace }}\epubcheck"
