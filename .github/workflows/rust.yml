@@ -8,11 +8,12 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [ windows-latest ]
+        os: [ ubuntu-latest, windows-latest, macos-latest ]
         include:
-          #          - os: ubuntu-latest
-          #            install-epubcheck: sudo apt-get update -y && sudo apt-get upgrade -y && sudo apt-get install -y epubcheck
-          #            epubcheck-path: epubcheck
+          - os: ubuntu-latest
+            install-epubcheck: sudo apt-get update -y && sudo apt-get upgrade -y && sudo apt-get install -y epubcheck
+            epubcheck-path: epubcheck
+
           - os: windows-latest
             install-epubcheck: |
               # Print system info
@@ -24,8 +25,11 @@ jobs:
               mkdir -p "$GITHUB_WORKSPACE/epubcheck"
               echo "Created directory at: $GITHUB_WORKSPACE/epubcheck"
               
+              # Define the epubcheck version
+              EPUBCHECK_VERSION="5.2.0"
+              
               # Download epubcheck
-              curl -L -o "$GITHUB_WORKSPACE/epubcheck/epubcheck.zip" https://github.com/w3c/epubcheck/releases/download/v5.2.0/epubcheck-5.2.0.zip
+              curl -L -o "$GITHUB_WORKSPACE/epubcheck/epubcheck.zip" https://github.com/w3c/epubcheck/releases/download/v$EPUBCHECK_VERSION/epubcheck-$EPUBCHECK_VERSION.zip
               echo "Downloaded epubcheck to: $GITHUB_WORKSPACE/epubcheck/epubcheck.zip"
               
               # Extract archive and check contents
@@ -34,12 +38,12 @@ jobs:
               echo "Archive extracted to: $PWD"
               ls -la
               
-              # Check epubcheck-5.2.0 directory contents
-              echo "Checking epubcheck-5.2.0 contents:"
-              ls -la epubcheck-5.2.0/
+              # Check epubcheck $EPUBCHECK_VERSION directory contents
+              echo "Checking epubcheck-$EPUBCHECK_VERSION contents:"
+              ls -la epubcheck-$EPUBCHECK_VERSION/
               
               # Set and verify epubcheck path
-              EPUBCHECK_JAR="$GITHUB_WORKSPACE\epubcheck\epubcheck-5.2.0\epubcheck.jar"
+              EPUBCHECK_JAR="$GITHUB_WORKSPACE\epubcheck\epubcheck-$EPUBCHECK_VERSION\epubcheck.jar"
               
               echo "Value to be set: $EPUBCHECK_JAR"
               
@@ -52,22 +56,22 @@ jobs:
               fi
               
               # Set epubcheck path using working approach
-              EPUBCHECK_JAR="$GITHUB_WORKSPACE\epubcheck\epubcheck-5.2.0\epubcheck.jar"
+              EPUBCHECK_JAR="$GITHUB_WORKSPACE\epubcheck\epubcheck-$EPUBCHECK_VERSION\epubcheck.jar"
               echo "EPUBCHECK_PATH=$EPUBCHECK_JAR" >> "$GITHUB_ENV"
               
               # Debug output
               echo "Debug: EPUBCHECK_JAR value is: $EPUBCHECK_JAR"
               
               # Show current directory structure
-              # ls -la "$GITHUB_WORKSPACE\epubcheck\epubcheck-5.2.0"
+              # ls -la "$GITHUB_WORKSPACE\epubcheck\epubcheck-$EPUBCHECK_VERSION"
               
               # Export the variable for subsequent steps
               echo "EPUBCHECK_JAR=$EPUBCHECK_JAR" >> $GITHUB_ENV
             epubcheck-path: "$EPUBCHECK_JAR"
 
-    #          - os: macos-latest
-    #            install-epubcheck: brew install epubcheck
-    #            epubcheck-path: epubcheck
+          - os: macos-latest
+            install-epubcheck: brew install epubcheck
+            epubcheck-path: epubcheck
 
     runs-on: ${{ matrix.os }}
     env:
@@ -90,9 +94,9 @@ jobs:
         run: ${{ matrix.install-epubcheck }}
         shell: bash
 
-      #      - name: Install cargo audit
-      #        run: cargo install cargo-audit
-      #
+      - name: Install cargo audit
+        run: cargo install cargo-audit
+
       - name: Show rust version
         run: cargo --version
 
@@ -103,9 +107,9 @@ jobs:
         run: cargo test --verbose
         env:
           EPUBCHECK_JAR: ${{ env.EPUBCHECK_JAR }}
-#
-#      - name: Run Clippy
-#        run: cargo clippy -- --no-deps -Dwarnings
-#
-#      - name: Audit
-#        run: cargo audit
+
+      - name: Run Clippy
+        run: cargo clippy -- --no-deps -Dwarnings
+
+      - name: Audit
+        run: cargo audit
