@@ -37,7 +37,7 @@ jobs:
               # Check epubcheck-5.2.0 directory contents
               echo "Checking epubcheck-5.2.0 contents:"
               ls -la epubcheck-5.2.0/
-
+              
               # Set and verify epubcheck path
               EPUBCHECK_JAR="$GITHUB_WORKSPACE/epubcheck/epubcheck-5.2.0/epubcheck.jar"
               
@@ -45,19 +45,22 @@ jobs:
               
               # Verify file exists
               if [ -f "$EPUBCHECK_JAR" ]; then
-                echo "JAR file exists at: $EPUBCHECK_JAR"
+              echo "JAR file exists at: $EPUBCHECK_JAR"
               else
-                echo "JAR file not found at: $EPUBCHECK_JAR"
-                exit 1
+              echo "JAR file not found at: $EPUBCHECK_JAR"
+              exit 1
               fi
               
-              echo "Setting EPUBCHECK_PATH..."
-              {
-                echo "EPUBCHECK_PATH=$GITHUB_WORKSPACE/epubcheck/epubcheck-5.2.0/epubcheck.jar"
-              } >> "$GITHUB_ENV"
+              # Set epubcheck path using working approach
+              EPUBCHECK_JAR="$GITHUB_WORKSPACE/epubcheck/epubcheck-5.2.0/epubcheck.jar"
+              echo "EPUBCHECK_PATH=$EPUBCHECK_JAR" >> "$GITHUB_ENV"
               
-              # Verify the value was set
-              echo "Verify EPUBCHECK_PATH = $EPUBCHECK_PATH"
+              # Debug output
+              echo "Debug: Setting EPUBCHECK_PATH to: $EPUBCHECK_JAR"
+              
+              # Verify the value
+              echo "Debug: Current GITHUB_ENV contents:"
+              cat "$GITHUB_ENV"
               
               # Show current value
               echo "Current environment variables:"
