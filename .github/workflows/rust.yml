@@ -34,9 +34,16 @@ jobs:
               echo "Archive extracted to: $PWD"
               ls -la
               
-              # Set epubcheck path
+              # Check epubcheck-5.2.0 directory contents
+              echo "Checking epubcheck-5.2.0 contents:"
+              ls -la epubcheck-5.2.0/
+
+              # Set and verify epubcheck path
               EPUBCHECK_JAR="$GITHUB_WORKSPACE/epubcheck/epubcheck-5.2.0/epubcheck.jar"
               echo "EPUBCHECK_PATH=$EPUBCHECK_JAR" >> $GITHUB_ENV
+              echo "Value to be set: $EPUBCHECK_JAR"
+              echo "Current environment variables:"
+              env | grep EPUBCHECK
               
               # Setup full path to jar file
               #              echo "EPUBCHECK_PATH=%GITHUB_WORKSPACE%\epubcheck\epubcheck-5.2.0\epubcheck.jar" >> $GITHUB_ENV
