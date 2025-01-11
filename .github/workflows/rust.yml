@@ -24,8 +24,9 @@ jobs:
               mkdir -p "$GITHUB_WORKSPACE/epubcheck"
               echo "Created directory at: $GITHUB_WORKSPACE/epubcheck"
               
-              # Donwloading and unpack 
-              #              curl -L -o "${{ github.workspace }}\epubcheck\epubcheck.zip" https://github.com/w3c/epubcheck/releases/download/v5.2.0/epubcheck-5.2.0.zip
+              # Download epubcheck
+              curl -L -o "$GITHUB_WORKSPACE/epubcheck/epubcheck.zip" https://github.com/w3c/epubcheck/releases/download/v5.2.0/epubcheck-5.2.0.zip
+              echo "Downloaded epubcheck to: $GITHUB_WORKSPACE/epubcheck/epubcheck.zip"
               #              cd "${{ github.workspace }}\epubcheck"
               #              cmd.exe /c "echo Changed to directory: %CD%"
               
