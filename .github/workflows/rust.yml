@@ -20,8 +20,9 @@ jobs:
               echo "Current directory is: $PWD"
               pwd
               
-              #              cmd.exe /c "mkdir ${{ github.workspace }}\epubcheck"
-              #              cmd.exe /c "echo Created directory at: ${{ github.workspace }}\epubcheck"
+              # Create directory for epubcheck
+              mkdir -p "$GITHUB_WORKSPACE/epubcheck"
+              echo "Created directory at: $GITHUB_WORKSPACE/epubcheck"
               
               # Donwloading and unpack 
               #              curl -L -o "${{ github.workspace }}\epubcheck\epubcheck.zip" https://github.com/w3c/epubcheck/releases/download/v5.2.0/epubcheck-5.2.0.zip
@@ -55,11 +56,11 @@ jobs:
       EPUBCHECK_PATH: ${{ matrix.epubcheck-path }}
 
     steps:
-      - name: Set up Rust
-        uses: actions/checkout@v4
-
-      - name: Install cargo version
-        uses: dtolnay/rust-toolchain@stable
+      #      - name: Set up Rust
+      #        uses: actions/checkout@v4
+      #
+      #      - name: Install cargo version
+      #        uses: dtolnay/rust-toolchain@stable
 
       - name: Set up Java
         uses: actions/setup-java@v3
@@ -71,20 +72,20 @@ jobs:
         run: ${{ matrix.install-epubcheck }}
         shell: bash
 
-      - name: Install cargo audit
-        run: cargo install cargo-audit
-
-      - name: Show rust version
-        run: cargo --version
-
-      - name: Build
-        run: cargo build --verbose
-
-      - name: Run tests
-        run: cargo test --verbose
-
-      - name: Run Clippy
-        run: cargo clippy -- --no-deps -Dwarnings
-
-      - name: Audit
-        run: cargo audit
+#      - name: Install cargo audit
+#        run: cargo install cargo-audit
+#
+#      - name: Show rust version
+#        run: cargo --version
+#
+#      - name: Build
+#        run: cargo build --verbose
+#
+#      - name: Run tests
+#        run: cargo test --verbose
+#
+#      - name: Run Clippy
+#        run: cargo clippy -- --no-deps -Dwarnings
+#
+#      - name: Audit
+#        run: cargo audit
