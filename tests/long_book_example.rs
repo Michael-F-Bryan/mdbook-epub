@@ -81,7 +81,7 @@ fn rendered_document_contains_all_chapter_files_and_assets() {
     // number of internal epub resources for long_book_example test book
     assert_eq!(12, doc.0.resources.len());
     assert_eq!(3, doc.0.spine.len());
-    assert_eq!(doc.0.mdata("title").unwrap(), "Long Book");
+    assert_eq!(doc.0.mdata("title").unwrap(), "LongBookExample");
     assert_eq!(doc.0.mdata("language").unwrap(), "en");
     debug!(
         "doc current path = {:?} / {:?}",
