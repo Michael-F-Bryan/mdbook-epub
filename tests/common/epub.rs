@@ -54,13 +54,26 @@ pub fn create_dummy_book(name: &str) -> Result<(RenderContext, MDBook, TempDir),
 
 pub fn epub_check(path: &Path) -> Result<(), Error> {
     init_logging();
-    debug!("epub_check in path = {}...", &path.display());
+    debug!("check epub book by path = '{}'...", &path.display());
 
     // windows workaround
     #[cfg(windows)]
     let cmd = {
+        // On Windows run epubcheck via : java -jar
         debug!("Windows environment detected");
-        Command::new("epubcheck").arg(path).output()
+        let epubcheck_path =
+            std::env::var("EPUBCHECK_JAR").expect("EPUBCHECK_JAR environment variable not set");
+
+        debug!("Current directory: {:?}", std::env::current_dir().unwrap());
+        debug!("Epubcheck JAR path: {}", &epubcheck_path);
+        debug!(
+            "File exists: {}",
+            std::path::Path::new(&epubcheck_path).exists()
+        );
+
+        Command::new("java")
+            .args(&["-jar", &epubcheck_path, path.to_str().unwrap()])
+            .output()
     };
 
     #[cfg(not(windows))]

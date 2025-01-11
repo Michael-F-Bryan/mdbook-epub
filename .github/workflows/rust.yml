@@ -15,18 +15,28 @@ jobs:
             epubcheck-path: epubcheck
           - os: windows-latest
             install-epubcheck: |
-              # Create dir in root
-              CMD="/c mkdir %GITHUB_WORKSPACE%\tools && cd %GITHUB_WORKSPACE%\tools && curl -L -o epubcheck.zip https://github.com/w3c/epubcheck/releases/download/v5.2.0/epubcheck-5.2.0.zip && 7z x epubcheck.zip"
-              cmd.exe $CMD
-              # Create bat file for start
-              CMD="/c echo @echo off > %GITHUB_WORKSPACE%\tools\epubcheck.bat && echo java -jar %GITHUB_WORKSPACE%\tools\epubcheck-5.2.0\epubcheck.jar %%* >> %GITHUB_WORKSPACE%\tools\epubcheck.bat"
-              cmd.exe $CMD
-              # Add the path to the bat file to PATH
-              echo "%GITHUB_WORKSPACE%\tools" >> $GITHUB_PATH
-              # Save the path to the jar file
-              echo "EPUBCHECK_JAR=%GITHUB_WORKSPACE%\tools\epubcheck-5.2.0\epubcheck.jar" >> $GITHUB_ENV
-              # Check installation
-              cmd.exe /c "dir /b %GITHUB_WORKSPACE%\tools"
+              
+              # Print Windows version and env
+              cmd.exe /c "ver"
+              cmd.exe /c "echo Current workspace: %GITHUB_WORKSPACE%"
+              cmd.exe /c "echo Current directory: %CD%"
+              
+              cmd.exe /c "mkdir %GITHUB_WORKSPACE%\epubcheck"
+              cmd.exe /c "cd %GITHUB_WORKSPACE%\epubcheck"
+              
+              # Donwloading and unpack 
+              curl -L -o epubcheck.zip https://github.com/w3c/epubcheck/releases/download/v5.2.0/epubcheck-5.2.0.zip
+              7z x epubcheck.zip
+              
+              # Current dir content
+              cmd.exe /c "echo EPUBCHECK_JAR=%GITHUB_WORKSPACE%\epubcheck\epubcheck-5.2.0\epubcheck.jar >> %GITHUB_ENV%"
+              
+              # Сохраним полный путь к jar файлу
+              # echo "EPUBCHECK_JAR_2=${PWD}/epubcheck-5.2.0/epubcheck.jar" >> $GITHUB_ENV
+              echo "EPUBCHECK_JAR=${{github.workspace}}/epubcheck/epubcheck-5.2.0/epubcheck.jar" >> $GITHUB_ENV
+
+              # Check if file exists
+              cmd.exe /c "if exist %GITHUB_WORKSPACE%\epubcheck\epubcheck-5.2.0\epubcheck.jar (echo JAR file exists) else (echo JAR file not found)"
             epubcheck-path: "%EPUBCHECK_JAR%"
           - os: macos-latest
             install-epubcheck: brew install epubcheck
