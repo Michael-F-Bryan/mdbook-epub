@@ -15,7 +15,6 @@ jobs:
             epubcheck-path: epubcheck
           - os: windows-latest
             install-epubcheck: |
-              
               # Print Windows version and env
               cmd.exe /c "ver"
               cmd.exe /c "echo Current workspace: %GITHUB_WORKSPACE%"
@@ -44,7 +43,8 @@ jobs:
 
               # Check if file exists
               cmd.exe /c "if exist %GITHUB_WORKSPACE%\epubcheck\epubcheck-5.2.0\epubcheck.jar (echo JAR file found at: %GITHUB_WORKSPACE%\epubcheck\epubcheck-5.2.0\epubcheck.jar)"
-            epubcheck-path: "${{ env.EPUBCHECK_PATH }}"
+            epubcheck-path: "%GITHUB_WORKSPACE%\epubcheck\epubcheck-5.2.0\epubcheck.jar"
+
           - os: macos-latest
             install-epubcheck: brew install epubcheck
             epubcheck-path: epubcheck
