@@ -27,10 +27,12 @@ jobs:
               # Download epubcheck
               curl -L -o "$GITHUB_WORKSPACE/epubcheck/epubcheck.zip" https://github.com/w3c/epubcheck/releases/download/v5.2.0/epubcheck-5.2.0.zip
               echo "Downloaded epubcheck to: $GITHUB_WORKSPACE/epubcheck/epubcheck.zip"
-              #              cd "${{ github.workspace }}\epubcheck"
-              #              cmd.exe /c "echo Changed to directory: %CD%"
               
-              #              7z x epubcheck.zip
+              # Extract archive and check contents
+              cd "$GITHUB_WORKSPACE/epubcheck"
+              7z x epubcheck.zip
+              echo "Archive extracted to: $PWD"
+              ls -la
               
               # Current dir content
               #              cmd.exe /c "echo Contents of epubcheck directory:"
