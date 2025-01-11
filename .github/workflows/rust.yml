@@ -59,7 +59,10 @@ jobs:
               echo "Debug: EPUBCHECK_JAR value is: $EPUBCHECK_JAR"
               
               # Show current directory structure
-              ls -la "$GITHUB_WORKSPACE\epubcheck\epubcheck-5.2.0"
+              # ls -la "$GITHUB_WORKSPACE\epubcheck\epubcheck-5.2.0"
+              
+              # Export the variable for subsequent steps
+              echo "EPUBCHECK_JAR=$EPUBCHECK_JAR" >> $GITHUB_ENV
             epubcheck-path: "$EPUBCHECK_JAR"
 
     #          - os: macos-latest
@@ -98,6 +101,8 @@ jobs:
 
       - name: Run tests
         run: cargo test --verbose
+        env:
+          EPUBCHECK_JAR: ${{ env.EPUBCHECK_JAR }}
 #
 #      - name: Run Clippy
 #        run: cargo clippy -- --no-deps -Dwarnings
