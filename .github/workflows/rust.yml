@@ -40,7 +40,7 @@ jobs:
 
               # Set and verify epubcheck path
               EPUBCHECK_JAR="$GITHUB_WORKSPACE/epubcheck/epubcheck-5.2.0/epubcheck.jar"
-              echo "EPUBCHECK_PATH=$EPUBCHECK_JAR" >> $GITHUB_ENV
+              
               echo "Value to be set: $EPUBCHECK_JAR"
               
               # Verify file exists
@@ -51,6 +51,15 @@ jobs:
                 exit 1
               fi
               
+              echo "Setting EPUBCHECK_PATH..."
+              {
+                echo "EPUBCHECK_PATH=$GITHUB_WORKSPACE/epubcheck/epubcheck-5.2.0/epubcheck.jar"
+              } >> "$GITHUB_ENV"
+              
+              # Verify the value was set
+              echo "Verify EPUBCHECK_PATH = $EPUBCHECK_PATH"
+              
+              # Show current value
               echo "Current environment variables:"
               env | grep EPUBCHECK
               
