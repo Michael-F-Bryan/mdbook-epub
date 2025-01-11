@@ -24,7 +24,7 @@ pub(crate) const UPPER_FOLDER_PATHS: &[&str] =
 
 #[cfg(target_os = "windows")]
 pub(crate) const UPPER_FOLDER_PATHS: &[&str] =
-    &[&"/", MAIN_SEPARATOR_STR, UPPER_PARENT, UPPER_PARENT_LINUX];
+    &["/", MAIN_SEPARATOR_STR, UPPER_PARENT, UPPER_PARENT_LINUX];
 
 /// Find all resources in book and put them into HashMap.
 /// The key is a link, value is a composed Asset
