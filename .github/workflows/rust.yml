@@ -15,9 +15,10 @@ jobs:
           #            epubcheck-path: epubcheck
           - os: windows-latest
             install-epubcheck: |
-              ver
-              echo Current working directory:
-              cd
+              # Print system info
+              echo "Current workspace is: $GITHUB_WORKSPACE"
+              echo "Current directory is: $PWD"
+              pwd
               
               #              cmd.exe /c "mkdir ${{ github.workspace }}\epubcheck"
               #              cmd.exe /c "echo Created directory at: ${{ github.workspace }}\epubcheck"
@@ -43,7 +44,6 @@ jobs:
 
               # Check if file exists
               #              cmd.exe /c "if exist ${{ github.workspace }}\epubcheck\epubcheck-5.2.0\epubcheck.jar (echo JAR file found) else (echo JAR file not found)"
-            shell: cmd
             epubcheck-path: "${{ github.workspace }}\epubcheck\epubcheck-5.2.0\epubcheck.jar"
 
     #          - os: macos-latest
