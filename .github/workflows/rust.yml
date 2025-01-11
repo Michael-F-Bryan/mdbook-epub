@@ -39,7 +39,7 @@ jobs:
               ls -la epubcheck-5.2.0/
               
               # Set and verify epubcheck path
-              EPUBCHECK_JAR="$GITHUB_WORKSPACE/epubcheck/epubcheck-5.2.0/epubcheck.jar"
+              EPUBCHECK_JAR="$GITHUB_WORKSPACE\epubcheck\epubcheck-5.2.0\epubcheck.jar"
               
               echo "Value to be set: $EPUBCHECK_JAR"
               
@@ -52,7 +52,7 @@ jobs:
               fi
               
               # Set epubcheck path using working approach
-              EPUBCHECK_JAR="$GITHUB_WORKSPACE/epubcheck/epubcheck-5.2.0/epubcheck.jar"
+              EPUBCHECK_JAR="$GITHUB_WORKSPACE\epubcheck\epubcheck-5.2.0\epubcheck.jar"
               echo "EPUBCHECK_PATH=$EPUBCHECK_JAR" >> "$GITHUB_ENV"
               
               # Debug output
