@@ -71,11 +71,11 @@ jobs:
       EPUBCHECK_PATH: ${{ matrix.epubcheck-path }}
 
     steps:
-      #      - name: Set up Rust
-      #        uses: actions/checkout@v4
-      #
-      #      - name: Install cargo version
-      #        uses: dtolnay/rust-toolchain@stable
+      - name: Set up Rust
+        uses: actions/checkout@v4
+
+      - name: Install cargo version
+        uses: dtolnay/rust-toolchain@stable
 
       - name: Set up Java
         uses: actions/setup-java@v3
@@ -87,17 +87,17 @@ jobs:
         run: ${{ matrix.install-epubcheck }}
         shell: bash
 
-#      - name: Install cargo audit
-#        run: cargo install cargo-audit
-#
-#      - name: Show rust version
-#        run: cargo --version
-#
-#      - name: Build
-#        run: cargo build --verbose
-#
-#      - name: Run tests
-#        run: cargo test --verbose
+      #      - name: Install cargo audit
+      #        run: cargo install cargo-audit
+      #
+      - name: Show rust version
+        run: cargo --version
+
+      - name: Build
+        run: cargo build --verbose
+
+      - name: Run tests
+        run: cargo test --verbose
 #
 #      - name: Run Clippy
 #        run: cargo clippy -- --no-deps -Dwarnings
