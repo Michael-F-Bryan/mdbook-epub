@@ -3,7 +3,6 @@ use std::ffi::OsStr;
 use std::path::{Component, Path, PathBuf};
 use url::Url;
 use urlencoding::encode;
-use uuid::Uuid;
 
 pub(crate) fn create_new_pull_down_parser(text: &str) -> Parser<'_> {
     let mut opts = Options::empty();
@@ -53,12 +52,16 @@ pub(crate) fn hash_link(url: &Url) -> String {
     let mut hasher = DefaultHasher::new();
     url.hash(&mut hasher);
     let path = PathBuf::from(url.path());
-    let _generated_file_extension = Uuid::new_v4().to_string();
+    let file_hash_value = hasher.finish();
+    let file_hash_string = file_hash_value.to_string();
+    let file_ext = file_hash_string.as_str();
+    let ext = path.extension().and_then(OsStr::to_str).unwrap_or(file_ext);
+    /*let _generated_file_extension = Uuid::new_v4().to_string();
     let ext = path
         .extension()
         .and_then(OsStr::to_str)
-        .unwrap_or(_generated_file_extension.as_str());
-    format!("{:x}.{}", hasher.finish(), ext)
+        .unwrap_or(_generated_file_extension.as_str());*/
+    format!("{:x}.{}", file_hash_value, ext)
 }
 
 /// Source text is url encoded if it has a non ascii symbols. Otherwise, it is not changed.
@@ -96,7 +99,9 @@ mod tests {
     fn test_hash_parametrized_url_no_extension() {
         let test_avatar_url = "https://avatars.githubusercontent.com/u/274803?v=4";
         let hashed_filename = hash_link(&test_avatar_url.parse::<Url>().unwrap());
-        assert!(hashed_filename.starts_with("4dbdb25800b6fa1b."));
+        println!("{}", hashed_filename);
+        // assert!(hashed_filename.starts_with("4dbdb25800b6fa1b."));
+        assert!(hashed_filename.starts_with("4dbdb25800b6fa1b.5601829602557622811"));
     }
 
     #[cfg(not(target_os = "windows"))]

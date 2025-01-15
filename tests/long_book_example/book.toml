@@ -1,5 +1,5 @@
 [book]
-title = "DummyBook"
+title = "LongBookExample"
 authors = []
 multilingual = false
 src = "src"
@@ -7,3 +7,5 @@ lang = "en"
 
 [output.epub]
 curly-quotes = true
+epub-version = 3
+footnote-backrefs = true

@@ -1,10 +1,8 @@
 [book]
-title = "FootnoteEpub3Example"
+title = "RemoteImageFetchExample"
 authors = []
 multilingual = false
 src = "src"
 lang = "en"
 
 [output.epub]
-epub-version = 3
-footnote-backrefs = true

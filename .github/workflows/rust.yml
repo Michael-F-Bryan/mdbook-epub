@@ -6,26 +6,110 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, windows-latest, macos-latest ]
+        include:
+          - os: ubuntu-latest
+            install-epubcheck: sudo apt-get update -y && sudo apt-get upgrade -y && sudo apt-get install -y epubcheck
+            epubcheck-path: epubcheck
+
+          - os: windows-latest
+            install-epubcheck: |
+              # Print system info
+              echo "Current workspace is: $GITHUB_WORKSPACE"
+              echo "Current directory is: $PWD"
+              pwd
+              
+              # Create directory for epubcheck
+              mkdir -p "$GITHUB_WORKSPACE/epubcheck"
+              echo "Created directory at: $GITHUB_WORKSPACE/epubcheck"
+              
+              # Define the epubcheck version
+              EPUBCHECK_VERSION="5.2.0"
+              
+              # Download epubcheck
+              curl -L -o "$GITHUB_WORKSPACE/epubcheck/epubcheck.zip" https://github.com/w3c/epubcheck/releases/download/v$EPUBCHECK_VERSION/epubcheck-$EPUBCHECK_VERSION.zip
+              echo "Downloaded epubcheck to: $GITHUB_WORKSPACE/epubcheck/epubcheck.zip"
+              
+              # Extract archive and check contents
+              cd "$GITHUB_WORKSPACE/epubcheck"
+              7z x epubcheck.zip
+              echo "Archive extracted to: $PWD"
+              ls -la
+              
+              # Check epubcheck $EPUBCHECK_VERSION directory contents
+              echo "Checking epubcheck-$EPUBCHECK_VERSION contents:"
+              ls -la epubcheck-$EPUBCHECK_VERSION/
+              
+              # Set and verify epubcheck path
+              EPUBCHECK_JAR="$GITHUB_WORKSPACE\epubcheck\epubcheck-$EPUBCHECK_VERSION\epubcheck.jar"
+              
+              echo "Value to be set: $EPUBCHECK_JAR"
+              
+              # Verify file exists
+              if [ -f "$EPUBCHECK_JAR" ]; then
+                echo "JAR file exists at: $EPUBCHECK_JAR"
+              else
+                echo "JAR file not found at: $EPUBCHECK_JAR"
+                exit 1
+              fi
+              
+              # Set epubcheck path using working approach
+              EPUBCHECK_JAR="$GITHUB_WORKSPACE\epubcheck\epubcheck-$EPUBCHECK_VERSION\epubcheck.jar"
+              echo "EPUBCHECK_PATH=$EPUBCHECK_JAR" >> "$GITHUB_ENV"
+              
+              # Debug output
+              echo "Debug: EPUBCHECK_JAR value is: $EPUBCHECK_JAR"
+              
+              # Show current directory structure
+              # ls -la "$GITHUB_WORKSPACE\epubcheck\epubcheck-$EPUBCHECK_VERSION"
+              
+              # Export the variable for subsequent steps
+              echo "EPUBCHECK_JAR=$EPUBCHECK_JAR" >> $GITHUB_ENV
+            epubcheck-path: "$EPUBCHECK_JAR"
+
+          - os: macos-latest
+            install-epubcheck: brew install epubcheck
+            epubcheck-path: epubcheck
+
+    runs-on: ${{ matrix.os }}
+    env:
+      EPUBCHECK_PATH: ${{ matrix.epubcheck-path }}
 
     steps:
-    - name: Set up Rust
-      uses: actions/checkout@v4
-    - name: Install cargo version
-      uses: dtolnay/rust-toolchain@stable
-    - name: Install epub checker
-      run: sudo apt-get update -y && sudo apt-get upgrade -y && sudo apt-get install -y epubcheck
-    - name: Install cargo audit
-      run: cargo install cargo-audit
-    - name: Show rust version
-      run: cargo --version
-    - name: Build
-      run: cargo build --verbose
-    - name: Run tests
-      run: cargo test --verbose
-    - name: Run Clippy
-      run: cargo clippy -- --no-deps -Dwarnings
-    - name: Audit
-      run: cargo audit
-#    - name: Rust format
-#      run: cargo fmt --check
+      - name: Set up Rust
+        uses: actions/checkout@v4
+
+      - name: Install cargo version
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Install epubcheck
+        run: ${{ matrix.install-epubcheck }}
+        shell: bash
+
+      - name: Install cargo audit
+        run: cargo install cargo-audit
+
+      - name: Show rust version
+        run: cargo --version
+
+      - name: Build
+        run: cargo build --verbose
+
+      - name: Run tests
+        run: cargo test --verbose
+        env:
+          EPUBCHECK_JAR: ${{ env.EPUBCHECK_JAR }}
+
+      - name: Run Clippy
+        run: cargo clippy -- --no-deps -Dwarnings
+
+      - name: Audit
+        run: cargo audit

@@ -1,10 +1,9 @@
 [book]
-title = "FootnoteEpub3Example"
+title = "CurlyQuotesBookExample"
 authors = []
 multilingual = false
 src = "src"
 lang = "en"
 
 [output.epub]
-epub-version = 3
-footnote-backrefs = true
+curly-quotes = true

@@ -81,9 +81,9 @@ impl Default for Config {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use std::path::Path;
     use tempfile::TempDir;
-    use super::*;
 
     #[test]
     fn test_from_render_context_minimal_settings() {
@@ -91,7 +91,8 @@ mod tests {
         let json = ctx_with_template(
             "unknown_src",
             tmp_dir.path().join("test-mdbook-epub").as_path(),
-        ).to_string();
+        )
+        .to_string();
         let ctx = RenderContext::from_json(json.as_bytes()).unwrap();
         let config = Config::from_render_context(&ctx);
         assert!(config.is_ok());
@@ -100,7 +101,7 @@ mod tests {
     fn ctx_with_template(source: &str, destination: &Path) -> serde_json::Value {
         json!({
             "version": mdbook::MDBOOK_VERSION,
-            "root": "tests/dummy",
+            "root": "tests/long_book_example",
             "book": {"sections": [], "__non_exhaustive": null},
             "config": {
                 "book": {"authors": [], "language": "en", "multilingual": false,
