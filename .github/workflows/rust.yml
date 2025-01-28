@@ -26,7 +26,7 @@ jobs:
               echo "Created directory at: $GITHUB_WORKSPACE/epubcheck"
               
               # Define the epubcheck version
-              EPUBCHECK_VERSION="5.2.0"
+              EPUBCHECK_VERSION="5.2.1"
               
               # Download epubcheck
               curl -L -o "$GITHUB_WORKSPACE/epubcheck/epubcheck.zip" https://github.com/w3c/epubcheck/releases/download/v$EPUBCHECK_VERSION/epubcheck-$EPUBCHECK_VERSION.zip

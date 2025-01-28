@@ -875,9 +875,9 @@ checksum = "a7a70ba024b9dc04c27ea2f0c0548feb474ec5c54bba33a7f72f873a39d07b24"
 
 [[package]]
 name = "mdbook"
-version = "0.4.43"
+version = "0.4.44"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fe1f98b8d66e537d2f0ba06e7dec4f44001deec539a2d18bfc102d6a86189148"
+checksum = "f9da1e54401fe5d45a664c57e112e70f18e8c5a73e268c179305b932ee864574"
 dependencies = [
  "anyhow",
  "chrono",
@@ -901,7 +901,7 @@ dependencies = [
 
 [[package]]
 name = "mdbook-epub"
-version = "0.4.43"
+version = "0.4.44"
 dependencies = [
  "clap",
  "const_format",
