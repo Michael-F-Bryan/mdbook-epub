@@ -16,7 +16,7 @@ pub fn generate_epub(epub_book_name: &str) -> Result<(EpubDoc<BufReader<File>>, 
     let (ctx, _md, temp) = create_dummy_book(epub_book_name).unwrap();
     debug!("temp dir = {:?}", &temp);
     mdbook_epub::generate(&ctx)?;
-    let output_file = mdbook_epub::output_filename(temp.path(), &ctx.config);
+    let output_file = mdbook_epub::output_filename(temp.path(), &ctx.config)?;
     debug!("output_file = {:?}", &output_file.display());
 
     match EpubDoc::new(&output_file) {
@@ -109,7 +109,8 @@ pub fn output_epub_is_valid(epub_book_name: &str) {
     mdbook_epub::generate(&ctx).unwrap();
 
     let output_file = mdbook_epub::output_filename(temp.path(), &ctx.config);
-
+    assert!(output_file.is_ok());
+    let output_file = output_file.unwrap();
     let got = EpubDoc::new(&output_file);
 
     assert!(got.is_ok());

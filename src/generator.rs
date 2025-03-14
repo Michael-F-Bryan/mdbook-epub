@@ -1,4 +1,4 @@
-use epub_builder::{EpubBuilder, EpubContent, EpubVersion, ZipLibrary};
+use epub_builder::{EpubBuilder, EpubContent, ZipLibrary};
 use handlebars::{Handlebars, RenderError, RenderErrorReason};
 use mdbook::book::{BookItem, Chapter};
 use mdbook::renderer::RenderContext;
@@ -19,6 +19,7 @@ use crate::filters::quote_converter::QuoteConverterFilter;
 use crate::resources::asset::{Asset, AssetKind};
 use crate::resources::resource::{self};
 use crate::resources::retrieve::{ContentRetriever, ResourceHandler};
+use crate::validation::validate_config_epub_version;
 use crate::DEFAULT_CSS;
 use crate::{utils, Error};
 
@@ -44,17 +45,7 @@ impl<'a> Generator<'a> {
         let handler = Box::new(handler);
         let config = Config::from_render_context(ctx)?;
 
-        let epub_version = match config.epub_version {
-            Some(2) => Some(EpubVersion::V20),
-            Some(3) => Some(EpubVersion::V30),
-            Some(v) => {
-                return Err(Error::EpubDocCreate(format!(
-                    "Unsupported epub version specified in book.toml: {}",
-                    v
-                )))
-            }
-            None => None,
-        };
+        let epub_version = validate_config_epub_version(&config)?;
 
         let mut builder = EpubBuilder::new(ZipLibrary::new()?)?;
         if let Some(version) = epub_version {

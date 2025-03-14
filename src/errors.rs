@@ -57,6 +57,9 @@ pub enum Error {
     TomlDeser(#[from] toml::de::Error),
     #[error(transparent)]
     HttpError(#[from] Box<ureq::Error>),
+
+    #[error("Incorrect book 'title', impossible to create file with name: '{0}'")]
+    EpubBookNameOrPath(String),
 }
 
 impl From<ureq::Error> for Error {

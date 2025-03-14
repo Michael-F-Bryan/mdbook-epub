@@ -14,6 +14,15 @@ fn output_epub_exists() {
     let (ctx, _md, temp) = create_dummy_book("long_book_example").unwrap();
 
     let output_file = mdbook_epub::output_filename(temp.path(), &ctx.config);
+    assert!(
+        output_file.is_ok(),
+        "{}",
+        format!(
+            "output_file is incorrect !: {}",
+            output_file.unwrap().display().to_string()
+        )
+    );
+    let output_file = output_file.unwrap();
 
     assert!(!output_file.exists());
     mdbook_epub::generate(&ctx).unwrap();
