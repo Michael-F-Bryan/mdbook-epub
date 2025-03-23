@@ -105,6 +105,7 @@ dd {
 a {
     font-size: 1.0em;
 }
+
 /* unvisited link */
 a:link {
 }
@@ -227,13 +228,15 @@ p code {
     color: #484848;
     padding: 0.2em;
 }
+
 pre {
-    white-space: pre-wrap;       /* Since CSS 2.1 */
-    white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
-    white-space: -pre-wrap;      /* Opera 4-6 */
-    white-space: -o-pre-wrap;    /* Opera 7 */
-    word-wrap: break-word;       /* Internet Explorer 5.5+ */
+    white-space: pre-wrap; /* Since CSS 2.1 */
+    white-space: -moz-pre-wrap; /* Mozilla, since 1999 */
+    white-space: -pre-wrap; /* Opera 4-6 */
+    white-space: -o-pre-wrap; /* Opera 7 */
+    word-wrap: break-word; /* Internet Explorer 5.5+ */
 }
+
 pre code {
     display: block;
     overflow-x: auto;
@@ -243,12 +246,15 @@ pre code {
     overflow-wrap: break-word;
     margin-left: 0.5em;
 }
+
 pre code.language-console {
     color: #373737;
 }
+
 pre code.language-toml {
     color: #000000;
 }
+
 pre code.language-rust {
     color: #000000;
 }
@@ -312,6 +318,7 @@ ol {
     margin: 1em 0 0 2em;
     text-align: left;
 }
+
 ul li code {
     overflow-x: auto;
     background: #f1f1f1;
@@ -375,9 +382,11 @@ span.ipadcenterfix {
 img {
     max-width: 100%;
 }
+
 .ferris-explain {
     width: 100px;
 }
+
 .center {
     display: block;
     margin-left: auto;
@@ -400,15 +409,19 @@ td {
     margin: 0;
     vertical-align: baseline;
 }
+
 table thead {
     background: rgb(204, 204, 204);
 }
+
 table tbody tr:nth-child(2n) {
     background: hsl(0, 0%, 97%);
 }
+
 table thead th {
     padding: 3px 20px;
 }
+
 table tbody tr td code {
     display: inline;
     padding: 0.1em 0.3em;
@@ -472,6 +485,7 @@ blockquote {
     padding: 0 20px;
     background-color: hsl(197, 37%, 96%);
 }
+
 div.blockquote {
     margin: 1em 1.5em 0 1.5em;
     text-align: left;
@@ -480,3 +494,7 @@ div.blockquote {
 
 
 /*==eBook Specific Formatting Below Here==*/
+
+.page-break {
+    page-break-after: always;
+}

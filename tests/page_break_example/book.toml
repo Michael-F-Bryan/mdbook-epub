@@ -1,0 +1,8 @@
+[book]
+title = "PageBreakExample"
+authors = []
+multilingual = false
+src = "src"
+lang = "en"
+
+[output.epub]
