@@ -53,15 +53,13 @@ pub(crate) fn hash_link(url: &Url) -> String {
     url.hash(&mut hasher);
     let path = PathBuf::from(url.path());
     let file_hash_value = hasher.finish();
-    let file_hash_string = file_hash_value.to_string();
-    let file_ext = file_hash_string.as_str();
-    let ext = path.extension().and_then(OsStr::to_str).unwrap_or(file_ext);
-    /*let _generated_file_extension = Uuid::new_v4().to_string();
-    let ext = path
-        .extension()
-        .and_then(OsStr::to_str)
-        .unwrap_or(_generated_file_extension.as_str());*/
-    format!("{:x}.{}", file_hash_value, ext)
+    // let file_hash_string = file_hash_value.to_string();
+    let ext = path.extension().and_then(OsStr::to_str).unwrap_or_default();
+    if !ext.is_empty() {
+        format!("{:x}.{}", file_hash_value, ext)
+    } else {
+        format!("{:x}", file_hash_value)
+    }
 }
 
 /// Source text is url encoded if it has a non ascii symbols. Otherwise, it is not changed.
@@ -71,7 +69,7 @@ pub(crate) fn encode_non_ascii_symbols(source_text: &str) -> String {
         source_text
             .chars()
             .map(|char_item| {
-                // println!("{}", &char_item);
+                // trace!("{}", &char_item);
                 if !char_item.is_ascii() {
                     encode(&char_item.to_string()).to_string()
                 } else {
@@ -89,7 +87,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_hash_named_url_with_extention() {
+    fn test_hash_named_url_with_extension() {
         let test_url = "https://www.rust-lang.org/static/images/rust-logo-blk.svg";
         let hashed_filename = hash_link(&test_url.parse::<Url>().unwrap());
         assert_eq!("b20b2723e874918.svg", hashed_filename);
@@ -100,8 +98,7 @@ mod tests {
         let test_avatar_url = "https://avatars.githubusercontent.com/u/274803?v=4";
         let hashed_filename = hash_link(&test_avatar_url.parse::<Url>().unwrap());
         println!("{}", hashed_filename);
-        // assert!(hashed_filename.starts_with("4dbdb25800b6fa1b."));
-        assert!(hashed_filename.starts_with("4dbdb25800b6fa1b.5601829602557622811"));
+        assert!(hashed_filename.starts_with("4dbdb25800b6fa1b"));
     }
 
     #[cfg(not(target_os = "windows"))]

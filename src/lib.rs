@@ -7,8 +7,8 @@ extern crate serde_derive;
 #[macro_use]
 extern crate serde_json;
 
-use std::fs::{create_dir_all, File};
-use std::path::{Path, PathBuf};
+use std::fs::{File, create_dir_all};
+use std::path::PathBuf;
 
 use ::mdbook;
 use ::semver;
@@ -60,7 +60,7 @@ pub fn generate(ctx: &RenderContext) -> Result<(), Error> {
     validate_config_title_file_name(&ctx.config)?;
 
     let outfile = output_filename(&ctx.destination, &ctx.config)?;
-    trace!("Output File: {}", outfile.display());
+    debug!("Output File: {}", outfile.display());
 
     if !ctx.destination.exists() {
         debug!(

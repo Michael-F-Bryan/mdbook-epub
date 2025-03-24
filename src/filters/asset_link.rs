@@ -1,4 +1,5 @@
-use crate::resources::asset::Asset;
+use crate::resources::asset::{Asset, AssetKind};
+use crate::resources::retrieve::ContentRetriever;
 use crate::utils::encode_non_ascii_symbols;
 use html_parser::{Dom, Node};
 use pulldown_cmark::{CowStr, Event, Tag};

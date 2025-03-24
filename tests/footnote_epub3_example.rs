@@ -78,7 +78,6 @@ fn output_footnote_book_exists() {
     assert!(output_file.exists());
 }
 
-#[ignore = "Waiting for issue = https://github.com/lise-henry/epub-builder/issues/45"]
 #[test]
 #[serial]
 fn test_output_epub_is_valid() {

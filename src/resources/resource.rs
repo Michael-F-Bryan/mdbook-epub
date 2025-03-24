@@ -61,7 +61,7 @@ pub(crate) fn find(ctx: &RenderContext) -> Result<HashMap<String, Asset>, Error>
 
                     // that is CORRECT generation way
                     debug!(
-                        "Check relative path assets for: '{}' for {:?}",
+                        "Check relative path assets chapter: '{}' for\n{}",
                         ch.name, asset
                     );
                     match asset.source {
@@ -87,7 +87,10 @@ pub(crate) fn find(ctx: &RenderContext) -> Result<HashMap<String, Asset>, Error>
                                 }
                                 _ => {
                                     // skip incorrect resource/image link outside of book /SRC/ folder
-                                    warn!("Sorry, we can't add 'Local asset' that is outside of book's /src/ folder, {:?}", &asset);
+                                    warn!(
+                                        "Sorry, we can't add 'Local asset' that is outside of book's /src/ folder, {:?}",
+                                        &asset
+                                    );
                                 }
                             }
                         }
@@ -124,7 +127,7 @@ fn find_assets_in_nested_html_tags(element: &Element) -> Result<Vec<String>, Err
         }
     }
     for item in &element.children {
-        if let Node::Element(ref nested_element) = item {
+        if let Node::Element(nested_element) = item {
             found_asset.extend(find_assets_in_nested_html_tags(nested_element)?.into_iter());
         }
     }
@@ -149,7 +152,7 @@ fn find_assets_in_markdown(chapter_src_content: &str) -> Result<Vec<String>, Err
                 found_asset.push(dest_url.to_string());
             }
             Event::Html(html) | Event::InlineHtml(html) => {
-                let content = html.into_string();
+                let content = html.to_owned().into_string();
 
                 if let Ok(dom) = Dom::parse(&content) {
                     for item in dom.children {
@@ -175,7 +178,7 @@ fn find_assets_in_markdown(chapter_src_content: &str) -> Result<Vec<String>, Err
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serde_json::{json, Value};
+    use serde_json::{Value, json};
     use std::path::{Path, PathBuf};
     use tempfile::TempDir;
 
@@ -212,7 +215,7 @@ mod tests {
     }
 
     #[test]
-    fn find_local_asset() {
+    fn test_find_local_asset() {
         let link = "./rust-logo.png";
         // link and link2 - are the same asset
         let link2 = "assets/rust-logo.png";
@@ -234,7 +237,7 @@ mod tests {
         let ctx = ctx_with_chapters(&chapters, &dest_dir).unwrap();
 
         let mut assets = find(&ctx).unwrap();
-        assert!(assets.len() == 2);
+        assert_eq!(2, assets.len());
 
         fn assert_asset(a: Asset, link: &str, ctx: &RenderContext) {
             let link_as_path = utils::normalize_path(&PathBuf::from(link));
@@ -279,7 +282,7 @@ mod tests {
     }
 
     #[test]
-    fn find_remote_asset() {
+    fn test_find_remote_asset() {
         let link = "https://www.rust-lang.org/static/images/rust-logo-blk.svg";
         let link2 = "https://www.rust-lang.org/static/images/rust-logo-blk.png";
         let link_parsed = Url::parse(link).unwrap();
@@ -298,7 +301,7 @@ mod tests {
         let ctx = ctx_with_chapters(&chapters, &dest_dir).unwrap();
 
         let mut assets = find(&ctx).unwrap();
-        assert!(assets.len() == 2);
+        assert_eq!(2, assets.len());
 
         for (key, value) in assets.clone().into_iter() {
             trace!("{} / {:?}", key, &value);
@@ -325,7 +328,7 @@ mod tests {
     }
 
     #[test]
-    fn find_draft_chapter_without_error() {
+    fn test_find_draft_chapter_without_error() {
         let tmp_dir = TempDir::new().unwrap();
         let temp = tmp_dir.path().join("mdbook-epub");
         let dest_dir = temp.as_path().to_string_lossy().to_string();
@@ -343,7 +346,7 @@ mod tests {
 
     #[test]
     #[should_panic(expected = "Asset was not found")]
-    fn find_asset_fail_when_chapter_dir_not_exist() {
+    fn test_find_asset_fail_when_chapter_dir_not_exist() {
         panic!(
             "{}",
             Asset::from_local(
@@ -359,7 +362,7 @@ mod tests {
     #[cfg(not(target_os = "windows"))]
     #[test]
     #[should_panic(expected = "Asset was not found")]
-    fn find_asset_fail_when_chapter_dir_not_exist_linux() {
+    fn test_find_asset_fail_when_chapter_dir_not_exist_linux() {
         panic!(
             "{}",
             Asset::from_local(
@@ -377,7 +380,7 @@ mod tests {
     #[should_panic(
         expected = "Asset was not found: 'wikimedia' by 'tests/long_book_example/third_party/a.md/wikimedia', error = No such file or directory (os error 2)"
     )]
-    fn find_asset_fail_when_it_is_a_dir() {
+    fn test_find_asset_fail_when_it_is_a_dir() {
         panic!(
             "{}",
             Asset::from_local(
@@ -396,7 +399,7 @@ mod tests {
     //expected = "Asset was not found: 'wikimedia' by 'tests\\dummy\\third_party\\a.md\\wikimedia', error = Системе не удается найти указанный путь. (os error 3)"
     expected = "Asset was not found: 'wikimedia' by 'tests\\dummy\\third_party\\a.md\\wikimedia', error = The system cannot find the path specified. (os error 3)"
     )]
-    fn find_asset_fail_when_it_is_a_dir_windows() {
+    fn test_find_asset_fail_when_it_is_a_dir_windows() {
         panic!(
             "{}",
             Asset::from_local(
@@ -520,7 +523,7 @@ mod tests {
         asset_path = asset_path.join(normalized_link); // compose final result
         assert_eq!(
             asset_path.as_path().as_os_str(),
-            (["media", "book", "src", "asset1.jpg"])
+            ["media", "book", "src", "asset1.jpg"]
                 .iter()
                 .collect::<PathBuf>()
                 .as_os_str()
@@ -693,7 +696,7 @@ mod tests {
 
     #[cfg(not(target_os = "windows"))]
     #[test]
-    fn incorrect_compute_asset_path_by_src_and_link() {
+    fn test_incorrect_compute_asset_path_by_src_and_link() {
         let book_or_chapter_src = ["media", "book", "src"].iter().collect::<PathBuf>();
 
         let link = "/assets/asset1.jpg";
@@ -711,7 +714,7 @@ mod tests {
 
     #[cfg(target_os = "windows")]
     #[test]
-    fn incorrect_compute_asset_path_by_src_and_link_windows() {
+    fn test_incorrect_compute_asset_path_by_src_and_link_windows() {
         let book_or_chapter_src = ["media", "book", "src"].iter().collect::<PathBuf>();
 
         let link = "\\assets\\asset1.jpg";

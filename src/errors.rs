@@ -1,5 +1,7 @@
+use mime_guess::mime::FromStrError;
 use std::path::PathBuf;
 use thiserror::Error;
+use url::ParseError;
 
 #[derive(Error, Debug)]
 pub enum Error {
@@ -50,7 +52,7 @@ pub enum Error {
     #[error(transparent)]
     Semver(#[from] semver::Error),
     #[error(transparent)]
-    EpubBuilder(#[from] eyre::Report),
+    EpubBuilder(#[from] epub_builder::Error),
     #[error(transparent)]
     Render(#[from] handlebars::RenderError),
     #[error(transparent)]

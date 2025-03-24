@@ -1,8 +1,8 @@
 use crate::common::init_logging::init_logging;
 use epub::doc::EpubDoc;
 use log::{debug, error};
-use mdbook::renderer::RenderContext;
 use mdbook::MDBook;
+use mdbook::renderer::RenderContext;
 use mdbook_epub::errors::Error;
 use std::fs::File;
 use std::io::BufReader;
@@ -15,6 +15,7 @@ pub fn generate_epub(epub_book_name: &str) -> Result<(EpubDoc<BufReader<File>>, 
     debug!("generate_epub: {:?}...", epub_book_name);
     let (ctx, _md, temp) = create_dummy_book(epub_book_name).unwrap();
     debug!("temp dir = {:?}", &temp);
+    debug!("Before start generate...");
     mdbook_epub::generate(&ctx)?;
     let output_file = mdbook_epub::output_filename(temp.path(), &ctx.config)?;
     debug!("output_file = {:?}", &output_file.display());

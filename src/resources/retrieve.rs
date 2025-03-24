@@ -1,11 +1,27 @@
+use crate::Error;
+use crate::resources::asset::{Asset, AssetKind};
+use infer::Infer;
+use mime_guess::Mime;
+#[cfg(test)]
+use mockall::automock;
+use std::fmt::{Display, Formatter};
+use std::io::Cursor;
+use std::path::PathBuf;
+use std::str::FromStr;
 use std::{
+    fmt,
     fs::{self, File, OpenOptions},
     io::{self, Read},
     path::Path,
 };
 
-#[cfg(test)]
-use mockall::automock;
+#[allow(dead_code)]
+pub struct RetrievedContent {
+    pub reader: Box<dyn Read + Send + Sync + 'static>,
+    pub mime_type: String,
+    pub extension: String,
+    pub size: Option<u64>, // Additional field to store the content's size in bytes
+}
 
 use crate::resources::asset::{Asset, AssetKind};
 use crate::Error;

@@ -12,16 +12,16 @@ use std::{
     path::PathBuf,
 };
 
+use crate::DEFAULT_CSS;
 use crate::config::Config;
 use crate::filters::asset_link::AssetRemoteLinkFilter;
 use crate::filters::footnote::FootnoteFilter;
 use crate::filters::quote_converter::QuoteConverterFilter;
-use crate::resources::asset::{Asset, AssetKind};
+use crate::resources::asset::Asset;
 use crate::resources::resource::{self};
 use crate::resources::retrieve::{ContentRetriever, ResourceHandler};
 use crate::validation::validate_config_epub_version;
-use crate::DEFAULT_CSS;
-use crate::{utils, Error};
+use crate::{Error, utils};
 
 /// The actual EPUB book renderer.
 pub struct Generator<'a> {
@@ -116,8 +116,10 @@ impl<'a> Generator<'a> {
     /// Find assets for adding to the document later. For remote linked assets, they would be
     /// rendered differently in the document by provided information of assets.
     fn find_assets(&mut self) -> Result<(), Error> {
-        info!("2. find assets ==");
-        let error = String::from("Failed finding/fetch resource taken from content? Look up content for possible error...");
+        info!("2.1 Start find_assets()...");
+        let error = String::from(
+            "Failed finding/fetch resource taken from content? Look up content for possible error...",
+        );
         // resources::find can emit very unclear error based on internal MD content,
         // so let's give a tip to user in error message
         let assets = resource::find(self.ctx).map_err(|e| {
@@ -125,20 +127,23 @@ impl<'a> Generator<'a> {
             e
         })?;
         self.assets.extend(assets);
+        info!("2.2 found [{}] assets", self.assets.len());
         Ok(())
     }
 
     fn generate_chapters(&mut self) -> Result<(), Error> {
-        info!("3. Generate chapters == ");
+        info!("3.1 Generate chapters == ");
 
+        let mut added_count = 0;
         for (idx, item) in self.ctx.book.sections.iter().enumerate() {
             let is_first = idx == 0;
             if let BookItem::Chapter(ref ch) = *item {
                 trace!("Adding chapter \"{}\"", ch);
                 self.add_chapter(ch, Some(is_first))?;
+                added_count += 1;
             }
         }
-
+        info!("3.2 Generate [{}] chapters == ", added_count);
         Ok(())
     }
 
@@ -165,8 +170,7 @@ impl<'a> Generator<'a> {
         })?;
         trace!(
             "add a chapter '{:?}' by a path = '{:?}'",
-            &ch.name,
-            content_path
+            &ch.name, content_path
         );
         let path = content_path.with_extension("html").display().to_string();
         let title = if self.config.no_section_label {
@@ -221,9 +225,6 @@ impl<'a> Generator<'a> {
 
         let mut body = String::with_capacity(3000); // big enough arbitrary size
 
-        // if self.config.epub_version == Some(3) && self.config.footnote_backrefs {
-        // body.push_str(&self.render_with_footnote_backrefs(chapter_dir, ch));
-        // } else {
         let parser = utils::create_new_pull_down_parser(&ch.content);
         let mut quote_converter = QuoteConverterFilter::new(self.config.curly_quotes);
         let ch_depth = chapter_dir.components().count();
@@ -263,10 +264,8 @@ impl<'a> Generator<'a> {
             footnote_filter.retain();
             footnote_filter.sort_by_cached_key();
             body.push_str("<div class=\"footnotes\" epub:type=\"footnotes\">\n");
-            // let events = parser.filter_map(|event| footnote_filter.apply(event));
             let events = footnote_filter.get_events();
             html::push_html(&mut body, events);
-            // body.push_str("</ol>\n");
             body.push_str("</div>\n");
         }
 
@@ -463,7 +462,7 @@ mod tests {
     use url::Url;
 
     #[test]
-    fn load_assets() {
+    fn test_load_assets() {
         let png = "rust-logo.png";
         let svg = "rust-logo.svg";
         let url = "https://www.rust-lang.org/static/images/rust-logo-blk.svg";
@@ -510,7 +509,7 @@ mod tests {
     }
 
     #[test]
-    fn render_assets() {
+    fn test_render_assets() {
         let links = [
             "local.webp",
             "http://server/remote.svg",
@@ -572,7 +571,7 @@ mod tests {
     }
 
     #[test]
-    fn render_remote_assets_in_sub_chapter() {
+    fn test_render_remote_assets_in_sub_chapter() {
         let link = "https://mdbook.epub/dummy.svg";
         let tmp_dir = TempDir::new().unwrap();
         let dest_dir = tmp_dir.path().join("mdbook-epub");
@@ -644,7 +643,7 @@ mod tests {
 
     #[test]
     #[should_panic]
-    fn find_assets_with_wrong_src_dir() {
+    fn test_find_assets_with_wrong_src_dir() {
         let tmp_dir = TempDir::new().unwrap();
         let json = ctx_with_template(
             "# Chapter 1\n\n",
