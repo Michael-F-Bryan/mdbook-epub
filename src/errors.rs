@@ -1,6 +1,7 @@
 use mime_guess::mime::FromStrError;
 use std::path::PathBuf;
 use thiserror::Error;
+use url::ParseError;
 
 #[derive(Error, Debug)]
 pub enum Error {
