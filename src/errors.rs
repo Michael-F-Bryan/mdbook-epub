@@ -1,7 +1,6 @@
 use mime_guess::mime::FromStrError;
 use std::path::PathBuf;
 use thiserror::Error;
-use url::ParseError;
 
 #[derive(Error, Debug)]
 pub enum Error {
@@ -33,7 +32,7 @@ pub enum Error {
     RenderContext,
 
     #[error("Unable to open asset")]
-    AssetOpen,
+    AssetOpen(#[from] std::io::Error),
 
     #[error("Error reading stylesheet")]
     StylesheetRead,
@@ -41,9 +40,8 @@ pub enum Error {
     #[error("epubcheck has failed: {0}")]
     EpubCheck(String),
 
-    #[error(transparent)]
-    Io(#[from] std::io::Error),
-
+    // #[error(transparent)]
+    // Io(#[from] std::io::Error),
     #[error(transparent)]
     AssetOutsideSrcDir(#[from] std::path::StripPrefixError),
 
@@ -59,6 +57,8 @@ pub enum Error {
     TomlDeser(#[from] toml::de::Error),
     #[error(transparent)]
     HttpError(#[from] Box<ureq::Error>),
+    #[error(transparent)]
+    MimeTypeError(#[from] FromStrError),
 
     #[error("Incorrect book 'title', impossible to create file with name: '{0}'")]
     EpubBookNameOrPath(String),

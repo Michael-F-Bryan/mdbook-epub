@@ -9,7 +9,7 @@ use pulldown_cmark::{Event, Tag};
 use url::Url;
 
 use crate::resources::asset::{Asset, AssetKind};
-use crate::{utils, Error};
+use crate::{Error, utils};
 
 // Internal constants for reveling 'upper folder' paths in resource links inside MD
 pub(crate) const UPPER_PARENT: &str = concatcp!("..", MAIN_SEPARATOR_STR);
@@ -69,14 +69,14 @@ pub(crate) fn find(ctx: &RenderContext) -> Result<HashMap<String, Asset>, Error>
                         AssetKind::Local(_) => {
                             let relative = asset.location_on_disk.strip_prefix(&src_dir);
                             match relative {
-                                Ok(relative_link_path) => {
-                                    let link_key: String =
-                                        String::from(relative_link_path.to_str().unwrap());
+                                Ok(_relative_link_path) => {
+                                    // let link_key: String = String::from(relative_link_path.to_str().unwrap());
+                                    let link_key = asset.original_link.clone();
                                     if let std::collections::hash_map::Entry::Vacant(e) =
                                         assets.entry(link_key.to_owned())
                                     {
                                         debug!(
-                                            "Adding asset by link '{:?}' : {:#?}",
+                                            "Adding asset by link '{:?}' : {}",
                                             link_key, &asset
                                         );
                                         e.insert(asset);
@@ -96,9 +96,9 @@ pub(crate) fn find(ctx: &RenderContext) -> Result<HashMap<String, Asset>, Error>
                         }
                         AssetKind::Remote(_) => {
                             // remote asset kind
-                            let link_key: String =
-                                String::from(asset.location_on_disk.to_str().unwrap());
-                            debug!("Adding Remote asset by link '{}' : {:#?}", link_key, &asset);
+                            // let link_key: String =                                 String::from(asset.location_on_disk.to_str().unwrap());
+                            let link_key = asset.original_link.clone();
+                            debug!("Adding Remote asset by link '{}' : {}", link_key, &asset);
                             assets.insert(link_key, asset);
                             assets_count += 1;
                         }
@@ -254,7 +254,7 @@ mod tests {
                 .expect("Asset Location is not found");
 
             let source = AssetKind::Local(PathBuf::from(link));
-            let should_be = Asset::new(filename, absolute_location, source);
+            let should_be = Asset::new(link.to_string(), filename, absolute_location, source);
             assert_eq!(a, should_be);
         }
         assert_asset(
@@ -316,7 +316,7 @@ mod tests {
                     };
                     let absolute_location = temp.as_path().join(&filename);
                     let source = AssetKind::Remote(internal_url);
-                    let should_be = Asset::new(filename, absolute_location, source);
+                    let should_be = Asset::new(key, filename, absolute_location, source);
                     assert_eq!(got, should_be);
                 }
                 _ => {

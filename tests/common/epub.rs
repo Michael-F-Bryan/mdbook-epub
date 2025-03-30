@@ -17,7 +17,8 @@ pub fn generate_epub(epub_book_name: &str) -> Result<(EpubDoc<BufReader<File>>, 
     debug!("temp dir = {:?}", &temp);
     debug!("Before start generate...");
     mdbook_epub::generate(&ctx)?;
-    let output_file = mdbook_epub::output_filename(temp.path(), &ctx.config)?;
+    // let output_file = mdbook_epub::output_filename(temp.path(), &ctx.config)?;
+    let output_file = mdbook_epub::output_filename(&temp, &ctx.config)?;
     debug!("output_file = {:?}", &output_file.display());
 
     match EpubDoc::new(&output_file) {
@@ -31,9 +32,12 @@ pub fn generate_epub(epub_book_name: &str) -> Result<(EpubDoc<BufReader<File>>, 
 
 /// Use `MDBook::load()` to load the dummy book into memory, then set up the
 /// `RenderContext` for use the EPUB generator.
-pub fn create_dummy_book(name: &str) -> Result<(RenderContext, MDBook, TempDir), Error> {
+// pub fn create_dummy_book(name: &str) -> Result<(RenderContext, MDBook, TempDir), Error> {
+pub fn create_dummy_book(name: &str) -> Result<(RenderContext, MDBook, PathBuf), Error> {
     debug!("create_{:?}...", name);
     let temp = TempDir::with_prefix_in("mdbook-epub", ".")?;
+    let temp_path: PathBuf = temp.into_path();
+    println!("Temporary directory preserved at: {:?}", temp_path);
 
     let dummy_book = Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("tests")
@@ -47,10 +51,12 @@ pub fn create_dummy_book(name: &str) -> Result<(RenderContext, MDBook, TempDir),
         book.root.clone(),
         book.book.clone(),
         book.config.clone(),
-        temp.path().to_path_buf(),
+        // temp.path().to_path_buf(),
+        temp_path.to_path_buf(),
     );
 
-    Ok((ctx, book, temp))
+    // Ok((ctx, book, temp))
+    Ok((ctx, book, temp_path))
 }
 
 pub fn epub_check(path: &Path) -> Result<(), Error> {
@@ -109,7 +115,8 @@ pub fn output_epub_is_valid(epub_book_name: &str) {
     let (ctx, _md, temp) = create_dummy_book(epub_book_name).unwrap();
     mdbook_epub::generate(&ctx).unwrap();
 
-    let output_file = mdbook_epub::output_filename(temp.path(), &ctx.config);
+    // let output_file = mdbook_epub::output_filename(temp.path(), &ctx.config);
+    let output_file = mdbook_epub::output_filename(&temp, &ctx.config);
     assert!(output_file.is_ok());
     let output_file = output_file.unwrap();
     let got = EpubDoc::new(&output_file);

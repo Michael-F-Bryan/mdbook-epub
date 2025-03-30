@@ -8,7 +8,7 @@ extern crate serde_derive;
 extern crate serde_json;
 
 use std::fs::{File, create_dir_all};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use ::mdbook;
 use ::semver;
@@ -70,6 +70,10 @@ pub fn generate(ctx: &RenderContext) -> Result<(), Error> {
         create_dir_all(&ctx.destination)?;
     }
 
+    debug!(
+        "Before writing to file. Path to epub file: '{:?}'",
+        outfile.display()
+    );
     let f = File::create(&outfile)?;
     debug!("Path to epub file: '{:?}'", f);
     Generator::new(ctx)?.generate(f)?;

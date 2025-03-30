@@ -208,7 +208,7 @@ impl<'a> Generator<'a> {
     }
 
     /// Render the chapter into its fully formed HTML representation.
-    fn render_chapter(&self, ch: &Chapter) -> Result<String, RenderError> {
+    fn render_chapter(&mut self, ch: &Chapter) -> Result<String, RenderError> {
         let chapter_dir = if let Some(chapter_file_path) = &ch.path {
             chapter_file_path.parent().ok_or_else(|| {
                 RenderError::from(RenderErrorReason::Other(format!(
@@ -230,7 +230,7 @@ impl<'a> Generator<'a> {
         let ch_depth = chapter_dir.components().count();
 
         // create 'Remote Assets' copy to be processed by AssetLinkFilter
-        let mut remote_assets: HashMap<String, Asset> = HashMap::new();
+        /*let mut remote_assets: HashMap<String, Asset> = HashMap::new();
         for (key, value) in self.assets.clone().into_iter() {
             trace!("{} / {:?}", key, &value);
             if let AssetKind::Remote(ref remote_url) = value.source {
@@ -241,8 +241,12 @@ impl<'a> Generator<'a> {
                 );
                 remote_assets.insert(remote_url.to_string(), value);
             }
-        }
-        let asset_link_filter = AssetRemoteLinkFilter::new(&remote_assets, ch_depth);
+        }*/
+        // let mut asset_link_filter = AssetRemoteLinkFilter::new(&mut remote_assets, ch_depth, &*self.handler);
+        // debug!("There are = '{}' assets", self.assets.len());
+        debug!("There are = {:?}", self.assets);
+        let mut asset_link_filter =
+            AssetRemoteLinkFilter::new(&mut self.assets, ch_depth, &*self.handler);
 
         let mut footnote_filter =
             if self.config.epub_version == Some(3) && self.config.footnote_backrefs {
@@ -309,13 +313,15 @@ impl<'a> Generator<'a> {
         // TODO: have a list of Asset URLs and try to download all of them (in parallel?)
         // to a temporary location.
         let mut count = 0;
-        for asset in self.assets.values() {
-            self.handler.download(asset)?;
-            debug!("Adding asset : {:?}", asset);
+        for (_key, asset) in self.assets.iter_mut() {
+            // self.handler.download(asset)?;
+            debug!("Adding asset : {}", asset);
             let mut content = Vec::new();
+            debug!("Read (EARLIER downloaded?) asset from disk : {}", asset);
             self.handler
                 .read(&asset.location_on_disk, &mut content)
-                .map_err(|_| Error::AssetOpen)?;
+                // .map_err(|err| Error::AssetOpen(err))?;
+                ?;
             let mt = asset.mimetype.to_string();
             self.builder.add_resource(&asset.filename, &*content, mt)?;
             count += 1;
@@ -363,7 +369,9 @@ impl<'a> Generator<'a> {
             }
             let mt = mime_guess::from_path(&full_path).first_or_octet_stream();
 
-            let content = File::open(&full_path).map_err(|_| Error::AssetOpen)?;
+            let content = File::open(&full_path)
+                // .map_err(|err| Error::AssetOpen)?;
+                ?;
             debug!(
                 "Adding resource [{}]: {:?} / {:?} ",
                 count,
@@ -400,7 +408,9 @@ impl<'a> Generator<'a> {
             }
             let mt = mime_guess::from_path(&full_path).first_or_octet_stream();
 
-            let content = File::open(&full_path).map_err(|_| Error::AssetOpen)?;
+            let content = File::open(&full_path)
+                // .map_err(|err| Error::AssetOpen)?;
+                ?;
             debug!("Adding cover image: {:?} / {:?} ", path, mt.to_string());
             self.builder
                 .add_cover_image(path, content, mt.to_string())?;
@@ -455,8 +465,9 @@ impl Debug for Generator<'_> {
 mod tests {
     use super::*;
     use crate::resources::asset::AssetKind;
-    use crate::resources::retrieve::MockContentRetriever;
+    use crate::resources::retrieve::{MockContentRetriever, RetrievedContent};
     use mime_guess::mime;
+    use std::io::Cursor;
     use std::path::Path;
     use tempfile::TempDir;
     use url::Url;
@@ -478,7 +489,8 @@ mod tests {
         let ctx = RenderContext::from_json(json.as_bytes()).unwrap();
 
         let mut mock_client = MockContentRetriever::new();
-        mock_client.expect_download().times(3).returning(|_| Ok(()));
+        // mock_client.expect_download().times(3).returning(|_| Ok(()));
+        mock_client.expect_download().times(0).returning(|_| Ok(()));
         // checks local path of assets
         let book_source = PathBuf::from(&ctx.root)
             .join(&ctx.config.book.src)
@@ -518,9 +530,11 @@ mod tests {
         let tmp_dir = TempDir::new().unwrap();
         let root = tmp_dir.path().join("mdbook-epub");
         let mut assets = HashMap::new();
+        let original_link = links[0].to_string();
         assets.insert(
-            links[0].to_string(),
+            original_link.clone(),
             Asset {
+                original_link,
                 location_on_disk: root.as_path().join("src").join(links[0]),
                 filename: PathBuf::from(links[0]),
                 mimetype: "image/webp".parse::<mime::Mime>().unwrap(),
@@ -530,9 +544,11 @@ mod tests {
         let url = Url::parse(links[1]).unwrap();
         let hashed_filename = utils::hash_link(&url);
         let hashed_path = Path::new("cache").join(&hashed_filename);
+        let original_link = links[1].to_string();
         assets.insert(
-            links[1].to_string(),
+            original_link.clone(),
             Asset {
+                original_link,
                 location_on_disk: root.as_path().join("book").join(&hashed_path),
                 filename: hashed_path,
                 mimetype: "image/svg+xml".parse::<mime::Mime>().unwrap(),
@@ -548,7 +564,21 @@ mod tests {
             links[2], links[0], links[1]
         );
 
-        let filter = AssetRemoteLinkFilter::new(&assets, 0);
+        struct TestHandler;
+        impl ContentRetriever for TestHandler {
+            fn retrieve(&self, _url: &str) -> Result<RetrievedContent, Error> {
+                let content = "Downloaded content".as_bytes();
+                Ok(RetrievedContent::new(
+                    Box::new(Cursor::new(content)),
+                    "text/plain".to_string(),
+                    "txt".to_string(),
+                    Some(content.len() as u64),
+                ))
+            }
+        }
+        let test_content_retriever = TestHandler {};
+
+        let mut filter = AssetRemoteLinkFilter::new(&mut assets, 0, &test_content_retriever);
         let parser = utils::create_new_pull_down_parser(&markdown_str);
         let events = parser.map(|ev| filter.apply(ev));
         trace!("Events = {:?}", events);
