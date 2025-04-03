@@ -3,6 +3,7 @@ use crate::resources::resource::{
     UPPER_FOLDER_PATHS, UPPER_PARENT, UPPER_PARENT_LINUX, UPPER_PARENT_STARTS_SLASH,
     UPPER_PARENT_STARTS_SLASH_LINUX,
 };
+use crate::resources::retrieve::UpdatedAssetData;
 use crate::utils;
 use mime_guess::Mime;
 use std::fmt::{Display, Formatter};
@@ -56,8 +57,18 @@ impl Asset {
         }
     }
 
+    pub(crate) fn with_updated_fields(&self, updated_data: UpdatedAssetData) -> Self {
+        Asset {
+            original_link: self.original_link.clone(),
+            location_on_disk: updated_data.location_on_disk,
+            filename: updated_data.filename,
+            mimetype: updated_data.mimetype,
+            source: self.source.clone(),
+        }
+    }
+
     // Create Asset by using remote Url, destination path is used for composing path
-    pub(crate) fn from_url(url: Url, dest_dir: &Path) -> Result<Asset, Error> {
+    pub(crate) fn from_url(link_key: &str, url: Url, dest_dir: &Path) -> Result<Asset, Error> {
         debug!("Extract from URL: {:#?} into folder = {:?}", url, dest_dir);
         let filename = utils::hash_link(&url);
         let dest_dir = utils::normalize_path(dest_dir);
@@ -70,7 +81,7 @@ impl Asset {
             &absolute_location
         );
         let asset = Asset::new(
-            &url.to_string(),
+            &link_key,
             filename,
             &absolute_location,
             AssetKind::Remote(url),

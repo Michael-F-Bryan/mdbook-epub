@@ -465,7 +465,7 @@ impl Debug for Generator<'_> {
 mod tests {
     use super::*;
     use crate::resources::asset::AssetKind;
-    use crate::resources::retrieve::{MockContentRetriever, RetrievedContent};
+    use crate::resources::retrieve::{MockContentRetriever, RetrievedContent, UpdatedAssetData};
     use mime_guess::mime;
     use std::io::Cursor;
     use std::path::Path;
@@ -490,7 +490,10 @@ mod tests {
 
         let mut mock_client = MockContentRetriever::new();
         // mock_client.expect_download().times(3).returning(|_| Ok(()));
-        mock_client.expect_download().times(0).returning(|_| Ok(()));
+        mock_client
+            .expect_download()
+            .times(0)
+            .returning(|_| Ok(UpdatedAssetData::default()));
         // checks local path of assets
         let book_source = PathBuf::from(&ctx.root)
             .join(&ctx.config.book.src)
@@ -566,6 +569,9 @@ mod tests {
 
         struct TestHandler;
         impl ContentRetriever for TestHandler {
+            fn download(&self, asset: &Asset) -> Result<UpdatedAssetData, Error> {
+                Ok(UpdatedAssetData::default())
+            }
             fn retrieve(&self, _url: &str) -> Result<RetrievedContent, Error> {
                 let content = "Downloaded content".as_bytes();
                 Ok(RetrievedContent::new(

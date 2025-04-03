@@ -48,8 +48,9 @@ pub(crate) fn find(ctx: &RenderContext) -> Result<HashMap<String, Asset>, Error>
                     continue;
                 }
                 for link in find_assets_in_markdown(&ch.content)? {
+                    debug!("'{}' finding Asset...", &link);
                     let asset = if let Ok(url) = Url::parse(&link) {
-                        Asset::from_url(url, &ctx.destination)
+                        Asset::from_url(&link, url, &ctx.destination)
                     } else {
                         let result = Asset::from_local(&link, &src_dir, ch.path.as_ref().unwrap());
                         if let Err(Error::AssetOutsideSrcDir(_)) = result {

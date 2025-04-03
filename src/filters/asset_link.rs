@@ -1,3 +1,4 @@
+use crate::errors::Error;
 use crate::resources::asset::{Asset, AssetKind};
 use crate::resources::retrieve::ContentRetriever;
 use crate::utils::encode_non_ascii_symbols;
@@ -40,28 +41,26 @@ impl<'a> AssetRemoteLinkFilter<'a> {
                 ref title,
                 ref id,
             }) => {
-                let encoded_link_key = encode_non_ascii_symbols(&dest_url);
-                if let Some(mut asset) = self.assets.get_mut(&encoded_link_key).cloned() {
-                    debug!("filter loops over all assets: by {}", &dest_url);
+                if let Some(asset) = self.assets.get_mut(&dest_url.to_string()).cloned() {
+                    debug!("Lookup Remote asset: by {}", &dest_url);
                     if let AssetKind::Remote(ref _remote_url) = asset.source {
                         debug!("Compare: {} vs {}", &asset.original_link, &dest_url);
-                        // Проверяем, совпадает ли remote_url с dest_url
+                        // Check equality of remote_url and dest_url
                         if asset.original_link.as_str() == dest_url.as_ref() {
                             debug!("1. Found URL '{}' by Event", &dest_url);
-                            match self.download_handler.download(&mut asset) {
-                                Ok(_) => {
-                                    println!(
+                            match self.process_asset(&asset, dest_url) {
+                                Ok(new_file_name) => {
+                                    debug!(
                                         "SUCCESSFULLY downloaded resource by URL '{}'",
                                         &dest_url
                                     );
-                                    let new = asset.filename.to_string_lossy().to_string();
                                     debug!(
-                                        "Created new Event for URL '{}' and new Url = {}",
-                                        &dest_url, &new
+                                        "Create new Event for URL '{}' and new file name = {}",
+                                        &dest_url, &new_file_name
                                     );
                                     return Event::Start(Tag::Image {
                                         link_type,
-                                        dest_url: CowStr::from(new),
+                                        dest_url: CowStr::from(new_file_name),
                                         title: title.to_owned(),
                                         id: id.to_owned(),
                                     });
@@ -74,24 +73,61 @@ impl<'a> AssetRemoteLinkFilter<'a> {
                                 }
                             }
                         }
+                    } else {
+                        let depth = self.depth;
+                        // local image/resource
+                        let new = Self::compute_path_prefix(depth, asset.filename.as_path());
+                        Event::Start(Tag::Image {
+                            link_type,
+                            dest_url: CowStr::from(new),
+                            title: title.to_owned(),
+                            id: id.to_owned(),
+                        });
                     }
                 }
                 event
             }
-            Event::Html(ref html) => {
+            Event::Html(ref html) | Event::InlineHtml(ref html) => {
                 let mut found_links = Vec::new();
                 if let Ok(dom) = Dom::parse(&html.clone().into_string()) {
                     for item in dom.children {
                         match item {
                             Node::Element(ref element) if element.name == "img" => {
-                                if let Some(dest) = &element.attributes["src"] {
-                                    if Url::parse(dest).is_ok() {
-                                        debug!("Found a valid remote img src:\"{}\".", dest);
-                                        let encoded_link_key = encode_non_ascii_symbols(&dest);
+                                if let Some(dest_url) = &element.attributes["src"] {
+                                    if Url::parse(dest_url).is_ok() {
+                                        debug!("Found a valid remote img src:\"{}\".", dest_url);
+                                        if let Some(asset) = self.assets.get_mut(dest_url).cloned()
+                                        {
+                                            debug!("Lookup Remote asset: by {}", &dest_url);
+                                            if let AssetKind::Remote(ref _remote_url) = asset.source
+                                            {
+                                                debug!(
+                                                    "Compare: {} vs {}",
+                                                    &asset.original_link, &dest_url
+                                                );
+                                                // Check equality of remote_url and dest_url
+                                                if asset.original_link.as_str() == dest_url.as_str()
+                                                {
+                                                    debug!("1. Found URL '{}' by Event", &dest_url);
+                                                    match self.process_asset(&asset, dest_url) {
+                                                        Ok(_) => {
+                                                            println!(
+                                                                "SUCCESSFULLY downloaded resource by URL '{}'",
+                                                                &dest_url
+                                                            );
+                                                        }
+                                                        Err(error) => {
+                                                            error!(
+                                                                "Can't download resource by URL '{}'. Error = {}",
+                                                                &dest_url, error
+                                                            );
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
 
-                                        // TODO: processing here....
-
-                                        found_links.push(dest.to_owned());
+                                        found_links.push(dest_url.clone());
                                     }
                                 }
                             }
@@ -99,18 +135,19 @@ impl<'a> AssetRemoteLinkFilter<'a> {
                         }
                     }
                 }
+
                 if found_links.is_empty() {
                     event
                 } else {
                     found_links.dedup();
                     let mut content = html.clone().into_string();
-                    debug!("2. found_links\n'{:?}'", &found_links);
+                    debug!("3. found_links\n'{:?}'", &found_links);
                     for original_link in found_links {
-                        let encoded_link_key = encode_non_ascii_symbols(&original_link);
+                        // let encoded_link_key = encode_non_ascii_symbols(&original_link);
                         debug!("original_link = '{}'", &original_link);
                         debug!("1. assets\n'{:?}'", &self.assets);
 
-                        if let Some(asset) = self.assets.get(&encoded_link_key) {
+                        if let Some(asset) = self.assets.get(&original_link) {
                             // let new = self.path_prefix(asset.filename.as_path());
                             let depth = self.depth;
                             let new = Self::compute_path_prefix(depth, asset.filename.as_path());
@@ -122,7 +159,7 @@ impl<'a> AssetRemoteLinkFilter<'a> {
                             );
                             // REAL SRC REPLACING happens here...
                             content = content.replace(&original_link, new.as_str());
-                            trace!("new content after replacement\n{}", &content);
+                            debug!("new content after replacement\n{}", &content);
                         } else {
                             error!("Asset was not found by original_link: {}", original_link);
                             unreachable!("{original_link} should be replaced, but it doesn't.");
@@ -131,6 +168,7 @@ impl<'a> AssetRemoteLinkFilter<'a> {
                     Event::Html(CowStr::from(content))
                 }
             }
+            // Event::InlineHtml(ref html) => {}
             _ => event,
         }
     }
@@ -151,5 +189,25 @@ impl<'a> AssetRemoteLinkFilter<'a> {
             .chain(iter::once(filename.as_str()))
             .collect::<Vec<_>>()
             .join("/")
+    }
+
+    fn process_asset(
+        &mut self,
+        asset: &Asset,
+        link_key: &str,
+        // old_key: &str,
+    ) -> Result<String, Error> {
+        debug!("1. DUMP assets:\n{:?}\n", self.assets);
+        match self.download_handler.download(asset) {
+            Ok(updated_data) => {
+                let updated_asset = asset.with_updated_fields(updated_data);
+                // replaced previous asset by new, updated one
+                self.assets
+                    .insert(link_key.to_string(), updated_asset.clone());
+                debug!("2. DUMP assets:\n{:?}", self.assets);
+                Ok(updated_asset.filename.to_string_lossy().to_string())
+            }
+            Err(error) => Err(error),
+        }
     }
 }

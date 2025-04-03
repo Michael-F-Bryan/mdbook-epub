@@ -15,12 +15,17 @@ use std::{
     path::Path,
 };
 
+/// Struct to keep file (image) data 'mime type' after recognizing downloaded content
 #[allow(dead_code)]
 pub struct RetrievedContent {
+    /// Data content itself
     pub reader: Box<dyn Read + Send + Sync + 'static>,
+    /// Mime type as string
     pub mime_type: String,
+    /// File extension
     pub extension: String,
-    pub size: Option<u64>, // Additional field to store the content's size in bytes
+    /// Additional field to store the content's size in bytes
+    pub size: Option<u64>,
 }
 
 impl RetrievedContent {
@@ -54,62 +59,31 @@ impl Display for RetrievedContent {
     }
 }
 
+/// Struct will be used for later updating Asset fields
+#[derive(Debug)]
+pub(crate) struct UpdatedAssetData {
+    pub(crate) mimetype: Mime,
+    pub(crate) location_on_disk: PathBuf,
+    pub(crate) filename: PathBuf,
+}
+
+impl Default for UpdatedAssetData {
+    fn default() -> Self {
+        UpdatedAssetData {
+            mimetype: Mime::from_str("plain/txt").unwrap(),
+            location_on_disk: PathBuf::new(),
+            filename: PathBuf::new(),
+        }
+    }
+}
+
+/// Trait will be implemented by component to do:
+/// - download remote resource bytes content
+/// - recognize downloaded content mime type
+/// - reading data from local file
 #[cfg_attr(test, automock)]
 pub(crate) trait ContentRetriever {
-    fn download(&self, asset: &mut Asset) -> Result<(), Error> {
-        debug!(
-            "ContentRetriever is going to download asset to dest location = '{:?}'",
-            asset.location_on_disk
-        );
-        if let AssetKind::Remote(url) = &asset.source {
-            let dest = &asset.location_on_disk;
-            debug!("Initial asset dest location = '{:?}'", dest);
-            if dest.is_file() {
-                debug!("Cache file {:?} to '{}' already exists.", dest, url);
-            } else {
-                if let Some(cache_dir) = dest.parent() {
-                    fs::create_dir_all(cache_dir)?;
-                }
-                debug!("Downloading asset by: {}", url);
-                let mut retrieved_content = self.retrieve(url.as_str())?;
-                debug!("Retrieved content: \n{}", &retrieved_content);
-                debug!(
-                    "Mime from content: \n{:?}",
-                    &Mime::from_str(retrieved_content.mime_type.clone().as_str())?
-                );
-                asset.mimetype = Mime::from_str(retrieved_content.mime_type.clone().as_str())?;
-                if asset.filename.extension().is_none() {
-                    let previous_file_name = asset.filename.clone();
-                    // rename asset's file name by adding extension
-                    asset.filename = PathBuf::from(format!(
-                        "{}.{}",
-                        &previous_file_name.as_os_str().to_str().unwrap(),
-                        retrieved_content.extension
-                    ));
-                    // rename file on disk by adding extension to file on disk
-                    asset.location_on_disk = PathBuf::from(format!(
-                        "{}.{}",
-                        &asset.location_on_disk.as_os_str().to_str().unwrap(),
-                        retrieved_content.extension
-                    ));
-                    // file.set_file_name(&asset.filename);
-                    debug!("asset file location: '{:?}'", &asset.location_on_disk);
-                }
-                let dest = &asset.location_on_disk;
-                let mut file = OpenOptions::new()
-                    .create(true)
-                    .truncate(true)
-                    .write(true)
-                    .open(dest)?;
-                debug!("File on disk: \n{:?}", &file);
-                io::copy(&mut retrieved_content.reader, &mut file)?;
-                // drop(file);
-                // drop(retrieved_content.reader);
-                debug!("Downloaded asset by '{}' : '{}", url, asset);
-            }
-        }
-        Ok(())
-    }
+    fn download(&self, asset: &Asset) -> Result<UpdatedAssetData, Error>;
     fn read(&self, path: &Path, buffer: &mut Vec<u8>) -> Result<(), Error> {
         File::open(path)?.read_to_end(buffer)?;
         Ok(())
@@ -120,6 +94,73 @@ pub(crate) trait ContentRetriever {
 #[derive(Clone, Debug)]
 pub(crate) struct ResourceHandler;
 impl ContentRetriever for ResourceHandler {
+    fn download(&self, asset: &Asset) -> Result<UpdatedAssetData, Error> {
+        debug!(
+            "ContentRetriever is going to download asset to dest location = '{:?}'",
+            asset.location_on_disk
+        );
+        if let AssetKind::Remote(url) = &asset.source {
+            let dest = &asset.location_on_disk;
+            debug!("Initial asset dest location = '{:?}'", dest);
+            if dest.is_file() {
+                debug!("Cache file {:?} to '{}' already exists.", dest, url);
+                return Ok(UpdatedAssetData {
+                    mimetype: asset.mimetype.clone(),
+                    location_on_disk: asset.location_on_disk.clone(),
+                    filename: asset.filename.clone(),
+                });
+            } else {
+                if let Some(cache_dir) = dest.parent() {
+                    fs::create_dir_all(cache_dir)?;
+                }
+                debug!("Downloading asset by: {}", url);
+                let mut retrieved_content = self.retrieve(url.as_str())?;
+                debug!("Retrieved content: \n{}", &retrieved_content);
+                let mimetype = Mime::from_str(retrieved_content.mime_type.as_str())?;
+                debug!("Mime from content: \n{:?}", &mimetype);
+
+                let mut new_filename = asset.filename.clone();
+                let mut new_location_on_disk = asset.location_on_disk.clone();
+                if new_filename.extension().is_none() {
+                    new_filename = PathBuf::from(format!(
+                        "{}.{}",
+                        new_filename.as_os_str().to_str().unwrap(),
+                        retrieved_content.extension
+                    ));
+                    new_location_on_disk = PathBuf::from(format!(
+                        "{}.{}",
+                        new_location_on_disk.as_os_str().to_str().unwrap(),
+                        retrieved_content.extension
+                    ));
+                    debug!("asset file location: '{:?}'", &new_location_on_disk);
+                }
+
+                let mut file = OpenOptions::new()
+                    .create(true)
+                    .truncate(true)
+                    .write(true)
+                    .open(&new_location_on_disk)?;
+                debug!("File on disk: \n{:?}", &file);
+                io::copy(&mut retrieved_content.reader, &mut file)?;
+                debug!(
+                    "Downloaded asset by '{}' : {:?}",
+                    url, &new_location_on_disk
+                );
+
+                return Ok(UpdatedAssetData {
+                    mimetype,
+                    location_on_disk: new_location_on_disk,
+                    filename: new_filename,
+                });
+            }
+        }
+        Ok(UpdatedAssetData {
+            mimetype: asset.mimetype.clone(),
+            location_on_disk: asset.location_on_disk.clone(),
+            filename: asset.filename.clone(),
+        })
+    }
+
     fn retrieve(&self, url: &str) -> Result<RetrievedContent, Error> {
         let res = ureq::get(url).call()?;
         match res.status().as_u16() {
@@ -170,9 +211,7 @@ mod tests {
     use crate::errors::Error;
     use crate::resources::asset::Asset;
 
-    use super::{ContentRetriever, RetrievedContent};
-
-    // type BoxRead = Box<(dyn std::io::Read + Send + Sync + 'static)>;
+    use super::{ContentRetriever, RetrievedContent, UpdatedAssetData};
 
     #[test]
     fn test_download_success() {
@@ -180,6 +219,9 @@ mod tests {
 
         struct TestHandler;
         impl ContentRetriever for TestHandler {
+            fn download(&self, asset: &Asset) -> Result<UpdatedAssetData, Error> {
+                Ok(UpdatedAssetData::default())
+            }
             fn retrieve(&self, _url: &str) -> Result<RetrievedContent, Error> {
                 let content = "Downloaded content".as_bytes();
                 Ok(RetrievedContent::new(
@@ -205,6 +247,9 @@ mod tests {
     fn test_download_fail_when_resource_not_exist() {
         struct TestHandler;
         impl ContentRetriever for TestHandler {
+            fn download(&self, asset: &Asset) -> Result<UpdatedAssetData, Error> {
+                Ok(UpdatedAssetData::default())
+            }
             fn retrieve(&self, url: &str) -> Result<RetrievedContent, Error> {
                 Err(Error::AssetFileNotFound(format!(
                     "Missing remote resource: {url}"
@@ -224,6 +269,9 @@ mod tests {
     fn test_download_fail_with_unexpected_status() {
         struct TestHandler;
         impl ContentRetriever for TestHandler {
+            fn download(&self, asset: &Asset) -> Result<UpdatedAssetData, Error> {
+                Ok(UpdatedAssetData::default())
+            }
             fn retrieve(&self, _url: &str) -> Result<RetrievedContent, Error> {
                 panic!("NOT 200 or 404")
             }
@@ -241,6 +289,9 @@ mod tests {
 
         struct TestHandler;
         impl ContentRetriever for TestHandler {
+            fn download(&self, asset: &Asset) -> Result<UpdatedAssetData, Error> {
+                Ok(UpdatedAssetData::default())
+            }
             fn retrieve(&self, _url: &str) -> Result<RetrievedContent, Error> {
                 let content = "Downloaded content".as_bytes();
                 Ok(RetrievedContent::new(
@@ -266,6 +317,10 @@ mod tests {
     fn temp_remote_asset(url: &str) -> Result<Asset, Error> {
         let tmp_dir = TempDir::new().unwrap();
         let dest_dir = tmp_dir.path().join("mdbook-epub");
-        Asset::from_url(url::Url::parse(url).unwrap(), dest_dir.as_path())
+        Asset::from_url(
+            "unique_remote_url",
+            url::Url::parse(url).unwrap(),
+            dest_dir.as_path(),
+        )
     }
 }
