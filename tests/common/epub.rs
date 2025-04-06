@@ -106,10 +106,10 @@ pub fn epub_check(path: &Path) -> Result<(), Error> {
     debug!("check epub book by path = '{}'...", &path.display());
 
     // windows workaround
-    #[cfg(windows)]
+    // #[cfg(windows)]
     let cmd = {
         // On Windows run epubcheck via : java -jar
-        debug!("Windows environment detected");
+        debug!("Windows/Linux environment detected");
         let epubcheck_path =
             std::env::var("EPUBCHECK_JAR").expect("EPUBCHECK_JAR environment variable not set");
 
@@ -125,8 +125,8 @@ pub fn epub_check(path: &Path) -> Result<(), Error> {
             .output()
     };
 
-    #[cfg(not(windows))]
-    let cmd = Command::new("epubcheck").arg(path).output();
+    // #[cfg(not(windows))]
+    // let cmd = Command::new("epubcheck").arg(path).output();
 
     match cmd {
         Ok(output) => {

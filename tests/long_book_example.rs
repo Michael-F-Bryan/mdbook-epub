@@ -2,9 +2,7 @@ use log::debug;
 use serial_test::serial;
 use std::path::Path;
 mod common;
-use crate::common::epub::{
-    create_dummy_book, generate_epub_preserve_temp_folder, output_epub_is_valid,
-};
+use crate::common::epub::{create_dummy_book, output_epub_is_valid};
 use common::epub::generate_epub;
 use common::init_logging::init_logging;
 
@@ -65,7 +63,7 @@ fn test_long_book_lookup_chapter_1_heading() {
 fn test_long_book_lookup_chapter_2_image_link_in_readme() {
     init_logging();
     let mut doc = generate_epub("long_book_example").unwrap();
-    // let mut doc = generate_epub_preserve_temp_folder("long_book_example").unwrap();
+    // let mut doc = common::epub::generate_epub_preserve_temp_folder("long_book_example").unwrap();
 
     let path = if cfg!(target_os = "linux") {
         Path::new("OEBPS").join("02_advanced").join("README.html") // linux
