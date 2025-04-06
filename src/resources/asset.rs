@@ -81,7 +81,7 @@ impl Asset {
             &absolute_location
         );
         let asset = Asset::new(
-            &link_key,
+            link_key,
             filename,
             &absolute_location,
             AssetKind::Remote(url),

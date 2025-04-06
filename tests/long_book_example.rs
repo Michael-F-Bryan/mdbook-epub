@@ -2,7 +2,9 @@ use log::debug;
 use serial_test::serial;
 use std::path::Path;
 mod common;
-use crate::common::epub::{create_dummy_book, output_epub_is_valid};
+use crate::common::epub::{
+    create_dummy_book, generate_epub_preserve_temp_folder, output_epub_is_valid,
+};
 use common::epub::generate_epub;
 use common::init_logging::init_logging;
 
@@ -13,8 +15,7 @@ fn test_output_long_book_exists() {
     debug!("fn output_epub_exists...");
     let (ctx, _md, temp) = create_dummy_book("long_book_example").unwrap();
 
-    // let output_file = mdbook_epub::output_filename(temp.path(), &ctx.config);
-    let output_file = mdbook_epub::output_filename(temp.as_path(), &ctx.config);
+    let output_file = mdbook_epub::output_filename(temp.path(), &ctx.config);
     assert!(
         output_file.is_ok(),
         "{}",
@@ -34,6 +35,7 @@ fn test_output_long_book_exists() {
 #[serial]
 fn test_output_long_book_is_valid() {
     output_epub_is_valid("long_book_example");
+    // common::epub::output_epub_is_valid_preserve_temp_folder("long_book_example");
 }
 
 #[test]
@@ -63,6 +65,7 @@ fn test_long_book_lookup_chapter_1_heading() {
 fn test_long_book_lookup_chapter_2_image_link_in_readme() {
     init_logging();
     let mut doc = generate_epub("long_book_example").unwrap();
+    // let mut doc = generate_epub_preserve_temp_folder("long_book_example").unwrap();
 
     let path = if cfg!(target_os = "linux") {
         Path::new("OEBPS").join("02_advanced").join("README.html") // linux
@@ -71,7 +74,7 @@ fn test_long_book_lookup_chapter_2_image_link_in_readme() {
     };
     let content = doc.0.get_resource_str_by_path(path).unwrap();
 
-    assert!(content.contains("<img src=\"Epub_logo.svg\""));
+    assert!(content.contains("<img src=\"../02_advanced/Epub_logo.svg\""));
 }
 
 #[test]

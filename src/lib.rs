@@ -85,7 +85,7 @@ pub fn generate(ctx: &RenderContext) -> Result<(), Error> {
 pub fn output_filename(dest: &Path, config: &MdConfig) -> Result<PathBuf, Error> {
     match config.book.title {
         Some(ref title) => {
-            validate_config_title_file_name(&config)?;
+            validate_config_title_file_name(config)?;
             Ok(dest.join(title).with_extension("epub"))
         }
         None => Ok(dest.join("book.epub")),

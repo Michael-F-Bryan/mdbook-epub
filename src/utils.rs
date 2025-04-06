@@ -63,6 +63,7 @@ pub(crate) fn hash_link(url: &Url) -> String {
 }
 
 /// Source text is url encoded if it has a non ascii symbols. Otherwise, it is not changed.
+#[allow(dead_code)]
 pub(crate) fn encode_non_ascii_symbols(source_text: &str) -> String {
     if !source_text.is_ascii() {
         // convert any 'non acsii' char into 'ascii encoded' variant

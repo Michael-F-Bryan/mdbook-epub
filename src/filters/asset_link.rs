@@ -81,7 +81,7 @@ impl<'a> AssetRemoteLinkFilter<'a> {
                         let depth = self.depth;
                         // local image/resource
                         let new = Self::compute_path_prefix(depth, asset.filename.as_path());
-                        Event::Start(Tag::Image {
+                        return Event::Start(Tag::Image {
                             link_type,
                             dest_url: CowStr::from(new),
                             title: title.to_owned(),

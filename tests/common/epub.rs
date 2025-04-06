@@ -11,13 +11,34 @@ use std::process::Command;
 use tempfile::TempDir;
 
 /// Convenience function for compiling the dummy book into an `EpubDoc`.
+#[allow(dead_code)]
 pub fn generate_epub(epub_book_name: &str) -> Result<(EpubDoc<BufReader<File>>, PathBuf), Error> {
     debug!("generate_epub: {:?}...", epub_book_name);
     let (ctx, _md, temp) = create_dummy_book(epub_book_name).unwrap();
     debug!("temp dir = {:?}", &temp);
     debug!("Before start generate...");
     mdbook_epub::generate(&ctx)?;
-    // let output_file = mdbook_epub::output_filename(temp.path(), &ctx.config)?;
+    let output_file = mdbook_epub::output_filename(temp.path(), &ctx.config)?;
+    debug!("output_file = {:?}", &output_file.display());
+
+    match EpubDoc::new(&output_file) {
+        Ok(epub) => Ok((epub, output_file)),
+        Err(err) => {
+            error!("dummy book creation error = {:?}", err);
+            Err(Error::EpubDocCreate(output_file.display().to_string()))
+        }
+    }
+}
+
+#[allow(dead_code)]
+pub fn generate_epub_preserve_temp_folder(
+    epub_book_name: &str,
+) -> Result<(EpubDoc<BufReader<File>>, PathBuf), Error> {
+    debug!("generate_epub: {:?}...", epub_book_name);
+    let (ctx, _md, temp) = create_dummy_book_preserve_temp_folder(epub_book_name).unwrap();
+    debug!("temp dir = {:?}", &temp);
+    debug!("Before start generate...");
+    mdbook_epub::generate(&ctx)?;
     let output_file = mdbook_epub::output_filename(&temp, &ctx.config)?;
     debug!("output_file = {:?}", &output_file.display());
 
@@ -32,8 +53,31 @@ pub fn generate_epub(epub_book_name: &str) -> Result<(EpubDoc<BufReader<File>>, 
 
 /// Use `MDBook::load()` to load the dummy book into memory, then set up the
 /// `RenderContext` for use the EPUB generator.
-// pub fn create_dummy_book(name: &str) -> Result<(RenderContext, MDBook, TempDir), Error> {
-pub fn create_dummy_book(name: &str) -> Result<(RenderContext, MDBook, PathBuf), Error> {
+pub fn create_dummy_book(name: &str) -> Result<(RenderContext, MDBook, TempDir), Error> {
+    debug!("create_{:?}...", name);
+    let temp = TempDir::with_prefix_in("mdbook-epub", ".")?;
+
+    let dummy_book = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("tests")
+        .join(name);
+    debug!("{:?} = {:?}", name, &dummy_book.display().to_string());
+
+    let md = MDBook::load(dummy_book);
+
+    let book = md.expect(&format!("{:?} MDBook is not loaded", name));
+    let ctx = RenderContext::new(
+        book.root.clone(),
+        book.book.clone(),
+        book.config.clone(),
+        temp.path().to_path_buf(),
+    );
+
+    Ok((ctx, book, temp))
+}
+
+pub fn create_dummy_book_preserve_temp_folder(
+    name: &str,
+) -> Result<(RenderContext, MDBook, PathBuf), Error> {
     debug!("create_{:?}...", name);
     let temp = TempDir::with_prefix_in("mdbook-epub", ".")?;
     let temp_path: PathBuf = temp.into_path();
@@ -51,11 +95,9 @@ pub fn create_dummy_book(name: &str) -> Result<(RenderContext, MDBook, PathBuf),
         book.root.clone(),
         book.book.clone(),
         book.config.clone(),
-        // temp.path().to_path_buf(),
         temp_path.to_path_buf(),
     );
 
-    // Ok((ctx, book, temp))
     Ok((ctx, book, temp_path))
 }
 
@@ -115,7 +157,24 @@ pub fn output_epub_is_valid(epub_book_name: &str) {
     let (ctx, _md, temp) = create_dummy_book(epub_book_name).unwrap();
     mdbook_epub::generate(&ctx).unwrap();
 
-    // let output_file = mdbook_epub::output_filename(temp.path(), &ctx.config);
+    let output_file = mdbook_epub::output_filename(temp.path(), &ctx.config);
+    assert!(output_file.is_ok());
+    let output_file = output_file.unwrap();
+    let got = EpubDoc::new(&output_file);
+
+    assert!(got.is_ok());
+
+    // also try to run epubcheck, if it's available
+    epub_check(&output_file).unwrap();
+}
+
+#[allow(dead_code)]
+pub fn output_epub_is_valid_preserve_temp_folder(epub_book_name: &str) {
+    init_logging();
+    debug!("output_epub_is_valid...");
+    let (ctx, _md, temp) = create_dummy_book_preserve_temp_folder(epub_book_name).unwrap();
+    mdbook_epub::generate(&ctx).unwrap();
+
     let output_file = mdbook_epub::output_filename(&temp, &ctx.config);
     assert!(output_file.is_ok());
     let output_file = output_file.unwrap();

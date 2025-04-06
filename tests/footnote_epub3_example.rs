@@ -71,8 +71,7 @@ fn test_output_footnote_book_exists() {
     debug!("fn output_epub3_exists...");
     let (ctx, _md, temp) = create_dummy_book("footnote_epub3_example").unwrap();
 
-    // let output_file = mdbook_epub::output_filename(temp.path(), &ctx.config).unwrap();
-    let output_file = mdbook_epub::output_filename(temp.as_path(), &ctx.config).unwrap();
+    let output_file = mdbook_epub::output_filename(temp.path(), &ctx.config).unwrap();
 
     assert!(!output_file.exists());
     mdbook_epub::generate(&ctx).unwrap();

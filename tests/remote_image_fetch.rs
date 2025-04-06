@@ -29,4 +29,5 @@ fn test_remote_image_urls() {
 #[serial]
 fn test_output_remote_image_is_valid() {
     output_epub_is_valid("remote_image_fetch");
+    // common::epub::output_epub_is_valid_preserve_temp_folder("remote_image_fetch");
 }
