@@ -52,14 +52,11 @@ jobs:
               fi
               
               # Set epubcheck path
-              echo "EPUBCHECK_PATH=$EPUBCHECK_JAR" >> $GITHUB_ENV
+              echo "EPUBCHECK_JAR=$EPUBCHECK_JAR" >> $GITHUB_ENV
               
               # Debug output
               echo "Debug: EPUBCHECK_JAR value is: $EPUBCHECK_JAR"
-              
-              # Export the variable for subsequent steps
-              echo "EPUBCHECK_JAR=$EPUBCHECK_JAR" >> $GITHUB_ENV
-            epubcheck-path: "${{ env.EPUBCHECK_JAR }}"
+            epubcheck-path: "$EPUBCHECK_JAR"
 
           - os: windows-latest
             install-epubcheck: |
