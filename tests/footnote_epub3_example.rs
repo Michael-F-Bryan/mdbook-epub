@@ -68,7 +68,7 @@ fn test_footnote_definition_label() {
 #[serial]
 fn test_output_footnote_book_exists() {
     init_logging();
-    debug!("fn output_epub3_exists...");
+    debug!("test_output_footnote_book_exists...");
     let (ctx, _md, temp) = create_dummy_book("footnote_epub3_example").unwrap();
 
     let output_file = mdbook_epub::output_filename(temp.path(), &ctx.config).unwrap();
@@ -82,6 +82,6 @@ fn test_output_footnote_book_exists() {
 #[serial]
 fn test_output_footnote_book_is_valid() {
     init_logging();
-    debug!("output_epub_is_valid...");
+    debug!("test_output_footnote_book_is_valid...");
     output_epub_is_valid("footnote_epub3_example");
 }

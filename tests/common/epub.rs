@@ -106,7 +106,7 @@ pub fn epub_check(path: &Path) -> Result<(), Error> {
     debug!("check epub book by path = '{}'...", &path.display());
 
     // windows workaround
-    // #[cfg(windows)]
+    #[cfg(any(windows, target_os = "linux"))]
     let cmd = {
         // On Windows run epubcheck via : java -jar
         debug!("Windows/Linux environment detected");
@@ -125,8 +125,8 @@ pub fn epub_check(path: &Path) -> Result<(), Error> {
             .output()
     };
 
-    // #[cfg(not(windows))]
-    // let cmd = Command::new("epubcheck").arg(path).output();
+    #[cfg(target_os = "macos")]
+    let cmd = Command::new("epubcheck").arg(path).output();
 
     match cmd {
         Ok(output) => {
