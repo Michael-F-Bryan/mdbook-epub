@@ -25,9 +25,8 @@ fn test_remote_image_urls() {
     assert!(content.contains("<img src=\"4dbdb25800b6fa1b.jpg\" alt=\"Image\" />"));
 }
 
-// #[ignore = "Waiting for issue = https://github.com/lise-henry/epub-builder/issues/45"]
-// #[test]
-// #[serial]
-fn test_output_epub_is_valid() {
+#[test]
+#[serial]
+fn test_output_remote_image_is_valid() {
     output_epub_is_valid("remote_image_fetch");
 }

@@ -258,28 +258,9 @@ mod tests {
             let should_be = Asset::new(link.to_string(), filename, absolute_location, source);
             assert_eq!(a, should_be);
         }
-        assert_asset(
-            assets
-                .remove(
-                    utils::normalize_path(&PathBuf::from(link))
-                        .to_str()
-                        .unwrap(),
-                )
-                .unwrap(),
-            link,
-            &ctx,
-        );
-        assert_asset(
-            assets
-                .remove(
-                    utils::normalize_path(&PathBuf::from(link2))
-                        .to_str()
-                        .unwrap(),
-                )
-                .unwrap(),
-            link2,
-            &ctx,
-        );
+        trace!("All = {:?}", assets);
+        assert_asset(assets.remove(link).unwrap(), link, &ctx);
+        assert_asset(assets.remove(link2).unwrap(), link2, &ctx);
     }
 
     #[test]
@@ -309,7 +290,8 @@ mod tests {
             match value.source {
                 AssetKind::Remote(internal_url) => {
                     let key_to_remove = value.location_on_disk.to_str().unwrap();
-                    let got = assets.remove(key_to_remove).unwrap();
+                    // let got = assets.remove(key_to_remove).unwrap();
+                    let got = assets.remove(key.clone().as_str()).unwrap();
                     let filename = if key_to_remove.contains(".svg") {
                         PathBuf::from("").join(utils::hash_link(&link_parsed))
                     } else {

@@ -111,7 +111,7 @@ impl<'a> AssetRemoteLinkFilter<'a> {
                                                     debug!("1. Found URL '{}' by Event", &dest_url);
                                                     match self.process_asset(&asset, dest_url) {
                                                         Ok(_) => {
-                                                            println!(
+                                                            debug!(
                                                                 "SUCCESSFULLY downloaded resource by URL '{}'",
                                                                 &dest_url
                                                             );

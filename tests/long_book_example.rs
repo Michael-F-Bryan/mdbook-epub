@@ -8,12 +8,13 @@ use common::init_logging::init_logging;
 
 #[test]
 #[serial]
-fn output_epub_exists() {
+fn test_output_long_book_exists() {
     init_logging();
     debug!("fn output_epub_exists...");
     let (ctx, _md, temp) = create_dummy_book("long_book_example").unwrap();
 
-    let output_file = mdbook_epub::output_filename(temp.path(), &ctx.config);
+    // let output_file = mdbook_epub::output_filename(temp.path(), &ctx.config);
+    let output_file = mdbook_epub::output_filename(temp.as_path(), &ctx.config);
     assert!(
         output_file.is_ok(),
         "{}",
@@ -29,16 +30,16 @@ fn output_epub_exists() {
     assert!(output_file.exists());
 }
 
-#[ignore = "Waiting for issue = https://github.com/lise-henry/epub-builder/issues/45"]
+// #[ignore = "Waiting for issue = https://github.com/lise-henry/epub-builder/issues/45"]
 #[test]
 #[serial]
-fn test_output_epub_is_valid() {
+fn test_output_long_book_is_valid() {
     output_epub_is_valid("long_book_example");
 }
 
 #[test]
 #[serial]
-fn look_for_chapter_1_heading() {
+fn test_long_book_lookup_chapter_1_heading() {
     init_logging();
     debug!("look_for_chapter_1_heading...");
     let mut doc = generate_epub("long_book_example").unwrap();
@@ -60,7 +61,7 @@ fn look_for_chapter_1_heading() {
 
 #[test]
 #[serial]
-fn look_for_chapter_2_image_link_in_readme() {
+fn test_long_book_lookup_chapter_2_image_link_in_readme() {
     init_logging();
     let mut doc = generate_epub("long_book_example").unwrap();
 
@@ -76,7 +77,7 @@ fn look_for_chapter_2_image_link_in_readme() {
 
 #[test]
 #[serial]
-fn rendered_document_contains_all_chapter_files_and_assets() {
+fn test_long_book_contains_all_chapter_files_and_assets() {
     init_logging();
     debug!("rendered_document_contains_all_chapter_files_and_assets...");
     let chapters = vec![

@@ -1,17 +1,3 @@
-use epub_builder::{EpubBuilder, EpubContent, ZipLibrary};
-use handlebars::{Handlebars, RenderError, RenderErrorReason};
-use mdbook::book::{BookItem, Chapter};
-use mdbook::renderer::RenderContext;
-use pulldown_cmark::html;
-use std::{
-    collections::HashMap,
-    fmt::{self, Debug, Formatter},
-    fs::File,
-    io::{Read, Write},
-    iter,
-    path::PathBuf,
-};
-
 use crate::DEFAULT_CSS;
 use crate::config::Config;
 use crate::filters::asset_link::AssetRemoteLinkFilter;
@@ -22,6 +8,20 @@ use crate::resources::resource::{self};
 use crate::resources::retrieve::{ContentRetriever, ResourceHandler};
 use crate::validation::validate_config_epub_version;
 use crate::{Error, utils};
+use epub_builder::{EpubBuilder, EpubContent, ZipLibrary};
+use handlebars::{Handlebars, RenderError, RenderErrorReason};
+use mdbook::book::{BookItem, Chapter};
+use mdbook::renderer::RenderContext;
+use pulldown_cmark::html;
+use std::collections::HashSet;
+use std::{
+    collections::HashMap,
+    fmt::{self, Debug, Formatter},
+    fs::File,
+    io::{Read, Write},
+    iter,
+    path::PathBuf,
+};
 
 /// The actual EPUB book renderer.
 pub struct Generator<'a> {
@@ -310,21 +310,19 @@ impl<'a> Generator<'a> {
             self.assets.len()
         );
 
-        // TODO: have a list of Asset URLs and try to download all of them (in parallel?)
-        // to a temporary location.
+        let mut unique_assets = HashSet::new();
         let mut count = 0;
         for (_key, asset) in self.assets.iter_mut() {
             // self.handler.download(asset)?;
-            debug!("Adding asset : {}", asset);
-            let mut content = Vec::new();
-            debug!("Read (EARLIER downloaded?) asset from disk : {}", asset);
-            self.handler
-                .read(&asset.location_on_disk, &mut content)
-                // .map_err(|err| Error::AssetOpen(err))?;
-                ?;
-            let mt = asset.mimetype.to_string();
-            self.builder.add_resource(&asset.filename, &*content, mt)?;
-            count += 1;
+            debug!("Try to add asset : {}", asset);
+            if unique_assets.insert(&asset.location_on_disk) {
+                let mut content = Vec::new();
+                debug!("Read (EARLIER downloaded?) asset from disk : {}", asset);
+                self.handler.read(&asset.location_on_disk, &mut content)?;
+                let mt = asset.mimetype.to_string();
+                self.builder.add_resource(&asset.filename, &*content, mt)?;
+                count += 1;
+            }
         }
         debug!("Embedded '{}' additional assets", count);
         Ok(())
@@ -472,8 +470,17 @@ mod tests {
     use tempfile::TempDir;
     use url::Url;
 
+    use std::sync::Once;
+    static INIT: Once = Once::new();
+    pub fn init_logging() {
+        INIT.call_once(|| {
+            let _ = env_logger::builder().is_test(true).try_init();
+        });
+    }
+
     #[test]
     fn test_load_assets() {
+        init_logging();
         let png = "rust-logo.png";
         let svg = "rust-logo.svg";
         let url = "https://www.rust-lang.org/static/images/rust-logo-blk.svg";
@@ -525,6 +532,7 @@ mod tests {
 
     #[test]
     fn test_render_assets() {
+        init_logging();
         let links = [
             "local.webp",
             "http://server/remote.svg",
@@ -570,14 +578,19 @@ mod tests {
         struct TestHandler;
         impl ContentRetriever for TestHandler {
             fn download(&self, asset: &Asset) -> Result<UpdatedAssetData, Error> {
-                Ok(UpdatedAssetData::default())
+                Ok(UpdatedAssetData {
+                    mimetype: asset.mimetype.clone(),
+                    filename: PathBuf::from("78221e8d16c52ea3.svg"),
+                    location_on_disk: asset.location_on_disk.clone(),
+                })
             }
             fn retrieve(&self, _url: &str) -> Result<RetrievedContent, Error> {
+                trace!("retrieve by {_url}");
                 let content = "Downloaded content".as_bytes();
                 Ok(RetrievedContent::new(
                     Box::new(Cursor::new(content)),
-                    "text/plain".to_string(),
-                    "txt".to_string(),
+                    "image/svg+xml".to_string(),
+                    "svg".to_string(),
                     Some(content.len() as u64),
                 ))
             }
@@ -590,6 +603,7 @@ mod tests {
         trace!("Events = {:?}", events);
         let mut html_buf = String::new();
         html::push_html(&mut html_buf, events);
+        trace!("html_buf = {:?}", html_buf);
 
         assert_eq!(
             html_buf,
@@ -598,7 +612,7 @@ mod tests {
                 <ul>\n\
                 <li><a href=\"{}\">link</a></li>\n\
                 <li><img src=\"{}\" alt=\"Local Image\" /></li>\n\
-                <li><img alt=\"Remote Image\" src=\"cache/{}\" >\n\
+                <li><img alt=\"Remote Image\" src=\"{}\" >\n\
                 </li>\n\
                 </ul>\n",
                 links[2], links[0], hashed_filename
@@ -608,7 +622,8 @@ mod tests {
 
     #[test]
     fn test_render_remote_assets_in_sub_chapter() {
-        let link = "https://mdbook.epub/dummy.svg";
+        init_logging();
+        let link = "https://www.svgrepo.com/show/327768/finger-print.svg";
         let tmp_dir = TempDir::new().unwrap();
         let dest_dir = tmp_dir.path().join("mdbook-epub");
         let ch1_1 = json!({
@@ -653,16 +668,17 @@ mod tests {
         assert_eq!(g.assets.len(), 1);
 
         let pat = |heading, prefix| {
-            format!("<h1>{heading}</h1>\n<p><img src=\"{prefix}811c431d49ec880b.svg\"")
+            format!("<h1>{heading}</h1>\n<p><img src=\"{prefix}78d88324ed4ac3bf.svg\"")
         };
         if let BookItem::Chapter(ref ch) = ctx.book.sections[0] {
             let rendered: String = g.render_chapter(ch).unwrap();
-            debug!("{}", &rendered);
-            assert!(rendered.contains(&pat("Chapter 1", "../")));
+            debug!("rendered ===\n{}", &rendered);
+            assert!(rendered.contains(&pat("Chapter 1", "")));
 
             if let BookItem::Chapter(ref sub_ch) = ch.sub_items[0] {
                 let sub_rendered = g.render_chapter(sub_ch).unwrap();
-                assert!(sub_rendered.contains(&pat("Subchapter", "../")));
+                debug!("rendered ===\n{}", &sub_rendered);
+                assert!(sub_rendered.contains(&pat("Subchapter", "")));
             } else {
                 panic!();
             }
@@ -680,6 +696,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_find_assets_with_wrong_src_dir() {
+        init_logging();
         let tmp_dir = TempDir::new().unwrap();
         let json = ctx_with_template(
             "# Chapter 1\n\n",

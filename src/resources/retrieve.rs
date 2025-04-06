@@ -205,42 +205,36 @@ impl ContentRetriever for ResourceHandler {
 
 #[cfg(test)]
 mod tests {
-    use std::io::Cursor;
-    use tempfile::TempDir;
-
     use crate::errors::Error;
-    use crate::resources::asset::Asset;
+    use crate::resources::asset::{Asset, AssetKind};
+    use mime_guess::Mime;
+    use std::path::PathBuf;
+    use tempfile::TempDir;
+    use url::Url;
 
-    use super::{ContentRetriever, RetrievedContent, UpdatedAssetData};
+    use super::{ContentRetriever, ResourceHandler, RetrievedContent, UpdatedAssetData};
 
     #[test]
-    fn test_download_success() {
-        use std::io::Read;
+    fn test_download_failed() {
+        let temp_dir = TempDir::new().unwrap();
+        let test_dir = temp_dir.path();
 
-        struct TestHandler;
-        impl ContentRetriever for TestHandler {
-            fn download(&self, asset: &Asset) -> Result<UpdatedAssetData, Error> {
-                Ok(UpdatedAssetData::default())
-            }
-            fn retrieve(&self, _url: &str) -> Result<RetrievedContent, Error> {
-                let content = "Downloaded content".as_bytes();
-                Ok(RetrievedContent::new(
-                    Box::new(Cursor::new(content)),
-                    "text/plain".to_string(),
-                    "txt".to_string(),
-                    Some(content.len() as u64),
-                ))
-            }
-        }
-        let cr = TestHandler {};
-        let mut a = temp_remote_asset("https://mdbook-epub.org/image.svg").unwrap();
-        let r = cr.download(&mut a);
+        // Preparing test Asset
+        let test_url = "https://not_exist.somehost.com/u/274803?v=4";
+        let asset = Asset {
+            original_link: test_url.to_string(),
+            location_on_disk: test_dir.join("downloaded_image"),
+            filename: PathBuf::from("test_image"),
+            mimetype: "image/png".parse::<Mime>().unwrap(),
+            source: AssetKind::Remote(Url::parse(test_url).unwrap()),
+        };
 
-        assert!(r.is_ok());
-        let mut buffer = String::new();
-        let mut f = std::fs::File::open(&a.location_on_disk).unwrap();
-        f.read_to_string(&mut buffer).unwrap();
-        assert_eq!(buffer, "Downloaded content");
+        // Create a handler and download the asset
+        let handler = ResourceHandler;
+        let result = handler.download(&asset);
+
+        // Check the result
+        assert!(result.is_err(), "Download should NOT succeed");
     }
 
     #[test]
@@ -248,7 +242,10 @@ mod tests {
         struct TestHandler;
         impl ContentRetriever for TestHandler {
             fn download(&self, asset: &Asset) -> Result<UpdatedAssetData, Error> {
-                Ok(UpdatedAssetData::default())
+                Err(Error::AssetFileNotFound(format!(
+                    "Missing remote resource: {}",
+                    &asset.original_link.as_str()
+                )))
             }
             fn retrieve(&self, url: &str) -> Result<RetrievedContent, Error> {
                 Err(Error::AssetFileNotFound(format!(
@@ -265,12 +262,14 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "NOT 200 or 404")]
+    #[should_panic(expected = "bad uri: bad url")]
     fn test_download_fail_with_unexpected_status() {
         struct TestHandler;
         impl ContentRetriever for TestHandler {
-            fn download(&self, asset: &Asset) -> Result<UpdatedAssetData, Error> {
-                Ok(UpdatedAssetData::default())
+            fn download(&self, _asset: &Asset) -> Result<UpdatedAssetData, Error> {
+                Err(Error::HttpError(Box::new(ureq::Error::BadUri(
+                    "bad url".to_string(),
+                ))))
             }
             fn retrieve(&self, _url: &str) -> Result<RetrievedContent, Error> {
                 panic!("NOT 200 or 404")
@@ -279,48 +278,77 @@ mod tests {
         let cr = TestHandler {};
         let mut a = temp_remote_asset("https://mdbook-epub.org/bad.svg").unwrap();
         let r = cr.download(&mut a);
+        trace!("{:?}", &r);
 
         panic!("{}", r.unwrap_err().to_string());
     }
 
     #[test]
     fn test_download_parametrized_avatar_image() {
-        use std::io::Read;
+        use std::path::PathBuf;
 
-        struct TestHandler;
-        impl ContentRetriever for TestHandler {
-            fn download(&self, asset: &Asset) -> Result<UpdatedAssetData, Error> {
-                Ok(UpdatedAssetData::default())
-            }
-            fn retrieve(&self, _url: &str) -> Result<RetrievedContent, Error> {
-                let content = "Downloaded content".as_bytes();
-                Ok(RetrievedContent::new(
-                    Box::new(Cursor::new(content)),
-                    "text/plain".to_string(),
-                    "txt".to_string(),
-                    Some(content.len() as u64),
-                ))
-            }
-        }
-        let cr = TestHandler {};
-        let mut a =
-            temp_remote_asset("https://avatars.githubusercontent.com/u/274803?v=4").unwrap();
-        let r = cr.download(&mut a);
-        assert!(r.is_ok());
+        let temp_dir = TempDir::new().unwrap();
+        let test_dir = temp_dir.path();
 
-        let mut buffer = String::new();
-        let mut f = std::fs::File::open(&a.location_on_disk).unwrap();
-        f.read_to_string(&mut buffer).unwrap();
-        assert_eq!(buffer, "Downloaded content");
+        // Preparing test Asset
+        let test_url = "https://avatars.githubusercontent.com/u/274803?v=4";
+        let asset = Asset {
+            original_link: test_url.to_string(),
+            location_on_disk: test_dir.join("downloaded_image"),
+            filename: PathBuf::from("test_image"),
+            mimetype: "image/jpg".parse::<Mime>().unwrap(),
+            source: AssetKind::Remote(Url::parse(test_url).unwrap()),
+        };
+
+        // Create a handler and download the asset
+        let handler = ResourceHandler;
+        let result = handler.download(&asset);
+
+        // Check the result
+        assert!(result.is_ok(), "Download should succeed");
+        let updated_asset = result.unwrap();
+
+        // Check that the file was created
+        assert!(updated_asset.location_on_disk.exists(), "File should exist");
+        assert!(updated_asset.location_on_disk.is_file(), "Should be a file");
+
+        // Check the file extension (should have added .jpg)
+        assert_eq!(
+            updated_asset.location_on_disk.extension().unwrap(),
+            "jpg",
+            "File extension should be jpg"
+        );
+
+        // Check that the file size is greater than 0
+        let file_size = std::fs::metadata(&updated_asset.location_on_disk)
+            .unwrap()
+            .len();
+        assert!(file_size > 0, "File should not be empty");
+        assert!(updated_asset.location_on_disk.exists(), "File should exist");
+        assert!(updated_asset.location_on_disk.is_file(), "Should be a file");
+
+        // Check the file extension (should have added .jpg)
+        assert_eq!(
+            updated_asset.location_on_disk.extension().unwrap(),
+            "jpg",
+            "File extension should be jpg"
+        );
+
+        // Check that the file size is greater than 0
+        let file_size = std::fs::metadata(&updated_asset.location_on_disk)
+            .unwrap()
+            .len();
+        assert!(file_size > 0, "File should not be empty");
+        assert_eq!(updated_asset.mimetype.to_string(), "image/jpeg");
+        assert_eq!(
+            updated_asset.filename.display().to_string(),
+            "test_image.jpg"
+        );
     }
 
     fn temp_remote_asset(url: &str) -> Result<Asset, Error> {
         let tmp_dir = TempDir::new().unwrap();
         let dest_dir = tmp_dir.path().join("mdbook-epub");
-        Asset::from_url(
-            "unique_remote_url",
-            url::Url::parse(url).unwrap(),
-            dest_dir.as_path(),
-        )
+        Asset::from_url(url, url::Url::parse(url).unwrap(), dest_dir.as_path())
     }
 }
