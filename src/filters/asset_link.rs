@@ -1,7 +1,6 @@
 use crate::errors::Error;
 use crate::resources::asset::{Asset, AssetKind};
 use crate::resources::retrieve::ContentRetriever;
-use crate::utils::encode_non_ascii_symbols;
 use html_parser::{Dom, Node};
 use pulldown_cmark::{CowStr, Event, Tag};
 use std::collections::HashMap;
@@ -54,13 +53,18 @@ impl<'a> AssetRemoteLinkFilter<'a> {
                                         "SUCCESSFULLY downloaded resource by URL '{}'",
                                         &dest_url
                                     );
+                                    let depth = self.depth;
+                                    let new = Self::compute_path_prefix(
+                                        depth,
+                                        Path::new(new_file_name.as_str()),
+                                    );
                                     debug!(
                                         "Create new Event for URL '{}' and new file name = {}",
-                                        &dest_url, &new_file_name
+                                        &dest_url, &new
                                     );
                                     return Event::Start(Tag::Image {
                                         link_type,
-                                        dest_url: CowStr::from(new_file_name),
+                                        dest_url: CowStr::from(new),
                                         title: title.to_owned(),
                                         id: id.to_owned(),
                                     });

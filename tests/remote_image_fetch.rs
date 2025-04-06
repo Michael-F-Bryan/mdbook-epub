@@ -21,7 +21,7 @@ fn test_remote_image_urls() {
     let file = doc.0.get_resource_str_by_path(path);
     let content = file.unwrap();
     debug!("content =\n{:?}", content);
-    assert!(content.contains("<img src=\"b270cb6837d41f98.png\" alt=\"Not found asset\" />"));
+    assert!(content.contains("<img src=\"b270cb6837d41f98.png\" alt=\"Image\" />"));
     assert!(content.contains("<img src=\"4dbdb25800b6fa1b.jpg\" alt=\"Image\" />"));
 }
 

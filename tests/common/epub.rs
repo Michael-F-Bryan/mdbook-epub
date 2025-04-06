@@ -37,7 +37,7 @@ pub fn create_dummy_book(name: &str) -> Result<(RenderContext, MDBook, PathBuf),
     debug!("create_{:?}...", name);
     let temp = TempDir::with_prefix_in("mdbook-epub", ".")?;
     let temp_path: PathBuf = temp.into_path();
-    println!("Temporary directory preserved at: {:?}", temp_path);
+    debug!("Temporary directory preserved at: {:?}", temp_path);
 
     let dummy_book = Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("tests")

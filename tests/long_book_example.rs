@@ -30,7 +30,6 @@ fn test_output_long_book_exists() {
     assert!(output_file.exists());
 }
 
-// #[ignore = "Waiting for issue = https://github.com/lise-henry/epub-builder/issues/45"]
 #[test]
 #[serial]
 fn test_output_long_book_is_valid() {
