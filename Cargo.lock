@@ -1052,7 +1052,7 @@ dependencies = [
 
 [[package]]
 name = "mdbook-epub"
-version = "0.4.47"
+version = "0.4.48"
 dependencies = [
  "clap",
  "const_format",
