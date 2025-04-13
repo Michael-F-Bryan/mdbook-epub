@@ -25,6 +25,7 @@ fn test_remote_image_urls() {
     assert!(content.contains("<img src=\"4dbdb25800b6fa1b.jpg\" alt=\"Image\" />"));
 }
 
+#[ignore = "CI/CD only"]
 #[test]
 #[serial]
 fn test_output_remote_image_is_valid() {

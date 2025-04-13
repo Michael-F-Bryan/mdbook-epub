@@ -229,21 +229,6 @@ impl<'a> Generator<'a> {
         let mut quote_converter = QuoteConverterFilter::new(self.config.curly_quotes);
         let ch_depth = chapter_dir.components().count();
 
-        // create 'Remote Assets' copy to be processed by AssetLinkFilter
-        /*let mut remote_assets: HashMap<String, Asset> = HashMap::new();
-        for (key, value) in self.assets.clone().into_iter() {
-            trace!("{} / {:?}", key, &value);
-            if let AssetKind::Remote(ref remote_url) = value.source {
-                trace!(
-                    "Adding remote_assets = '{}' / {:?}",
-                    remote_url.to_string(),
-                    &value
-                );
-                remote_assets.insert(remote_url.to_string(), value);
-            }
-        }*/
-        // let mut asset_link_filter = AssetRemoteLinkFilter::new(&mut remote_assets, ch_depth, &*self.handler);
-        // debug!("There are = '{}' assets", self.assets.len());
         debug!("There are = {:?}", self.assets);
         let mut asset_link_filter =
             AssetRemoteLinkFilter::new(&mut self.assets, ch_depth, &*self.handler);
@@ -367,9 +352,7 @@ impl<'a> Generator<'a> {
             }
             let mt = mime_guess::from_path(&full_path).first_or_octet_stream();
 
-            let content = File::open(&full_path)
-                // .map_err(|err| Error::AssetOpen)?;
-                ?;
+            let content = File::open(&full_path)?;
             debug!(
                 "Adding resource [{}]: {:?} / {:?} ",
                 count,
@@ -406,9 +389,7 @@ impl<'a> Generator<'a> {
             }
             let mt = mime_guess::from_path(&full_path).first_or_octet_stream();
 
-            let content = File::open(&full_path)
-                // .map_err(|err| Error::AssetOpen)?;
-                ?;
+            let content = File::open(&full_path)?;
             debug!("Adding cover image: {:?} / {:?} ", path, mt.to_string());
             self.builder
                 .add_cover_image(path, content, mt.to_string())?;
@@ -439,9 +420,8 @@ impl<'a> Generator<'a> {
                     format!("Failed to find stylesheet by full path-name = {full_path_composed:?}");
                 full_path = full_path_composed.canonicalize().expect(&error);
             }
-            let mut f = File::open(&full_path).map_err(|_| Error::CssOpen(full_path.clone()))?;
-            f.read_to_end(&mut stylesheet)
-                .map_err(|_| Error::StylesheetRead)?;
+            let mut f = File::open(&full_path)?;
+            f.read_to_end(&mut stylesheet)?;
         }
         debug!("found style(s) = [{}]", stylesheet.len());
         Ok(stylesheet)

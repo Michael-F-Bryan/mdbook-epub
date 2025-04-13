@@ -40,8 +40,6 @@ pub enum Error {
     #[error("epubcheck has failed: {0}")]
     EpubCheck(String),
 
-    // #[error(transparent)]
-    // Io(#[from] std::io::Error),
     #[error(transparent)]
     AssetOutsideSrcDir(#[from] std::path::StripPrefixError),
 

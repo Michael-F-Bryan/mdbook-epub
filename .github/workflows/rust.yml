@@ -148,7 +148,7 @@ jobs:
         run: cargo build --verbose
 
       - name: Run tests
-        run: cargo test --verbose
+        run: cargo test --verbose -- --include-ignored
         env:
           EPUBCHECK_JAR: ${{ env.EPUBCHECK_JAR }}
 

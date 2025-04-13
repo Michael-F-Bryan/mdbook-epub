@@ -115,17 +115,14 @@ pub fn epub_check(path: &Path) -> Result<(), Error> {
 
         debug!("Current directory: {:?}", std::env::current_dir().unwrap());
         debug!("Epubcheck JAR path: {}", &epubcheck_path);
-        debug!(
-            "File exists: {}",
-            std::path::Path::new(&epubcheck_path).exists()
-        );
+        debug!("File exists: {}", Path::new(&epubcheck_path).exists());
 
         Command::new("java")
             .args(&["-jar", &epubcheck_path, path.to_str().unwrap()])
             .output()
     };
 
-    #[cfg(target_os = "macos")]
+    #[cfg(any(target_os = "macos"))]
     let cmd = Command::new("epubcheck").arg(path).output();
 
     match cmd {

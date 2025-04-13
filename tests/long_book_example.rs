@@ -29,6 +29,7 @@ fn test_output_long_book_exists() {
     assert!(output_file.exists());
 }
 
+#[ignore = "CI/CD only"]
 #[test]
 #[serial]
 fn test_output_long_book_is_valid() {

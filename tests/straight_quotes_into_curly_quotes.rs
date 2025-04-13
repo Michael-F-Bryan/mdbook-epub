@@ -26,6 +26,7 @@ fn test_straight_quotes_transformed_into_curly_quotes() {
     assert!(content.contains("<p>“One morning, when Gregor Samsa woke from troubled dreams, he found himself ‘transformed’ in his bed into a horrible\nvermin.”</p>"));
 }
 
+#[ignore = "CI/CD only"]
 #[test]
 #[serial]
 fn test_output_straight_quotes_is_valid() {
