@@ -36,61 +36,10 @@ impl<'a> AssetRemoteLinkFilter<'a> {
         match event {
             Event::Start(Tag::Image {
                 link_type,
-                ref dest_url,
-                ref title,
-                ref id,
-            }) => {
-                if let Some(asset) = self.assets.get_mut(&dest_url.to_string()).cloned() {
-                    debug!("Lookup Remote asset: by {}", &dest_url);
-                    if let AssetKind::Remote(ref _remote_url) = asset.source {
-                        debug!("Compare: {} vs {}", &asset.original_link, &dest_url);
-                        // Check equality of remote_url and dest_url
-                        if asset.original_link.as_str() == dest_url.as_ref() {
-                            debug!("1. Found URL '{}' by Event", &dest_url);
-                            match self.process_asset(&asset, dest_url) {
-                                Ok(new_file_name) => {
-                                    debug!(
-                                        "SUCCESSFULLY downloaded resource by URL '{}'",
-                                        &dest_url
-                                    );
-                                    let depth = self.depth;
-                                    let new = Self::compute_path_prefix(
-                                        depth,
-                                        Path::new(new_file_name.as_str()),
-                                    );
-                                    debug!(
-                                        "Create new Event for URL '{}' and new file name = {}",
-                                        &dest_url, &new
-                                    );
-                                    return Event::Start(Tag::Image {
-                                        link_type,
-                                        dest_url: CowStr::from(new),
-                                        title: title.to_owned(),
-                                        id: id.to_owned(),
-                                    });
-                                }
-                                Err(error) => {
-                                    error!(
-                                        "Can't download resource by URL '{}' for chapter '{}'. Error = {}",
-                                        &dest_url, &title, error
-                                    );
-                                }
-                            }
-                        }
-                    } else {
-                        let depth = self.depth;
-                        // local image/resource
-                        let new = Self::compute_path_prefix(depth, asset.filename.as_path());
-                        return Event::Start(Tag::Image {
-                            link_type,
-                            dest_url: CowStr::from(new),
-                            title: title.to_owned(),
-                            id: id.to_owned(),
-                        });
-                    }
-                }
-                event
-            }
+                dest_url,
+                title,
+                id,
+            }) => self.handle_image_tag(link_type, dest_url, title, id),
             Event::Html(ref html) | Event::InlineHtml(ref html) => {
                 let mut found_links = Vec::new();
                 if let Ok(dom) = Dom::parse(&html.clone().into_string()) {
@@ -172,9 +121,75 @@ impl<'a> AssetRemoteLinkFilter<'a> {
                     Event::Html(CowStr::from(content))
                 }
             }
-            // Event::InlineHtml(ref html) => {}
             _ => event,
         }
+    }
+
+    fn handle_image_tag(
+        &mut self,
+        link_type: pulldown_cmark::LinkType,
+        dest_url: CowStr<'a>,
+        title: CowStr<'a>,
+        id: CowStr<'a>,
+    ) -> Event<'a> {
+        let url_str = dest_url.as_ref(); // var shadowing
+        if let Some(asset) = self.assets.get_mut(&url_str.to_string()).cloned() {
+            debug!("Lookup Remote asset: by {}", &url_str);
+            match asset.source {
+                AssetKind::Remote(_) => {
+                    debug!("Compare: {} vs {}", &asset.original_link, &url_str);
+                    // Check equality of remote_url and dest_url
+                    if asset.original_link.as_str() == url_str {
+                        debug!("1. Found URL '{}' by Event", &url_str);
+                        match self.process_asset(&asset, url_str) {
+                            Ok(new_file_name) => {
+                                debug!("SUCCESSFULLY downloaded resource by URL '{}'", &url_str);
+                                let depth = self.depth;
+                                let new = Self::compute_path_prefix(
+                                    depth,
+                                    Path::new(new_file_name.as_str()),
+                                );
+                                debug!(
+                                    "Create new Event for URL '{}' and new file name = {}",
+                                    &url_str, &new
+                                );
+                                return Event::Start(Tag::Image {
+                                    link_type,
+                                    dest_url: CowStr::from(new),
+                                    title: title.to_owned(),
+                                    id: id.to_owned(),
+                                });
+                            }
+                            Err(error) => {
+                                error!(
+                                    "Can't download resource by URL '{}' for chapter '{}'. Error = {}",
+                                    &url_str, &title, error
+                                );
+                            }
+                        }
+                    }
+                }
+                AssetKind::Local(_) => {
+                    let depth = self.depth;
+                    // local image/resource
+                    let new = Self::compute_path_prefix(depth, asset.filename.as_path());
+                    return Event::Start(Tag::Image {
+                        link_type,
+                        dest_url: CowStr::from(new),
+                        title: title.to_owned(),
+                        id: id.to_owned(),
+                    });
+                }
+            }
+        } else {
+            error!("No asset found by URL: '{}'", url_str);
+        }
+        Event::Start(Tag::Image {
+            link_type,
+            dest_url,
+            title,
+            id,
+        })
     }
 
     fn compute_path_prefix(depth: usize, path: &Path) -> String {

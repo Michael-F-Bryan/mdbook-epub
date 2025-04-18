@@ -157,17 +157,12 @@ impl<'a> FootnoteFilter<'a> {
                         Event::Start(Tag::FootnoteDefinition(current_name)) => {
                             name = current_name;
                             has_written_backrefs = false;
-                            // Event::Html(format!(r##"<li id="fn-{name}">"##).into())
                             Event::Html(format!(r##"<div class="footnote-definition" id="fn-{name}" epub:type="footnote">"##).into())
                         }
                         Event::End(TagEnd::FootnoteDefinition) | Event::End(TagEnd::Paragraph)
                             if !has_written_backrefs && i >= fl_len - 2 =>
                         {
                             let usage_count = self.footnote_numbers.get(&name).unwrap().1;
-                            /*let mut end = String::with_capacity(
-                                name.len()
-                                    + (r##" <a href="#fr--1">↩</a></li>"##.len() * usage_count),
-                            );*/
                             let mut end = String::with_capacity(
                                 name.len() + (r##" <a href="#fr--1">↩</a></div>"##.len() * usage_count),
                             );
@@ -185,14 +180,12 @@ impl<'a> FootnoteFilter<'a> {
                             }
                             has_written_backrefs = true;
                             if internal_event == Event::End(TagEnd::FootnoteDefinition) {
-                                // end.push_str("</li>\n");
                                 end.push_str("</div>\n");
                             } else {
                                 end.push_str("</p>\n");
                             }
                             Event::Html(end.into())
                         }
-                        // Event::End(TagEnd::FootnoteDefinition) => Event::Html("</li>\n".into()),
                         Event::End(TagEnd::FootnoteDefinition) => Event::Html("</div>\n".into()),
                         Event::FootnoteReference(_) => unreachable!("converted to HTML earlier"),
                         f => f,
