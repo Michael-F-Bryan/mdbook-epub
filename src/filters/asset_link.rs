@@ -65,10 +65,8 @@ impl<'a> AssetRemoteLinkFilter<'a> {
                             Ok(new_file_name) => {
                                 debug!("SUCCESSFULLY downloaded resource by URL '{}'", &url_str);
                                 let depth = self.depth;
-                                let new = Self::compute_path_prefix(
-                                    depth,
-                                    Path::new(new_file_name.as_str()),
-                                );
+                                let new =
+                                    compute_path_prefix(depth, Path::new(new_file_name.as_str()));
                                 debug!(
                                     "Create new Event for URL '{}' and new file name = {}",
                                     &url_str, &new
@@ -92,7 +90,7 @@ impl<'a> AssetRemoteLinkFilter<'a> {
                 AssetKind::Local(_) => {
                     let depth = self.depth;
                     // local image/resource
-                    let new = Self::compute_path_prefix(depth, asset.filename.as_path());
+                    let new = compute_path_prefix(depth, asset.filename.as_path());
                     return Event::Start(Tag::Image {
                         link_type,
                         dest_url: CowStr::from(new),
@@ -167,12 +165,12 @@ impl<'a> AssetRemoteLinkFilter<'a> {
             for original_link in found_links {
                 // let encoded_link_key = encode_non_ascii_symbols(&original_link);
                 debug!("original_link = '{}'", &original_link);
-                debug!("1. assets\n'{:?}'", &self.assets);
+                trace!("1. assets\n'{:?}'", &self.assets);
 
                 if let Some(asset) = self.assets.get(&original_link) {
                     // let new = self.path_prefix(asset.filename.as_path());
                     let depth = self.depth;
-                    let new = Self::compute_path_prefix(depth, asset.filename.as_path());
+                    let new = compute_path_prefix(depth, asset.filename.as_path());
 
                     trace!("old content before replacement\n{}", &content);
                     trace!(
@@ -189,24 +187,6 @@ impl<'a> AssetRemoteLinkFilter<'a> {
             }
             Event::Html(CowStr::from(content))
         }
-    }
-
-    fn compute_path_prefix(depth: usize, path: &Path) -> String {
-        let mut fsp = OsString::new();
-        for (i, component) in path.components().enumerate() {
-            if i > 0 {
-                fsp.push("/");
-            }
-            fsp.push(component);
-        }
-        let filename = fsp
-            .into_string()
-            .unwrap_or_else(|orig| orig.to_string_lossy().to_string());
-        (0..depth)
-            .map(|_| "..")
-            .chain(iter::once(filename.as_str()))
-            .collect::<Vec<_>>()
-            .join("/")
     }
 
     fn process_asset(
@@ -227,5 +207,118 @@ impl<'a> AssetRemoteLinkFilter<'a> {
             }
             Err(error) => Err(error),
         }
+    }
+}
+
+fn compute_path_prefix(depth: usize, path: &Path) -> String {
+    let mut fsp = OsString::new();
+    let mut first_component = true;
+
+    for component in path.components() {
+        // Skip root directory component for absolute paths
+        if matches!(component, std::path::Component::RootDir) {
+            continue;
+        }
+
+        // Add separator "/" between components (but not before the first one)
+        if !first_component {
+            fsp.push("/");
+        }
+
+        fsp.push(component);
+        first_component = false;
+    }
+
+    let filename = fsp
+        .into_string()
+        .unwrap_or_else(|orig| orig.to_string_lossy().to_string());
+
+    (0..depth)
+        .map(|_| "..")
+        .chain(iter::once(filename.as_str()))
+        .collect::<Vec<_>>()
+        .join("/")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::path::Path;
+
+    #[test]
+    fn test_compute_path_prefix_zero_depth() {
+        let path = Path::new("file.txt");
+        assert_eq!(compute_path_prefix(0, path), "file.txt");
+
+        let path = Path::new("dir/file.txt");
+        assert_eq!(compute_path_prefix(0, path), "dir/file.txt");
+    }
+
+    #[test]
+    fn test_compute_path_prefix_with_depth() {
+        let path = Path::new("file.txt");
+        assert_eq!(compute_path_prefix(1, path), "../file.txt");
+        assert_eq!(compute_path_prefix(2, path), "../../file.txt");
+        assert_eq!(compute_path_prefix(3, path), "../../../file.txt");
+    }
+
+    #[test]
+    fn test_compute_path_prefix_with_complex_path() {
+        let path = Path::new("dir1/dir2/file.txt");
+        assert_eq!(compute_path_prefix(1, path), "../dir1/dir2/file.txt");
+        assert_eq!(compute_path_prefix(2, path), "../../dir1/dir2/file.txt");
+    }
+
+    #[test]
+    fn test_compute_path_prefix_with_absolute_path() {
+        let path = Path::new("/dir1/dir2/file.txt");
+        assert_eq!(compute_path_prefix(1, path), "../dir1/dir2/file.txt");
+        assert_eq!(compute_path_prefix(2, path), "../../dir1/dir2/file.txt");
+    }
+
+    #[test]
+    fn test_compute_path_prefix_with_empty_path() {
+        let path = Path::new("");
+        assert_eq!(compute_path_prefix(1, path), "../");
+        assert_eq!(compute_path_prefix(2, path), "../../");
+    }
+
+    #[test]
+    fn test_compute_path_prefix_with_unicode() {
+        let path = Path::new("директория/файл.txt");
+        assert_eq!(compute_path_prefix(1, path), "../директория/файл.txt");
+        assert_eq!(compute_path_prefix(2, path), "../../директория/файл.txt");
+    }
+
+    #[test]
+    fn test_compute_path_prefix_with_spaces() {
+        let path = Path::new("my documents/important file.txt");
+        assert_eq!(
+            compute_path_prefix(1, path),
+            "../my documents/important file.txt"
+        );
+    }
+
+    #[test]
+    fn test_compute_path_prefix_large_depth() {
+        let path = Path::new("file.txt");
+        let expected = "../../../../../file.txt";
+        assert_eq!(compute_path_prefix(5, path), expected);
+    }
+
+    #[test]
+    fn test_compute_path_prefix_root_only() {
+        let path = Path::new("/");
+        assert_eq!(compute_path_prefix(1, path), "../");
+        assert_eq!(compute_path_prefix(2, path), "../../");
+    }
+
+    #[test]
+    fn test_compute_path_prefix_dot_paths() {
+        let path = Path::new("./file.txt");
+        assert_eq!(compute_path_prefix(1, path), ".././file.txt");
+
+        let path = Path::new("../file.txt");
+        assert_eq!(compute_path_prefix(1, path), "../../file.txt");
     }
 }
