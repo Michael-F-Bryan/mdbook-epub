@@ -71,7 +71,6 @@ pub(crate) fn find(ctx: &RenderContext) -> Result<HashMap<String, Asset>, Error>
                             let relative = asset.location_on_disk.strip_prefix(&src_dir);
                             match relative {
                                 Ok(_relative_link_path) => {
-                                    // let link_key: String = String::from(relative_link_path.to_str().unwrap());
                                     let link_key = asset.original_link.clone();
                                     if let std::collections::hash_map::Entry::Vacant(e) =
                                         assets.entry(link_key.to_owned())
@@ -97,7 +96,6 @@ pub(crate) fn find(ctx: &RenderContext) -> Result<HashMap<String, Asset>, Error>
                         }
                         AssetKind::Remote(_) => {
                             // remote asset kind
-                            // let link_key: String =                                 String::from(asset.location_on_disk.to_str().unwrap());
                             let link_key = asset.original_link.clone();
                             debug!("Adding Remote asset by link '{}' : {}", link_key, &asset);
                             assets.insert(link_key, asset);

@@ -204,12 +204,7 @@ impl Display for Asset {
         write!(
             f,
             "Asset {{\n\toriginal_link: {},\n\tlocation_on_disk: {:?},\n\tfilename: {:?},\n\tmimetype: {},\n\tkind: {} }}",
-            // "Asset {{\n\tlocation_on_disk: {:?},\n\tfilename: {:?},\n\tmimetype: {},\n\tkind: {} }}",
-            self.original_link,
-            self.location_on_disk,
-            self.filename,
-            self.mimetype,
-            self.source
+            self.original_link, self.location_on_disk, self.filename, self.mimetype, self.source
         )
     }
 }
