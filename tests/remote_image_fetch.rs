@@ -21,13 +21,14 @@ fn test_remote_image_urls() {
     let file = doc.0.get_resource_str_by_path(path);
     let content = file.unwrap();
     debug!("content =\n{:?}", content);
-    assert!(content.contains("<img src=\"b270cb6837d41f98.png\" alt=\"Not found asset\" />"));
-    assert!(content.contains("<img src=\"4dbdb25800b6fa1b.5601829602557622811\" alt=\"Image\" />"));
+    assert!(content.contains("<img src=\"b270cb6837d41f98.png\" alt=\"Image\" />"));
+    assert!(content.contains("<img src=\"4dbdb25800b6fa1b.jpg\" alt=\"Image\" />"));
 }
 
-#[ignore = "Waiting for issue = https://github.com/lise-henry/epub-builder/issues/45"]
+#[ignore = "CI/CD only"]
 #[test]
 #[serial]
-fn test_output_epub_is_valid() {
+fn test_output_remote_image_is_valid() {
     output_epub_is_valid("remote_image_fetch");
+    // common::epub::output_epub_is_valid_preserve_temp_folder("remote_image_fetch");
 }

@@ -3,9 +3,12 @@ use crate::resources::resource::{
     UPPER_FOLDER_PATHS, UPPER_PARENT, UPPER_PARENT_LINUX, UPPER_PARENT_STARTS_SLASH,
     UPPER_PARENT_STARTS_SLASH_LINUX,
 };
+use crate::resources::retrieve::UpdatedAssetData;
 use crate::utils;
 use mime_guess::Mime;
-use std::path::{Path, PathBuf, MAIN_SEPARATOR_STR};
+use std::fmt::{Display, Formatter};
+use std::hash::Hash;
+use std::path::{MAIN_SEPARATOR_STR, Path, PathBuf};
 use url::Url;
 
 /// The type of asset, remote or local
@@ -17,6 +20,8 @@ pub(crate) enum AssetKind {
 
 #[derive(Clone, PartialEq, Debug)]
 pub(crate) struct Asset {
+    /// The asset's original raw link from source
+    pub(crate) original_link: String,
     /// The asset's absolute location on disk.
     pub(crate) location_on_disk: PathBuf,
     /// The local asset's filename relative to the `src/` or `src/assets` directory.
@@ -28,8 +33,14 @@ pub(crate) struct Asset {
 }
 
 impl Asset {
-    pub(crate) fn new<P, Q, K>(filename: P, absolute_location: Q, source: K) -> Self
+    pub(crate) fn new<H, P, Q, K>(
+        original_link: H,
+        filename: P,
+        absolute_location: Q,
+        source: K,
+    ) -> Self
     where
+        H: Hash + ToString,
         P: Into<PathBuf>,
         Q: Into<PathBuf>,
         K: Into<AssetKind>,
@@ -38,6 +49,7 @@ impl Asset {
         let mt = mime_guess::from_path(&location_on_disk).first_or_octet_stream();
         let source = source.into();
         Self {
+            original_link: original_link.to_string(),
             location_on_disk,
             filename: filename.into(),
             mimetype: mt,
@@ -45,17 +57,36 @@ impl Asset {
         }
     }
 
+    pub(crate) fn with_updated_fields(&self, updated_data: UpdatedAssetData) -> Self {
+        Asset {
+            original_link: self.original_link.clone(),
+            location_on_disk: updated_data.location_on_disk,
+            filename: updated_data.filename,
+            mimetype: updated_data.mimetype,
+            source: self.source.clone(),
+        }
+    }
+
     // Create Asset by using remote Url, destination path is used for composing path
-    pub(crate) fn from_url(url: Url, dest_dir: &Path) -> Result<Asset, Error> {
-        trace!("Extract from URL: {:#?} into folder = {:?}", url, dest_dir);
+    pub(crate) fn from_url(link_key: &str, url: Url, dest_dir: &Path) -> Result<Asset, Error> {
+        debug!("Extract from URL: {:#?} into folder = {:?}", url, dest_dir);
         let filename = utils::hash_link(&url);
         let dest_dir = utils::normalize_path(dest_dir);
         let full_filename = dest_dir.join(filename);
         // Will fetch assets to normalized path later. fs::canonicalize() only works for existed path.
         let absolute_location = utils::normalize_path(full_filename.as_path());
-        let filename = absolute_location.strip_prefix(dest_dir).unwrap();
-        let asset = Asset::new(filename, &absolute_location, AssetKind::Remote(url));
-        debug!("Created from URL: {:#?}", asset);
+        let filename = absolute_location.strip_prefix(dest_dir)?;
+        trace!(
+            "File from URL: absolute_location = {:?}",
+            &absolute_location
+        );
+        let asset = Asset::new(
+            link_key,
+            filename,
+            &absolute_location,
+            AssetKind::Remote(url),
+        );
+        debug!("Created from URL:\n{}", asset);
         Ok(asset)
     }
 
@@ -71,7 +102,7 @@ impl Asset {
         );
         let chapter_path = src_dir.join(chapter_path);
 
-        // compose file name by it's link and chapter path
+        // compose file name by its link and chapter path
         let stripped_path = Self::compute_asset_path_by_src_and_link(link, &chapter_path);
         let normalized_link = utils::normalize_path(PathBuf::from(link).as_path());
         debug!(
@@ -96,15 +127,10 @@ impl Asset {
         let filename = full_filename.strip_prefix(src_dir)?;
 
         let asset = Asset::new(
+            link,
             filename,
             &absolute_location,
             AssetKind::Local(PathBuf::from(link)),
-        );
-        trace!(
-            "[{:#?}] = {:?} : {:?}",
-            asset.source,
-            asset.filename,
-            asset.location_on_disk
         );
         debug!("Created from local: {:#?}", asset);
         Ok(asset)
@@ -128,10 +154,7 @@ impl Asset {
         }
         trace!(
             "check if parent present by '{}' = '{}' || '{}' || '{}'",
-            link_string,
-            MAIN_SEPARATOR_STR,
-            UPPER_PARENT,
-            UPPER_PARENT_STARTS_SLASH
+            link_string, MAIN_SEPARATOR_STR, UPPER_PARENT, UPPER_PARENT_STARTS_SLASH
         );
         // if link points to upper folder
         if !link_string.is_empty()
@@ -141,8 +164,8 @@ impl Asset {
                 || link_string.starts_with(UPPER_PARENT_STARTS_SLASH)
                 || link_string.starts_with(UPPER_PARENT_STARTS_SLASH_LINUX))
         {
-            reassigned_asset_root.pop(); // remove an one folder from asset's path
-                                         // make a recursive call
+            reassigned_asset_root.pop(); // remove a one folder from asset's path
+            // make a recursive call
             let new_link = Self::remove_prefixes(link_string, UPPER_FOLDER_PATHS);
             reassigned_asset_root =
                 Self::compute_asset_path_by_src_and_link(&new_link, &reassigned_asset_root);
@@ -164,5 +187,24 @@ impl Asset {
             };
         }
         stripped_link
+    }
+}
+
+impl Display for AssetKind {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            AssetKind::Remote(url) => write!(f, "Remote: '{}'", url.as_str()),
+            AssetKind::Local(path) => write!(f, "Local '{}'", path.display()),
+        }
+    }
+}
+
+impl Display for Asset {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "Asset {{\n\toriginal_link: {},\n\tlocation_on_disk: {:?},\n\tfilename: {:?},\n\tmimetype: {},\n\tkind: {} }}",
+            self.original_link, self.location_on_disk, self.filename, self.mimetype, self.source
+        )
     }
 }

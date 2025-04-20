@@ -9,7 +9,7 @@ use common::init_logging::init_logging;
 
 #[test]
 #[serial]
-fn straight_quotes_transformed_into_curly_quotes() {
+fn test_straight_quotes_transformed_into_curly_quotes() {
     init_logging();
     debug!("straight_quotes_transformed_into_curly_quotes...");
     let mut doc = generate_epub("straight_quotes_into_curly_quotes").unwrap();
@@ -26,8 +26,9 @@ fn straight_quotes_transformed_into_curly_quotes() {
     assert!(content.contains("<p>“One morning, when Gregor Samsa woke from troubled dreams, he found himself ‘transformed’ in his bed into a horrible\nvermin.”</p>"));
 }
 
+#[ignore = "CI/CD only"]
 #[test]
 #[serial]
-fn test_output_epub_is_valid() {
+fn test_output_straight_quotes_is_valid() {
     output_epub_is_valid("straight_quotes_into_curly_quotes");
 }

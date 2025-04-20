@@ -9,7 +9,7 @@ use common::init_logging::init_logging;
 
 #[test]
 #[serial]
-fn footnote_has_linked_label() {
+fn test_footnote_has_linked_label() {
     init_logging();
     debug!("footnote_has_linked_label...");
     let mut doc = generate_epub("footnote_epub3_example").unwrap();
@@ -28,7 +28,7 @@ fn footnote_has_linked_label() {
 
 #[test]
 #[serial]
-fn footnote_definition_has_backreference_link() {
+fn test_footnote_definition_has_backreference_link() {
     init_logging();
     debug!("footnote_definition_has_backreference_link...");
     let mut doc = generate_epub("footnote_epub3_example").unwrap();
@@ -47,7 +47,7 @@ fn footnote_definition_has_backreference_link() {
 
 #[test]
 #[serial]
-fn footnote_definition_label() {
+fn test_footnote_definition_label() {
     init_logging();
     debug!("footnote_definition_label...");
     let mut doc = generate_epub("footnote_epub3_example").unwrap();
@@ -66,23 +66,23 @@ fn footnote_definition_label() {
 
 #[test]
 #[serial]
-fn output_footnote_book_exists() {
+fn test_output_footnote_book_exists() {
     init_logging();
-    debug!("fn output_epub3_exists...");
+    debug!("test_output_footnote_book_exists...");
     let (ctx, _md, temp) = create_dummy_book("footnote_epub3_example").unwrap();
 
-    let output_file = mdbook_epub::output_filename(temp.path(), &ctx.config);
+    let output_file = mdbook_epub::output_filename(temp.path(), &ctx.config).unwrap();
 
     assert!(!output_file.exists());
     mdbook_epub::generate(&ctx).unwrap();
     assert!(output_file.exists());
 }
 
-#[ignore = "Waiting for issue = https://github.com/lise-henry/epub-builder/issues/45"]
+#[ignore = "CI/CD only"]
 #[test]
 #[serial]
-fn test_output_epub_is_valid() {
+fn test_output_footnote_book_is_valid() {
     init_logging();
-    debug!("output_epub_is_valid...");
+    debug!("test_output_footnote_book_is_valid...");
     output_epub_is_valid("footnote_epub3_example");
 }
