@@ -322,35 +322,6 @@ impl<'a> Generator<'a> {
             debug!("Embedding resource: {:?}", path);
 
             let full_path = self.resolve_path(path)?;
-            /*let full_path: PathBuf;
-            if let Ok(full_path_internal) = path.canonicalize() {
-                // try process by 'path only' first
-                debug!("Found resource by a path = {:?}", full_path_internal);
-                full_path = full_path_internal; // OK
-            } else {
-                debug!("Failed to find resource by path, trying to compose 'root + src + path'...");
-                // try process by using 'root + src + path'
-                let full_path_composed = self
-                    .ctx
-                    .root
-                    .join(self.ctx.config.book.src.clone())
-                    .join(path);
-                debug!("Try embed resource by a path = {:?}", full_path_composed);
-                if let Ok(full_path_src) = full_path_composed.canonicalize() {
-                    full_path = full_path_src; // OK
-                } else {
-                    // try process by using 'root + path' finally
-                    let error = format!(
-                        "Failed to find resource file by 'root + src + path' = {full_path_composed:?}"
-                    );
-                    warn!("{:?}", error);
-                    debug!("Failed to find resource, trying to compose by 'root + path' only...");
-                    let full_path_composed = self.ctx.root.join(path);
-                    full_path = full_path_composed
-                        .canonicalize()
-                        .map_err(|_| Error::ResourceNotFound(full_path_composed))?;
-                }
-            }*/
             let mt = mime_guess::from_path(&full_path).first_or_octet_stream();
 
             let content = File::open(&full_path)?;
@@ -372,22 +343,6 @@ impl<'a> Generator<'a> {
 
         if let Some(ref path) = self.config.cover_image {
             let full_path = self.resolve_path(path)?;
-            /*let full_path: PathBuf;
-            if let Ok(full_path_internal) = path.canonicalize() {
-                debug!("Found resource by a path = {:?}", full_path_internal);
-                full_path = full_path_internal;
-            } else {
-                debug!("Failed to find resource, trying to compose path...");
-                let full_path_composed = self
-                    .ctx
-                    .root
-                    .join(self.ctx.config.book.src.clone())
-                    .join(path);
-                debug!("Try cover image by a path = {:?}", full_path_composed);
-                full_path = full_path_composed
-                    .canonicalize()
-                    .map_err(|_| Error::ResourceNotFound(full_path_composed))?;
-            }*/
             let mt = mime_guess::from_path(&full_path).first_or_octet_stream();
 
             let content = File::open(&full_path)?;
@@ -410,18 +365,6 @@ impl<'a> Generator<'a> {
         for additional_css in &self.config.additional_css {
             debug!("generating stylesheet: {:?}", &additional_css);
             let full_path = self.resolve_path(additional_css)?;
-            /*let full_path: PathBuf;
-            if let Ok(full_path_internal) = additional_css.canonicalize() {
-                debug!("Found stylesheet by a path = {:?}", full_path_internal);
-                full_path = full_path_internal;
-            } else {
-                debug!("Failed to find stylesheet, trying to compose path...");
-                let full_path_composed = self.ctx.root.join(additional_css);
-                debug!("Try stylesheet by a path = {:?}", full_path_composed);
-                full_path = full_path_composed
-                    .canonicalize()
-                    .map_err(|_| Error::ResourceNotFound(full_path_composed))?;
-            }*/
             let mut f = File::open(&full_path)?;
             f.read_to_end(&mut stylesheet)?;
         }
