@@ -6,11 +6,10 @@ use std::path::PathBuf;
 use std::process;
 
 use ::env_logger;
-use ::mdbook;
 use ::serde_json;
 use clap::Parser;
-use mdbook::renderer::RenderContext;
-use mdbook::MDBook;
+use mdbook_driver::MDBook;
+use mdbook_renderer::RenderContext;
 
 use ::mdbook_epub;
 use mdbook_epub::errors::Error;
@@ -47,7 +46,9 @@ fn run(args: &Args) -> Result<(), Error> {
         debug!("EPUB book config is : {:?}", md.config);
         RenderContext::new(md.root, md.book, md.config, destination)
     } else {
-        println!("Running mdbook-epub as plugin waiting on the STDIN input. If you wanted to process the files in the current folder, use the -s flag from documentation, See: mdbook-epub --help");
+        println!(
+            "Running mdbook-epub as plugin waiting on the STDIN input. If you wanted to process the files in the current folder, use the -s flag from documentation, See: mdbook-epub --help"
+        );
         serde_json::from_reader(io::stdin()).map_err(|_| Error::RenderContext)?
     };
     debug!("calling the main code for epub creation");

@@ -10,11 +10,11 @@ extern crate serde_json;
 use std::fs::{File, create_dir_all};
 use std::path::{Path, PathBuf};
 
-use ::mdbook;
+use ::mdbook_core;
 use ::semver;
 use ::thiserror::Error;
-use mdbook::config::Config as MdConfig;
-use mdbook::renderer::RenderContext;
+use mdbook_core::config::Config as MdConfig;
+use mdbook_renderer::RenderContext;
 use semver::{Version, VersionReq};
 
 use errors::Error;
@@ -35,7 +35,7 @@ mod validation;
 pub const DEFAULT_CSS: &str = include_str!("master.css");
 
 /// The exact version of `mdbook` this crate is compiled against.
-pub const MDBOOK_VERSION: &str = mdbook::MDBOOK_VERSION;
+pub const MDBOOK_VERSION: &str = mdbook_core::MDBOOK_VERSION;
 
 /// Check that the version of `mdbook` we're called by is compatible with this
 /// backend.

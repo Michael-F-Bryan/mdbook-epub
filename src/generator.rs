@@ -10,8 +10,8 @@ use crate::validation::validate_config_epub_version;
 use crate::{Error, utils};
 use epub_builder::{EpubBuilder, EpubContent, ZipLibrary};
 use handlebars::{Handlebars, RenderError, RenderErrorReason};
-use mdbook::book::{BookItem, Chapter};
-use mdbook::renderer::RenderContext;
+use mdbook_core::book::{BookItem, Chapter};
+use mdbook_renderer::RenderContext;
 use pulldown_cmark::html;
 use std::collections::HashSet;
 use std::{
@@ -135,7 +135,7 @@ impl<'a> Generator<'a> {
         info!("3.1 Generate chapters == ");
 
         let mut added_count = 0;
-        for (idx, item) in self.ctx.book.sections.iter().enumerate() {
+        for (idx, item) in self.ctx.book.iter().enumerate() {
             let is_first = idx == 0;
             if let BookItem::Chapter(ref ch) = *item {
                 trace!("Adding chapter \"{}\"", ch);
@@ -650,7 +650,7 @@ mod tests {
         let pat = |heading, prefix| {
             format!("<h1>{heading}</h1>\n<p><img src=\"{prefix}78d88324ed4ac3bf.svg\"")
         };
-        if let BookItem::Chapter(ref ch) = ctx.book.sections[0] {
+        if let BookItem::Chapter(ref ch) = ctx.book.items[0] {
             let rendered: String = g.render_chapter(ch).unwrap();
             debug!("rendered ===\n{}", &rendered);
             assert!(rendered.contains(&pat("Chapter 1", "../")));
@@ -665,7 +665,7 @@ mod tests {
         } else {
             panic!();
         }
-        if let BookItem::Chapter(ref ch) = ctx.book.sections[1] {
+        if let BookItem::Chapter(ref ch) = ctx.book.items[1] {
             let rendered: String = g.render_chapter(ch).unwrap();
             assert!(rendered.contains(&pat("Chapter 2", "")));
         } else {
@@ -691,7 +691,7 @@ mod tests {
 
     fn ctx_with_template(content: &str, source: &str, destination: &Path) -> serde_json::Value {
         json!({
-            "version": mdbook::MDBOOK_VERSION,
+            "version": mdbook_core::MDBOOK_VERSION,
             "root": "tests/long_book_example",
             "book": {"sections": [{
                 "Chapter": {

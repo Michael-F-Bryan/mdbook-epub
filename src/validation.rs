@@ -1,7 +1,7 @@
-use crate::errors::Error;
 use crate::Config;
+use crate::errors::Error;
 use epub_builder::EpubVersion;
-use mdbook::Config as MdConfig;
+use mdbook_core::config::Config as MdConfig;
 use std::path::Path;
 
 pub(crate) fn validate_config_epub_version(
@@ -14,7 +14,7 @@ pub(crate) fn validate_config_epub_version(
             return Err(Error::EpubDocCreate(format!(
                 "Unsupported epub version specified in book.toml: {}",
                 v
-            )))
+            )));
         }
         None => None,
     };

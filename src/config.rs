@@ -1,5 +1,5 @@
 use super::Error;
-use mdbook::renderer::RenderContext;
+use mdbook_renderer::RenderContext;
 use std::path::PathBuf;
 
 pub const DEFAULT_TEMPLATE: &str = include_str!("index.hbs");
@@ -34,10 +34,8 @@ impl Config {
     /// Get the `output.epub` table from the provided `book.toml` config,
     /// falling back to the default if
     pub fn from_render_context(ctx: &RenderContext) -> Result<Config, Error> {
-        match ctx.config.get("output.epub") {
-            Some(table) => {
-                let mut cfg: Config = table.clone().try_into()?;
-
+        match ctx.config.get::<Config>("output.epub")? {
+            Some(mut cfg) => {
                 // make sure we update the `index_template` to make it relative
                 // to the book root
                 if let Some(template_file) = cfg.index_template.take() {
@@ -100,7 +98,7 @@ mod tests {
 
     fn ctx_with_template(source: &str, destination: &Path) -> serde_json::Value {
         json!({
-            "version": mdbook::MDBOOK_VERSION,
+            "version": mdbook_core::MDBOOK_VERSION,
             "root": "tests/long_book_example",
             "book": {"sections": [], "__non_exhaustive": null},
             "config": {
