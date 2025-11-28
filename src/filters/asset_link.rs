@@ -6,7 +6,7 @@ use pulldown_cmark::{CowStr, Event, Tag};
 use std::collections::HashMap;
 use std::ffi::OsString;
 use std::iter;
-use std::path::Path;
+use std::path::{Component, Path};
 use url::Url;
 
 /// Filter is used for replacing remote urls with local images downloaded from internet
@@ -54,7 +54,7 @@ impl<'a> AssetRemoteLinkFilter<'a> {
     ) -> Event<'a> {
         let url_str = dest_url.as_ref(); // var shadowing
         if let Some(asset) = self.assets.get_mut(&url_str.to_string()).cloned() {
-            debug!("Lookup Remote asset: by {}", &url_str);
+            debug!("Lookup for asset: by {}", &url_str);
             match asset.source {
                 AssetKind::Remote(_) => {
                     debug!("Compare: {} vs {}", &asset.original_link, &url_str);
@@ -88,12 +88,11 @@ impl<'a> AssetRemoteLinkFilter<'a> {
                     }
                 }
                 AssetKind::Local(_) => {
-                    let depth = self.depth;
                     // local image/resource
-                    let new = compute_path_prefix(depth, asset.filename.as_path());
+                    // left dest_url as is from MD
                     return Event::Start(Tag::Image {
                         link_type,
-                        dest_url: CowStr::from(new),
+                        dest_url: CowStr::from(asset.original_link),
                         title: title.to_owned(),
                         id: id.to_owned(),
                     });
@@ -163,7 +162,6 @@ impl<'a> AssetRemoteLinkFilter<'a> {
             let mut content = html.clone().into_string();
             debug!("3. found_links\n'{:?}'", &found_links);
             for original_link in found_links {
-                // let encoded_link_key = encode_non_ascii_symbols(&original_link);
                 debug!("original_link = '{}'", &original_link);
                 trace!("1. assets\n'{:?}'", &self.assets);
 
@@ -212,38 +210,80 @@ impl<'a> AssetRemoteLinkFilter<'a> {
 
 fn compute_path_prefix(depth: usize, path: &Path) -> String {
     let mut fsp = OsString::new();
-    let mut first_component = true;
 
-    for component in path.components() {
-        // Skip root directory component for absolute paths
-        if matches!(component, std::path::Component::RootDir) {
-            continue;
+    if path.starts_with("..") {
+        for (i, component) in path.components().enumerate() {
+            if i > 0 {
+                fsp.push("/");
+            }
+            fsp.push(component);
         }
+    } else {
+        let mut first_component = true;
+        for component in path.components() {
+            // Skip root directory component for absolute paths
+            if matches!(component, std::path::Component::RootDir) {
+                continue;
+            }
+            // Add separator "/" between components (but not before the first one)
+            if !first_component {
+                fsp.push("/");
+            }
 
-        // Add separator "/" between components (but not before the first one)
-        if !first_component {
-            fsp.push("/");
+            fsp.push(component);
+            first_component = false;
         }
-
-        fsp.push(component);
-        first_component = false;
     }
 
     let filename = fsp
         .into_string()
         .unwrap_or_else(|orig| orig.to_string_lossy().to_string());
 
-    (0..depth)
-        .map(|_| "..")
-        .chain(iter::once(filename.as_str()))
-        .collect::<Vec<_>>()
-        .join("/")
+    if has_no_prefix_in_name(filename.as_str()) {
+        filename
+    } else {
+        (0..depth)
+            .map(|_| "..")
+            .chain(iter::once(filename.as_str()))
+            .collect::<Vec<_>>()
+            .join("/")
+    }
+}
+
+fn has_no_prefix_in_name(path: &str) -> bool {
+    let path = Path::new(path);
+    let mut components = path.components();
+    match components.next() {
+        Some(Component::Normal(_)) => {
+            // Если это первый и единственный компонент - это просто имя файла
+            components.next().is_none()
+        }
+        _ => false, // Есть префиксы (ParentDir, RootDir, CurDir, Prefix и т.д.)
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use std::path::Path;
+
+    #[test]
+    fn test_has_prefix_in_file_name_linux() {
+        assert!(!has_no_prefix_in_name("../../../dir/file.txt")); // prefixes
+        assert!(has_no_prefix_in_name("file.txt")); // no prefixes
+        assert!(!has_no_prefix_in_name("./file.txt")); // prefix
+        assert!(!has_no_prefix_in_name("/file.txt")); // absolute path
+    }
+
+    #[test]
+    #[cfg(target_os = "windows")]
+    fn test_has_prefix_in_file_name_windows() {
+        assert!(!has_no_prefix_in_name("..\\..\\..\\dir\\file.txt")); // prefixes
+        assert!(has_no_prefix_in_name("file.txt")); // no prefixes
+        assert!(!has_no_prefix_in_name("C:\\Users\\file.txt")); // prefixes (Windows)
+        assert!(!has_no_prefix_in_name(".\\file.txt")); // prefix
+        assert!(!has_no_prefix_in_name("\\file.txt")); // absolute path
+    }
 
     #[test]
     fn test_compute_path_prefix_zero_depth() {
@@ -257,9 +297,10 @@ mod tests {
     #[test]
     fn test_compute_path_prefix_with_depth() {
         let path = Path::new("file.txt");
-        assert_eq!(compute_path_prefix(1, path), "../file.txt");
-        assert_eq!(compute_path_prefix(2, path), "../../file.txt");
-        assert_eq!(compute_path_prefix(3, path), "../../../file.txt");
+        assert_eq!(compute_path_prefix(0, path), "file.txt");
+        assert_eq!(compute_path_prefix(1, path), "file.txt");
+        assert_eq!(compute_path_prefix(2, path), "file.txt");
+        assert_eq!(compute_path_prefix(3, path), "file.txt");
     }
 
     #[test]
@@ -301,8 +342,8 @@ mod tests {
 
     #[test]
     fn test_compute_path_prefix_large_depth() {
-        let path = Path::new("file.txt");
-        let expected = "../../../../../file.txt";
+        let path = Path::new("../file.txt");
+        let expected = "../../../../../../file.txt";
         assert_eq!(compute_path_prefix(5, path), expected);
     }
 
