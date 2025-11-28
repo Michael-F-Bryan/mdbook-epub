@@ -90,7 +90,7 @@ additional-resources = ["./assets/Open-Sans-Regular.ttf"]
 no-section-label = true
 curly-quotes = true
 epub-version = 3
-footnote-backrefs = true
+footnote-backrefs = true # epub-version should be = 3
 ```
 
 ## Logging, seeing progress
