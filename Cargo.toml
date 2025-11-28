@@ -10,7 +10,7 @@ documentation = "https://docs.rs/mdbook-epub"
 keywords = ["epub", "mdbook", "documentation", "markdown"]
 categories = ["command-line-interface", "development-tools"]
 edition = "2024"
-rust-version = "1.85"
+rust-version = "1.91.1"
 
 [package.metadata.release]
 sign-commit = true
