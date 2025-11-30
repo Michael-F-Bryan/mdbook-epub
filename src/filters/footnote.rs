@@ -89,7 +89,7 @@ impl<'a> FootnoteFilter<'a> {
             _ => unreachable!(),
         });
     }
-    pub(crate) fn get_events(&self) -> impl Iterator<Item = Event> {
+    pub(crate) fn get_events(&self) -> impl Iterator<Item = Event<'_>> {
         self.footnotes
             .clone()
             .into_iter()
@@ -200,7 +200,7 @@ mod tests {
     use super::*;
     use pulldown_cmark::{Event, Options, Parser, Tag, TagEnd};
 
-    fn parse_markdown_with_footnotes(input: &str) -> Vec<Event> {
+    fn parse_markdown_with_footnotes(input: &str) -> Vec<Event<'_>> {
         let mut footnote_filter = FootnoteFilter::new(true);
         Parser::new_ext(input, Options::ENABLE_FOOTNOTES)
             .filter_map(|event| footnote_filter.apply(event))

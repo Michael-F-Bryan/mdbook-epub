@@ -14,6 +14,7 @@ use mdbook::book::{BookItem, Chapter};
 use mdbook::renderer::RenderContext;
 use pulldown_cmark::html;
 use std::collections::HashSet;
+use std::path::Path;
 use std::{
     collections::HashMap,
     fmt::{self, Debug, Formatter},
@@ -320,36 +321,7 @@ impl<'a> Generator<'a> {
         for path in self.config.additional_resources.iter() {
             debug!("Embedding resource: {:?}", path);
 
-            let full_path: PathBuf;
-            if let Ok(full_path_internal) = path.canonicalize() {
-                // try process by 'path only' first
-                debug!("Found resource by a path = {:?}", full_path_internal);
-                full_path = full_path_internal; // OK
-            } else {
-                debug!("Failed to find resource by path, trying to compose 'root + src + path'...");
-                // try process by using 'root + src + path'
-                let full_path_composed = self
-                    .ctx
-                    .root
-                    .join(self.ctx.config.book.src.clone())
-                    .join(path);
-                debug!("Try embed resource by a path = {:?}", full_path_composed);
-                if let Ok(full_path_src) = full_path_composed.canonicalize() {
-                    full_path = full_path_src; // OK
-                } else {
-                    // try process by using 'root + path' finally
-                    let mut error = format!(
-                        "Failed to find resource file by 'root + src + path' = {full_path_composed:?}"
-                    );
-                    warn!("{:?}", error);
-                    debug!("Failed to find resource, trying to compose by 'root + path' only...");
-                    let full_path_composed = self.ctx.root.join(path);
-                    error = format!(
-                        "Failed to find resource file by a root + path = {full_path_composed:?}"
-                    );
-                    full_path = full_path_composed.canonicalize().expect(&error);
-                }
-            }
+            let full_path = self.resolve_path(path)?;
             let mt = mime_guess::from_path(&full_path).first_or_octet_stream();
 
             let content = File::open(&full_path)?;
@@ -370,23 +342,7 @@ impl<'a> Generator<'a> {
         info!("4. Adding cover image ==");
 
         if let Some(ref path) = self.config.cover_image {
-            let full_path: PathBuf;
-            if let Ok(full_path_internal) = path.canonicalize() {
-                debug!("Found resource by a path = {:?}", full_path_internal);
-                full_path = full_path_internal;
-            } else {
-                debug!("Failed to find resource, trying to compose path...");
-                let full_path_composed = self
-                    .ctx
-                    .root
-                    .join(self.ctx.config.book.src.clone())
-                    .join(path);
-                debug!("Try cover image by a path = {:?}", full_path_composed);
-                let error = format!(
-                    "Failed to find cover image by full path-name = {full_path_composed:?}"
-                );
-                full_path = full_path_composed.canonicalize().expect(&error);
-            }
+            let full_path = self.resolve_path(path)?;
             let mt = mime_guess::from_path(&full_path).first_or_octet_stream();
 
             let content = File::open(&full_path)?;
@@ -408,23 +364,32 @@ impl<'a> Generator<'a> {
 
         for additional_css in &self.config.additional_css {
             debug!("generating stylesheet: {:?}", &additional_css);
-            let full_path: PathBuf;
-            if let Ok(full_path_internal) = additional_css.canonicalize() {
-                debug!("Found stylesheet by a path = {:?}", full_path_internal);
-                full_path = full_path_internal;
-            } else {
-                debug!("Failed to find stylesheet, trying to compose path...");
-                let full_path_composed = self.ctx.root.join(additional_css);
-                debug!("Try stylesheet by a path = {:?}", full_path_composed);
-                let error =
-                    format!("Failed to find stylesheet by full path-name = {full_path_composed:?}");
-                full_path = full_path_composed.canonicalize().expect(&error);
-            }
+            let full_path = self.resolve_path(additional_css)?;
             let mut f = File::open(&full_path)?;
             f.read_to_end(&mut stylesheet)?;
         }
         debug!("found style(s) = [{}]", stylesheet.len());
         Ok(stylesheet)
+    }
+
+    fn resolve_path(&self, path: &Path) -> Result<PathBuf, Error> {
+        // Try direct canonicalization first
+        if let Ok(resolved) = path.canonicalize() {
+            return Ok(resolved);
+        }
+
+        // Try with book source directory
+        let with_src = self.ctx.root.join(&self.ctx.config.book.src).join(path);
+
+        if let Ok(resolved) = with_src.canonicalize() {
+            return Ok(resolved);
+        }
+
+        // Try with root directory
+        let with_root = self.ctx.root.join(path);
+        with_root
+            .canonicalize()
+            .map_err(|_| Error::ResourceNotFound(path.to_path_buf()))
     }
 }
 
@@ -603,7 +568,7 @@ mod tests {
     #[test]
     fn test_render_remote_assets_in_sub_chapter() {
         init_logging();
-        let link = "https://www.svgrepo.com/show/327768/finger-print.svg";
+        let link = "https://upload.wikimedia.org/wikipedia/commons/4/4e/Open_Source_Initiative_keyhole.svg";
         let tmp_dir = TempDir::new().unwrap();
         let dest_dir = tmp_dir.path().join("mdbook-epub");
         let ch1_1 = json!({
@@ -648,16 +613,16 @@ mod tests {
         assert_eq!(g.assets.len(), 1);
 
         let pat = |heading, prefix| {
-            format!("<h1>{heading}</h1>\n<p><img src=\"{prefix}78d88324ed4ac3bf.svg\"")
+            format!("<h1>{heading}</h1>\n<p><img src=\"{prefix}e3825a3756080f55.svg\"")
         };
         if let BookItem::Chapter(ref ch) = ctx.book.sections[0] {
             let rendered: String = g.render_chapter(ch).unwrap();
-            debug!("rendered ===\n{}", &rendered);
+            debug!("1. rendered ===\n{}", &rendered);
             assert!(rendered.contains(&pat("Chapter 1", "../")));
 
             if let BookItem::Chapter(ref sub_ch) = ch.sub_items[0] {
                 let sub_rendered = g.render_chapter(sub_ch).unwrap();
-                debug!("rendered ===\n{}", &sub_rendered);
+                debug!("2. rendered ===\n{}", &sub_rendered);
                 assert!(sub_rendered.contains(&pat("Subchapter", "../")));
             } else {
                 panic!();

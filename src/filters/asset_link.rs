@@ -6,7 +6,7 @@ use pulldown_cmark::{CowStr, Event, Tag};
 use std::collections::HashMap;
 use std::ffi::OsString;
 use std::iter;
-use std::path::Path;
+use std::path::{Component, Path};
 use url::Url;
 
 /// Filter is used for replacing remote urls with local images downloaded from internet
@@ -54,7 +54,7 @@ impl<'a> AssetRemoteLinkFilter<'a> {
     ) -> Event<'a> {
         let url_str = dest_url.as_ref(); // var shadowing
         if let Some(asset) = self.assets.get_mut(&url_str.to_string()).cloned() {
-            debug!("Lookup Remote asset: by {}", &url_str);
+            debug!("Lookup for asset: by {}", &url_str);
             match asset.source {
                 AssetKind::Remote(_) => {
                     debug!("Compare: {} vs {}", &asset.original_link, &url_str);
@@ -65,8 +65,11 @@ impl<'a> AssetRemoteLinkFilter<'a> {
                             Ok(new_file_name) => {
                                 debug!("SUCCESSFULLY downloaded resource by URL '{}'", &url_str);
                                 let depth = self.depth;
-                                let new =
-                                    compute_path_prefix(depth, Path::new(new_file_name.as_str()));
+                                let new = compute_path_prefix(
+                                    depth,
+                                    Path::new(new_file_name.as_str()),
+                                    Some(&asset),
+                                );
                                 debug!(
                                     "Create new Event for URL '{}' and new file name = {}",
                                     &url_str, &new
@@ -88,12 +91,11 @@ impl<'a> AssetRemoteLinkFilter<'a> {
                     }
                 }
                 AssetKind::Local(_) => {
-                    let depth = self.depth;
                     // local image/resource
-                    let new = compute_path_prefix(depth, asset.filename.as_path());
+                    // left dest_url as is from MD
                     return Event::Start(Tag::Image {
                         link_type,
-                        dest_url: CowStr::from(new),
+                        dest_url: CowStr::from(asset.original_link),
                         title: title.to_owned(),
                         id: id.to_owned(),
                     });
@@ -116,39 +118,36 @@ impl<'a> AssetRemoteLinkFilter<'a> {
             for item in dom.children {
                 match item {
                     Node::Element(ref element) if element.name == "img" => {
-                        if let Some(dest_url) = &element.attributes["src"] {
-                            if Url::parse(dest_url).is_ok() {
-                                debug!("Found a valid remote img src:\"{}\".", dest_url);
-                                if let Some(asset) = self.assets.get_mut(dest_url).cloned() {
-                                    debug!("Lookup Remote asset: by {}", &dest_url);
-                                    if let AssetKind::Remote(ref _remote_url) = asset.source {
-                                        debug!(
-                                            "Compare: {} vs {}",
-                                            &asset.original_link, &dest_url
-                                        );
-                                        // Check equality of remote_url and dest_url
-                                        if asset.original_link.as_str() == dest_url.as_str() {
-                                            debug!("1. Found URL '{}' by Event", &dest_url);
-                                            match self.process_asset(&asset, dest_url) {
-                                                Ok(_) => {
-                                                    debug!(
-                                                        "SUCCESSFULLY downloaded resource by URL '{}'",
-                                                        &dest_url
-                                                    );
-                                                }
-                                                Err(error) => {
-                                                    error!(
-                                                        "Can't download resource by URL '{}'. Error = {}",
-                                                        &dest_url, error
-                                                    );
-                                                }
+                        if let Some(dest_url) = &element.attributes["src"]
+                            && Url::parse(dest_url).is_ok()
+                        {
+                            debug!("Found a valid remote img src:\"{}\".", dest_url);
+                            if let Some(asset) = self.assets.get_mut(dest_url).cloned() {
+                                debug!("Lookup Remote asset: by {}", &dest_url);
+                                if let AssetKind::Remote(ref _remote_url) = asset.source {
+                                    debug!("Compare: {} vs {}", &asset.original_link, &dest_url);
+                                    // Check equality of remote_url and dest_url
+                                    if asset.original_link.as_str() == dest_url.as_str() {
+                                        debug!("1. Found URL '{}' by Event", &dest_url);
+                                        match self.process_asset(&asset, dest_url) {
+                                            Ok(_) => {
+                                                debug!(
+                                                    "SUCCESSFULLY downloaded resource by URL '{}'",
+                                                    &dest_url
+                                                );
+                                            }
+                                            Err(error) => {
+                                                error!(
+                                                    "Can't download resource by URL '{}'. Error = {}",
+                                                    &dest_url, error
+                                                );
                                             }
                                         }
                                     }
                                 }
-
-                                found_links.push(dest_url.clone());
                             }
+
+                            found_links.push(dest_url.clone());
                         }
                     }
                     _ => {}
@@ -163,14 +162,13 @@ impl<'a> AssetRemoteLinkFilter<'a> {
             let mut content = html.clone().into_string();
             debug!("3. found_links\n'{:?}'", &found_links);
             for original_link in found_links {
-                // let encoded_link_key = encode_non_ascii_symbols(&original_link);
                 debug!("original_link = '{}'", &original_link);
                 trace!("1. assets\n'{:?}'", &self.assets);
 
                 if let Some(asset) = self.assets.get(&original_link) {
                     // let new = self.path_prefix(asset.filename.as_path());
                     let depth = self.depth;
-                    let new = compute_path_prefix(depth, asset.filename.as_path());
+                    let new = compute_path_prefix(depth, asset.filename.as_path(), Some(asset));
 
                     trace!("old content before replacement\n{}", &content);
                     trace!(
@@ -210,34 +208,62 @@ impl<'a> AssetRemoteLinkFilter<'a> {
     }
 }
 
-fn compute_path_prefix(depth: usize, path: &Path) -> String {
+// Important code for correct computation of resource source on local file system.
+// depth - how deep is folder's inclusion level
+// path - current path to resource to be analysed
+// asset - we need only true/false value (currently None/Some)
+fn compute_path_prefix(depth: usize, path: &Path, asset: Option<&Asset>) -> String {
     let mut fsp = OsString::new();
-    let mut first_component = true;
 
-    for component in path.components() {
-        // Skip root directory component for absolute paths
-        if matches!(component, std::path::Component::RootDir) {
-            continue;
+    if path.starts_with("..") {
+        for (i, component) in path.components().enumerate() {
+            if i > 0 {
+                fsp.push("/");
+            }
+            fsp.push(component);
         }
+    } else {
+        let mut first_component = true;
+        for component in path.components() {
+            // Skip root directory component for absolute paths
+            if matches!(component, Component::RootDir) {
+                continue;
+            }
+            // Add separator "/" between components (but not before the first one)
+            if !first_component {
+                fsp.push("/");
+            }
 
-        // Add separator "/" between components (but not before the first one)
-        if !first_component {
-            fsp.push("/");
+            fsp.push(component);
+            first_component = false;
         }
-
-        fsp.push(component);
-        first_component = false;
     }
 
     let filename = fsp
         .into_string()
         .unwrap_or_else(|orig| orig.to_string_lossy().to_string());
 
-    (0..depth)
-        .map(|_| "..")
-        .chain(iter::once(filename.as_str()))
-        .collect::<Vec<_>>()
-        .join("/")
+    if has_no_prefix_in_name(filename.as_str()) && asset.is_none() {
+        filename
+    } else {
+        (0..depth)
+            .map(|_| "..")
+            .chain(iter::once(filename.as_str()))
+            .collect::<Vec<_>>()
+            .join("/")
+    }
+}
+
+fn has_no_prefix_in_name(path: &str) -> bool {
+    let path = Path::new(path);
+    let mut components = path.components();
+    match components.next() {
+        Some(Component::Normal(_)) => {
+            // Если это первый и единственный компонент - это просто имя файла
+            components.next().is_none()
+        }
+        _ => false, // Есть префиксы (ParentDir, RootDir, CurDir, Prefix и т.д.)
+    }
 }
 
 #[cfg(test)]
@@ -246,79 +272,107 @@ mod tests {
     use std::path::Path;
 
     #[test]
+    fn test_has_prefix_in_file_name_linux() {
+        assert!(!has_no_prefix_in_name("../../../dir/file.txt")); // prefixes
+        assert!(has_no_prefix_in_name("file.txt")); // no prefixes
+        assert!(!has_no_prefix_in_name("./file.txt")); // prefix
+        assert!(!has_no_prefix_in_name("/file.txt")); // absolute path
+    }
+
+    #[test]
+    #[cfg(target_os = "windows")]
+    fn test_has_prefix_in_file_name_windows() {
+        assert!(!has_no_prefix_in_name("..\\..\\..\\dir\\file.txt")); // prefixes
+        assert!(has_no_prefix_in_name("file.txt")); // no prefixes
+        assert!(!has_no_prefix_in_name("C:\\Users\\file.txt")); // prefixes (Windows)
+        assert!(!has_no_prefix_in_name(".\\file.txt")); // prefix
+        assert!(!has_no_prefix_in_name("\\file.txt")); // absolute path
+    }
+
+    #[test]
     fn test_compute_path_prefix_zero_depth() {
         let path = Path::new("file.txt");
-        assert_eq!(compute_path_prefix(0, path), "file.txt");
+        assert_eq!(compute_path_prefix(0, path, None), "file.txt");
 
         let path = Path::new("dir/file.txt");
-        assert_eq!(compute_path_prefix(0, path), "dir/file.txt");
+        assert_eq!(compute_path_prefix(0, path, None), "dir/file.txt");
     }
 
     #[test]
     fn test_compute_path_prefix_with_depth() {
         let path = Path::new("file.txt");
-        assert_eq!(compute_path_prefix(1, path), "../file.txt");
-        assert_eq!(compute_path_prefix(2, path), "../../file.txt");
-        assert_eq!(compute_path_prefix(3, path), "../../../file.txt");
+        assert_eq!(compute_path_prefix(0, path, None), "file.txt");
+        assert_eq!(compute_path_prefix(1, path, None), "file.txt");
+        assert_eq!(compute_path_prefix(2, path, None), "file.txt");
+        assert_eq!(compute_path_prefix(3, path, None), "file.txt");
     }
 
     #[test]
     fn test_compute_path_prefix_with_complex_path() {
         let path = Path::new("dir1/dir2/file.txt");
-        assert_eq!(compute_path_prefix(1, path), "../dir1/dir2/file.txt");
-        assert_eq!(compute_path_prefix(2, path), "../../dir1/dir2/file.txt");
+        assert_eq!(compute_path_prefix(1, path, None), "../dir1/dir2/file.txt");
+        assert_eq!(
+            compute_path_prefix(2, path, None),
+            "../../dir1/dir2/file.txt"
+        );
     }
 
     #[test]
     fn test_compute_path_prefix_with_absolute_path() {
         let path = Path::new("/dir1/dir2/file.txt");
-        assert_eq!(compute_path_prefix(1, path), "../dir1/dir2/file.txt");
-        assert_eq!(compute_path_prefix(2, path), "../../dir1/dir2/file.txt");
+        assert_eq!(compute_path_prefix(1, path, None), "../dir1/dir2/file.txt");
+        assert_eq!(
+            compute_path_prefix(2, path, None),
+            "../../dir1/dir2/file.txt"
+        );
     }
 
     #[test]
     fn test_compute_path_prefix_with_empty_path() {
         let path = Path::new("");
-        assert_eq!(compute_path_prefix(1, path), "../");
-        assert_eq!(compute_path_prefix(2, path), "../../");
+        assert_eq!(compute_path_prefix(1, path, None), "../");
+        assert_eq!(compute_path_prefix(2, path, None), "../../");
     }
 
     #[test]
     fn test_compute_path_prefix_with_unicode() {
         let path = Path::new("директория/файл.txt");
-        assert_eq!(compute_path_prefix(1, path), "../директория/файл.txt");
-        assert_eq!(compute_path_prefix(2, path), "../../директория/файл.txt");
+        assert_eq!(compute_path_prefix(1, path, None), "../директория/файл.txt");
+        assert_eq!(
+            compute_path_prefix(2, path, None),
+            "../../директория/файл.txt"
+        );
     }
 
     #[test]
     fn test_compute_path_prefix_with_spaces() {
         let path = Path::new("my documents/important file.txt");
         assert_eq!(
-            compute_path_prefix(1, path),
+            compute_path_prefix(1, path, None),
             "../my documents/important file.txt"
         );
     }
 
     #[test]
     fn test_compute_path_prefix_large_depth() {
-        let path = Path::new("file.txt");
-        let expected = "../../../../../file.txt";
-        assert_eq!(compute_path_prefix(5, path), expected);
+        let path = Path::new("../file.txt");
+        let expected = "../../../../../../file.txt";
+        assert_eq!(compute_path_prefix(5, path, None), expected);
     }
 
     #[test]
     fn test_compute_path_prefix_root_only() {
         let path = Path::new("/");
-        assert_eq!(compute_path_prefix(1, path), "../");
-        assert_eq!(compute_path_prefix(2, path), "../../");
+        assert_eq!(compute_path_prefix(1, path, None), "../");
+        assert_eq!(compute_path_prefix(2, path, None), "../../");
     }
 
     #[test]
     fn test_compute_path_prefix_dot_paths() {
         let path = Path::new("./file.txt");
-        assert_eq!(compute_path_prefix(1, path), ".././file.txt");
+        assert_eq!(compute_path_prefix(1, path, None), ".././file.txt");
 
         let path = Path::new("../file.txt");
-        assert_eq!(compute_path_prefix(1, path), "../../file.txt");
+        assert_eq!(compute_path_prefix(1, path, None), "../../file.txt");
     }
 }

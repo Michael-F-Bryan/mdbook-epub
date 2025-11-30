@@ -2,7 +2,11 @@
 
 ## image link
 
-![Awesome image in the same folder](Epub_logo.svg "Awesome")
+Logo 1
+![Image in the same folder](Epub_logo.svg "Awesome")
 
 Logo 2
-![Logo on top](../assets/rust-logo.png)
+![Logo in /assets sub folder](../assets/rust-logo.png)
+
+Logo 3
+![Logo at root](../reddit.svg)

@@ -34,6 +34,9 @@ pub enum Error {
     #[error("Unable to open asset")]
     AssetOpen(#[from] std::io::Error),
 
+    #[error("Failed to find resource file (a root + path?): {0}")]
+    ResourceNotFound(PathBuf),
+
     #[error("Error reading stylesheet")]
     StylesheetRead,
 
