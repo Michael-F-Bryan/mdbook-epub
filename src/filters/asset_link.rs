@@ -118,39 +118,36 @@ impl<'a> AssetRemoteLinkFilter<'a> {
             for item in dom.children {
                 match item {
                     Node::Element(ref element) if element.name == "img" => {
-                        if let Some(dest_url) = &element.attributes["src"] {
-                            if Url::parse(dest_url).is_ok() {
-                                debug!("Found a valid remote img src:\"{}\".", dest_url);
-                                if let Some(asset) = self.assets.get_mut(dest_url).cloned() {
-                                    debug!("Lookup Remote asset: by {}", &dest_url);
-                                    if let AssetKind::Remote(ref _remote_url) = asset.source {
-                                        debug!(
-                                            "Compare: {} vs {}",
-                                            &asset.original_link, &dest_url
-                                        );
-                                        // Check equality of remote_url and dest_url
-                                        if asset.original_link.as_str() == dest_url.as_str() {
-                                            debug!("1. Found URL '{}' by Event", &dest_url);
-                                            match self.process_asset(&asset, dest_url) {
-                                                Ok(_) => {
-                                                    debug!(
-                                                        "SUCCESSFULLY downloaded resource by URL '{}'",
-                                                        &dest_url
-                                                    );
-                                                }
-                                                Err(error) => {
-                                                    error!(
-                                                        "Can't download resource by URL '{}'. Error = {}",
-                                                        &dest_url, error
-                                                    );
-                                                }
+                        if let Some(dest_url) = &element.attributes["src"]
+                            && Url::parse(dest_url).is_ok()
+                        {
+                            debug!("Found a valid remote img src:\"{}\".", dest_url);
+                            if let Some(asset) = self.assets.get_mut(dest_url).cloned() {
+                                debug!("Lookup Remote asset: by {}", &dest_url);
+                                if let AssetKind::Remote(ref _remote_url) = asset.source {
+                                    debug!("Compare: {} vs {}", &asset.original_link, &dest_url);
+                                    // Check equality of remote_url and dest_url
+                                    if asset.original_link.as_str() == dest_url.as_str() {
+                                        debug!("1. Found URL '{}' by Event", &dest_url);
+                                        match self.process_asset(&asset, dest_url) {
+                                            Ok(_) => {
+                                                debug!(
+                                                    "SUCCESSFULLY downloaded resource by URL '{}'",
+                                                    &dest_url
+                                                );
+                                            }
+                                            Err(error) => {
+                                                error!(
+                                                    "Can't download resource by URL '{}'. Error = {}",
+                                                    &dest_url, error
+                                                );
                                             }
                                         }
                                     }
                                 }
-
-                                found_links.push(dest_url.clone());
                             }
+
+                            found_links.push(dest_url.clone());
                         }
                     }
                     _ => {}
@@ -171,7 +168,7 @@ impl<'a> AssetRemoteLinkFilter<'a> {
                 if let Some(asset) = self.assets.get(&original_link) {
                     // let new = self.path_prefix(asset.filename.as_path());
                     let depth = self.depth;
-                    let new = compute_path_prefix(depth, asset.filename.as_path(), Some(&asset));
+                    let new = compute_path_prefix(depth, asset.filename.as_path(), Some(asset));
 
                     trace!("old content before replacement\n{}", &content);
                     trace!(
@@ -246,7 +243,7 @@ fn compute_path_prefix(depth: usize, path: &Path, asset: Option<&Asset>) -> Stri
         .into_string()
         .unwrap_or_else(|orig| orig.to_string_lossy().to_string());
 
-    if has_no_prefix_in_name(filename.as_str()) && asset == None {
+    if has_no_prefix_in_name(filename.as_str()) && asset.is_none() {
         filename
     } else {
         (0..depth)
