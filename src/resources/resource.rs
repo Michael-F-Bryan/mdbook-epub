@@ -400,9 +400,9 @@ mod tests {
         let json_ctx = json!({
             "version": mdbook_core::MDBOOK_VERSION,
             "root": "tests/long_book_example",
-            "book": {"sections": chapters, "__non_exhaustive": null},
+            "book": {"items": chapters, "__non_exhaustive": null},
             "config": {
-                "book": {"authors": [], "language": "en", "multilingual": false,
+                "book": {"authors": [], "language": "en", "text-direction": "ltr",
                     "src": "src", "title": "DummyBook"},
                 "output": {"epub": {"curly-quotes": true}}},
             "destination": destination

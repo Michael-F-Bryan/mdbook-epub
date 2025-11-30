@@ -637,7 +637,7 @@ mod tests {
             }
         });
         let mut json = ctx_with_template("", "src", dest_dir.as_path());
-        let chvalue = json["book"]["sections"].as_array_mut().unwrap();
+        let chvalue = json["book"]["items"].as_array_mut().unwrap();
         chvalue.clear();
         chvalue.push(ch1);
         chvalue.push(ch2);
@@ -693,7 +693,7 @@ mod tests {
         json!({
             "version": mdbook_core::MDBOOK_VERSION,
             "root": "tests/long_book_example",
-            "book": {"sections": [{
+            "book": {"items": [{
                 "Chapter": {
                     "name": "Chapter 1",
                     "content": content,
@@ -703,7 +703,7 @@ mod tests {
                     "parent_names": []
                 }}], "__non_exhaustive": null},
             "config": {
-                "book": {"authors": [], "language": "en", "multilingual": false,
+                "book": {"authors": [], "language": "en", "text-direction": "ltr",
                     "src": source, "title": "DummyBook"},
                 "output": {"epub": {"curly-quotes": true}}},
             "destination": destination
