@@ -568,7 +568,7 @@ mod tests {
     #[test]
     fn test_render_remote_assets_in_sub_chapter() {
         init_logging();
-        let link = "https://www.svgrepo.com/show/327768/finger-print.svg";
+        let link = "https://upload.wikimedia.org/wikipedia/commons/4/4e/Open_Source_Initiative_keyhole.svg";
         let tmp_dir = TempDir::new().unwrap();
         let dest_dir = tmp_dir.path().join("mdbook-epub");
         let ch1_1 = json!({
@@ -613,7 +613,7 @@ mod tests {
         assert_eq!(g.assets.len(), 1);
 
         let pat = |heading, prefix| {
-            format!("<h1>{heading}</h1>\n<p><img src=\"{prefix}78d88324ed4ac3bf.svg\"")
+            format!("<h1>{heading}</h1>\n<p><img src=\"{prefix}e3825a3756080f55.svg\"")
         };
         if let BookItem::Chapter(ref ch) = ctx.book.sections[0] {
             let rendered: String = g.render_chapter(ch).unwrap();
