@@ -617,13 +617,13 @@ mod tests {
         };
         if let BookItem::Chapter(ref ch) = ctx.book.sections[0] {
             let rendered: String = g.render_chapter(ch).unwrap();
-            debug!("rendered ===\n{}", &rendered);
-            assert!(rendered.contains(&pat("Chapter 1", "")));
+            debug!("1. rendered ===\n{}", &rendered);
+            assert!(rendered.contains(&pat("Chapter 1", "../")));
 
             if let BookItem::Chapter(ref sub_ch) = ch.sub_items[0] {
                 let sub_rendered = g.render_chapter(sub_ch).unwrap();
-                debug!("rendered ===\n{}", &sub_rendered);
-                assert!(sub_rendered.contains(&pat("Subchapter", "")));
+                debug!("2. rendered ===\n{}", &sub_rendered);
+                assert!(sub_rendered.contains(&pat("Subchapter", "../")));
             } else {
                 panic!();
             }
