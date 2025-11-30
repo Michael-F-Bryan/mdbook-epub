@@ -100,9 +100,9 @@ mod tests {
         json!({
             "version": mdbook_core::MDBOOK_VERSION,
             "root": "tests/long_book_example",
-            "book": {"sections": [], "__non_exhaustive": null},
+            "book": {"items": [], "__non_exhaustive": null},
             "config": {
-                "book": {"authors": [], "language": "en", "multilingual": false,
+                "book": {"authors": [], "language": "en", "text-direction": "ltr",
                     "src": source, "title": "DummyBook"},
                 "output": {"epub": {"optional": true}}},
             "destination": destination

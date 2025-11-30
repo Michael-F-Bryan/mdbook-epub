@@ -1,8 +1,8 @@
 use crate::common::init_logging::init_logging;
 use epub::doc::EpubDoc;
 use log::{debug, error};
-use mdbook::MDBook;
-use mdbook::renderer::RenderContext;
+use mdbook_driver::MDBook;
+use mdbook_renderer::RenderContext;
 use mdbook_epub::errors::Error;
 use std::fs::File;
 use std::io::BufReader;
