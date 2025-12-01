@@ -23,28 +23,35 @@ name = "mdbook-epub"
 doc = false
 
 [dependencies]
-clap = { version = "4.5", default-features = false, features = ["derive"] }
+clap = { version = "4.5", default-features = false, features = [
+    "derive",
+    "std",
+] }
 epub-builder = "0.8"
 thiserror = "2.0"
-pulldown-cmark = "0.10.0"
+pulldown-cmark = "0.13.0"
 semver = "1.0"
-serde = { version = "1.0.163", features = ["derive"] }
-serde_derive = "1.0"
-serde_json = "1.0.96"
-mime_guess = "2.0"
+toml = "0.9.8"
 env_logger = "0.11.1"
-log = "0.4.17"
-mdbook = { version = "0.4.51", default-features = true }
-handlebars = "6.0"
-toml = "0.5.11" # downgraded due to parent 'mdbook' dependency and error there
+serde = { version = "1.0.228", features = ["derive"] }
+serde_derive = "1.0"
+serde_json = "1.0.145"
+mime_guess = "2.0"
+#log = "0.4.17"
+tracing = "0.1.41"
+tracing-subscriber = { version = "0.3.20", features = ["env-filter"] }
+mdbook-core = { version = "0.5.1", default-features = false }          # I'm kinda anxious about it as they say it's for internal use, examples still outdated
+mdbook-driver = { version = "0.5.1", default-features = false }        # Because we support standalone rendering...
+mdbook-renderer = { version = "0.5.1", default-features = false }
+handlebars = "6.3.2"                                                   # downgraded due to parent 'mdbook' dependency and error there
 html_parser = "0.7.0"
 url = "2.5"
-ureq = "3.0"
+ureq = "3.1"
 infer = "0.19"
 const_format = "0.2"
 
 [dev-dependencies]
-tempfile = "3.19"
+tempfile = "3.23"
 epub = "2.1"
 serial_test = "3.2"
 mockall = "0.13"

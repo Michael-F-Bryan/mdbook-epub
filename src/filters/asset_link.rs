@@ -7,6 +7,7 @@ use std::collections::HashMap;
 use std::ffi::OsString;
 use std::iter;
 use std::path::{Component, Path};
+use tracing::{debug, error, trace};
 use url::Url;
 
 /// Filter is used for replacing remote urls with local images downloaded from internet

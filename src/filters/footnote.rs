@@ -199,6 +199,7 @@ impl<'a> FootnoteFilter<'a> {
 mod tests {
     use super::*;
     use pulldown_cmark::{Event, Options, Parser, Tag, TagEnd};
+    use tracing::debug;
 
     fn parse_markdown_with_footnotes(input: &str) -> Vec<Event<'_>> {
         let mut footnote_filter = FootnoteFilter::new(true);

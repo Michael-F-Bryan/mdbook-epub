@@ -10,9 +10,10 @@ use crate::validation::validate_config_epub_version;
 use crate::{Error, utils};
 use epub_builder::{EpubBuilder, EpubContent, ZipLibrary};
 use handlebars::{Handlebars, RenderError, RenderErrorReason};
-use mdbook::book::{BookItem, Chapter};
-use mdbook::renderer::RenderContext;
+use mdbook_core::book::{BookItem, Chapter};
+use mdbook_renderer::RenderContext;
 use pulldown_cmark::html;
+use serde_json::json;
 use std::collections::HashSet;
 use std::path::Path;
 use std::{
@@ -23,6 +24,7 @@ use std::{
     iter,
     path::PathBuf,
 };
+use tracing::{debug, error, info, trace, warn};
 
 /// The actual EPUB book renderer.
 pub struct Generator<'a> {
@@ -136,7 +138,7 @@ impl<'a> Generator<'a> {
         info!("3.1 Generate chapters == ");
 
         let mut added_count = 0;
-        for (idx, item) in self.ctx.book.sections.iter().enumerate() {
+        for (idx, item) in self.ctx.book.iter().enumerate() {
             let is_first = idx == 0;
             if let BookItem::Chapter(ref ch) = *item {
                 trace!("Adding chapter \"{}\"", ch);
@@ -602,7 +604,7 @@ mod tests {
             }
         });
         let mut json = ctx_with_template("", "src", dest_dir.as_path());
-        let chvalue = json["book"]["sections"].as_array_mut().unwrap();
+        let chvalue = json["book"]["items"].as_array_mut().unwrap();
         chvalue.clear();
         chvalue.push(ch1);
         chvalue.push(ch2);
@@ -615,7 +617,7 @@ mod tests {
         let pat = |heading, prefix| {
             format!("<h1>{heading}</h1>\n<p><img src=\"{prefix}e3825a3756080f55.svg\"")
         };
-        if let BookItem::Chapter(ref ch) = ctx.book.sections[0] {
+        if let BookItem::Chapter(ref ch) = ctx.book.items[0] {
             let rendered: String = g.render_chapter(ch).unwrap();
             debug!("1. rendered ===\n{}", &rendered);
             assert!(rendered.contains(&pat("Chapter 1", "../")));
@@ -630,7 +632,7 @@ mod tests {
         } else {
             panic!();
         }
-        if let BookItem::Chapter(ref ch) = ctx.book.sections[1] {
+        if let BookItem::Chapter(ref ch) = ctx.book.items[1] {
             let rendered: String = g.render_chapter(ch).unwrap();
             assert!(rendered.contains(&pat("Chapter 2", "")));
         } else {
@@ -656,9 +658,9 @@ mod tests {
 
     fn ctx_with_template(content: &str, source: &str, destination: &Path) -> serde_json::Value {
         json!({
-            "version": mdbook::MDBOOK_VERSION,
+            "version": mdbook_core::MDBOOK_VERSION,
             "root": "tests/long_book_example",
-            "book": {"sections": [{
+            "book": {"items": [{
                 "Chapter": {
                     "name": "Chapter 1",
                     "content": content,
@@ -668,7 +670,7 @@ mod tests {
                     "parent_names": []
                 }}], "__non_exhaustive": null},
             "config": {
-                "book": {"authors": [], "language": "en", "multilingual": false,
+                "book": {"authors": [], "language": "en", "text-direction": "ltr",
                     "src": source, "title": "DummyBook"},
                 "output": {"epub": {"curly-quotes": true}}},
             "destination": destination
