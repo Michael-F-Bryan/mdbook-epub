@@ -1,6 +1,6 @@
 # MDBook EPUB Backend
 
-- [![Rust](https://github.com/blandger/mdbook-epub/actions/workflows/rust.yml/badge.svg)](https://github.com/blandger/mdbook-epub/actions/workflows/rust.yml)
+- [![Rust](https://github.com/Michael-F-Bryan/mdbook-epub/actions/workflows/rust.yml/badge.svg)](https://github.com/Michael-F-Bryan/mdbook-epub/actions/workflows/rust.yml)
 
 [**(Rendered Docs)**](https://michael-f-bryan.github.io/mdbook-epub/)
 
