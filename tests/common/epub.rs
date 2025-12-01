@@ -214,7 +214,7 @@ pub fn output_epub_is_valid(epub_book_name: &str) {
 
 #[allow(dead_code)]
 pub fn output_epub_is_valid_preserve_temp_folder(epub_book_name: &str) {
-    init_logging();
+    init_tracing();
     debug!("output_epub_is_valid...");
     let (ctx, _md, temp) = create_dummy_book_preserve_temp_folder(epub_book_name).unwrap();
     mdbook_epub::generate(&ctx).unwrap();
