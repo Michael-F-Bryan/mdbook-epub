@@ -1,12 +1,5 @@
 //! A `mdbook` backend for generating a book in the `EPUB` format.
 
-#[macro_use]
-extern crate log;
-#[macro_use]
-extern crate serde_derive;
-#[macro_use]
-extern crate serde_json;
-
 use std::fs::{File, create_dir_all};
 use std::path::{Path, PathBuf};
 
@@ -16,6 +9,7 @@ use ::thiserror::Error;
 use mdbook_core::config::Config as MdConfig;
 use mdbook_renderer::RenderContext;
 use semver::{Version, VersionReq};
+use tracing::{debug, info};
 
 use errors::Error;
 

@@ -6,6 +6,7 @@ use html_parser::{Dom, Element, Node};
 use mdbook_core::book::BookItem;
 use mdbook_renderer::RenderContext;
 use pulldown_cmark::{Event, Tag};
+use tracing::{debug, trace, warn};
 use url::Url;
 
 use crate::resources::asset::{Asset, AssetKind};
@@ -120,10 +121,10 @@ pub(crate) fn find(ctx: &RenderContext) -> Result<HashMap<String, Asset>, Error>
 fn find_assets_in_nested_html_tags(element: &Element) -> Result<Vec<String>, Error> {
     let mut found_asset = Vec::new();
 
-    if element.name == "img" {
-        if let Some(dest) = &element.attributes["src"] {
-            found_asset.push(dest.clone());
-        }
+    if element.name == "img"
+        && let Some(dest) = &element.attributes["src"]
+    {
+        found_asset.push(dest.clone());
     }
     for item in &element.children {
         if let Node::Element(nested_element) = item {

@@ -1,6 +1,3 @@
-#[macro_use]
-extern crate log;
-
 use std::io;
 use std::path::PathBuf;
 use std::process;
@@ -13,6 +10,7 @@ use mdbook_renderer::RenderContext;
 
 use ::mdbook_epub;
 use mdbook_epub::errors::Error;
+use tracing::{debug, error, info};
 
 fn main() {
     env_logger::init();
@@ -21,7 +19,7 @@ fn main() {
     debug!("prepared generator args = {:?}", args);
 
     if let Err(e) = run(&args) {
-        log::error!("{}", e);
+        error!("{}", e);
 
         process::exit(1);
     }

@@ -1,5 +1,6 @@
 use super::Error;
 use mdbook_renderer::RenderContext;
+use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
 pub const DEFAULT_TEMPLATE: &str = include_str!("index.hbs");
@@ -80,6 +81,7 @@ impl Default for Config {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serde_json::json;
     use std::path::Path;
     use tempfile::TempDir;
 

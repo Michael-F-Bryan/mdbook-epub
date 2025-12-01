@@ -1,14 +1,14 @@
 use crate::common::init_logging::init_logging;
 use epub::doc::EpubDoc;
-use log::{debug, error};
 use mdbook_driver::MDBook;
-use mdbook_renderer::RenderContext;
 use mdbook_epub::errors::Error;
+use mdbook_renderer::RenderContext;
 use std::fs::File;
 use std::io::BufReader;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use tempfile::TempDir;
+use tracing::{debug, error};
 
 /// Convenience function for compiling the dummy book into an `EpubDoc`.
 #[allow(dead_code)]
@@ -80,7 +80,7 @@ pub fn create_dummy_book_preserve_temp_folder(
 ) -> Result<(RenderContext, MDBook, PathBuf), Error> {
     debug!("create_{:?}...", name);
     let temp = TempDir::with_prefix_in("mdbook-epub", ".")?;
-    let temp_path: PathBuf = temp.into_path();
+    let temp_path: PathBuf = temp.keep();
     debug!("Temporary directory preserved at: {:?}", temp_path);
 
     let dummy_book = Path::new(env!("CARGO_MANIFEST_DIR"))

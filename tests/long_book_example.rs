@@ -1,6 +1,6 @@
-use log::debug;
 use serial_test::serial;
 use std::path::Path;
+use tracing::debug;
 mod common;
 use crate::common::epub::{create_dummy_book, output_epub_is_valid};
 use common::epub::generate_epub;
@@ -73,7 +73,9 @@ fn test_long_book_lookup_chapter_2_image_link_in_readme() {
     };
     let content = doc.0.get_resource_str_by_path(path).unwrap();
 
-    assert!(content.contains("<img src=\"../02_advanced/Epub_logo.svg\""));
+    assert!(content.contains("<img src=\"Epub_logo.svg\""));
+    assert!(content.contains("<img src=\"../assets/rust-logo.png\""));
+    assert!(content.contains("<img src=\"../reddit.svg\""));
 }
 
 #[test]
@@ -90,10 +92,10 @@ fn test_long_book_contains_all_chapter_files_and_assets() {
     let mut doc = generate_epub("long_book_example").unwrap();
     debug!("Number of internal epub resources = {:?}", doc.0.resources);
     // number of internal epub resources for long_book_example test book
-    assert_eq!(12, doc.0.resources.len());
+    assert_eq!(13, doc.0.resources.len());
     assert_eq!(3, doc.0.spine.len());
-    assert_eq!(doc.0.mdata("title").unwrap(), "LongBookExample");
-    assert_eq!(doc.0.mdata("language").unwrap(), "en");
+    assert_eq!(doc.0.mdata("title").unwrap().value, "LongBookExample");
+    assert_eq!(doc.0.mdata("language").unwrap().value, "en");
     debug!(
         "doc current path = {:?} / {:?}",
         doc.0.get_current_path(),
