@@ -3,12 +3,12 @@ use std::path::Path;
 use tracing::debug;
 mod common;
 use crate::common::epub::{generate_epub, output_epub_is_valid};
-use crate::common::init_logging::init_logging;
+use crate::common::init_trace::init_tracing;
 
 #[test]
 #[serial]
 fn test_remote_image_urls() {
-    init_logging();
+    init_tracing();
     debug!("test_remote_image_urls...");
     let mut doc = generate_epub("remote_image_fetch").unwrap();
     debug!("doc current path = {:?}", doc.1);

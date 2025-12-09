@@ -5,12 +5,10 @@ use tracing::debug;
 mod common;
 use crate::common::epub::{create_dummy_book, output_epub_is_valid};
 use common::epub::generate_epub;
-use common::init_logging::init_logging;
 
 #[test]
 #[serial]
 fn test_footnote_has_linked_label() {
-    init_logging();
     debug!("footnote_has_linked_label...");
     let mut doc = generate_epub("footnote_epub3_example").unwrap();
     debug!("doc current path = {:?}", doc.1);
@@ -29,7 +27,6 @@ fn test_footnote_has_linked_label() {
 #[test]
 #[serial]
 fn test_footnote_definition_has_backreference_link() {
-    init_logging();
     debug!("footnote_definition_has_backreference_link...");
     let mut doc = generate_epub("footnote_epub3_example").unwrap();
     debug!("doc current path = {:?}", doc.1);
@@ -48,7 +45,6 @@ fn test_footnote_definition_has_backreference_link() {
 #[test]
 #[serial]
 fn test_footnote_definition_label() {
-    init_logging();
     debug!("footnote_definition_label...");
     let mut doc = generate_epub("footnote_epub3_example").unwrap();
     debug!("doc current path = {:?}", doc.1);
@@ -67,7 +63,6 @@ fn test_footnote_definition_label() {
 #[test]
 #[serial]
 fn test_output_footnote_book_exists() {
-    init_logging();
     debug!("test_output_footnote_book_exists...");
     let (ctx, _md, temp) = create_dummy_book("footnote_epub3_example").unwrap();
 
@@ -82,7 +77,6 @@ fn test_output_footnote_book_exists() {
 #[test]
 #[serial]
 fn test_output_footnote_book_is_valid() {
-    init_logging();
     debug!("test_output_footnote_book_is_valid...");
     output_epub_is_valid("footnote_epub3_example");
 }

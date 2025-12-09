@@ -24,6 +24,9 @@ mod generator;
 mod resources;
 mod utils;
 mod validation;
+pub mod init_trace;
+// Reexport function
+pub use init_trace::init_tracing;
 
 /// The default stylesheet used to make the rendered document pretty.
 pub const DEFAULT_CSS: &str = include_str!("master.css");

@@ -1,4 +1,4 @@
-use crate::common::init_logging::init_logging;
+use crate::common::init_trace::init_tracing;
 use epub::doc::EpubDoc;
 use mdbook_driver::MDBook;
 use mdbook_epub::errors::Error;
@@ -102,7 +102,7 @@ pub fn create_dummy_book_preserve_temp_folder(
 }
 
 pub fn epub_check(path: &Path) -> Result<(), Error> {
-    init_logging();
+    init_tracing();
     debug!("check epub book by path = '{}'...", &path.display());
 
     // windows workaround
@@ -149,7 +149,6 @@ pub fn epub_check(path: &Path) -> Result<(), Error> {
 }
 
 pub fn output_epub_is_valid(epub_book_name: &str) {
-    init_logging();
     debug!("output_epub_is_valid...");
     let (ctx, _md, temp) = create_dummy_book(epub_book_name).unwrap();
     mdbook_epub::generate(&ctx).unwrap();
@@ -167,7 +166,7 @@ pub fn output_epub_is_valid(epub_book_name: &str) {
 
 #[allow(dead_code)]
 pub fn output_epub_is_valid_preserve_temp_folder(epub_book_name: &str) {
-    init_logging();
+    init_tracing();
     debug!("output_epub_is_valid...");
     let (ctx, _md, temp) = create_dummy_book_preserve_temp_folder(epub_book_name).unwrap();
     mdbook_epub::generate(&ctx).unwrap();

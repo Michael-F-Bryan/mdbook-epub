@@ -4,12 +4,11 @@ use tracing::debug;
 mod common;
 use crate::common::epub::{create_dummy_book, output_epub_is_valid};
 use common::epub::generate_epub;
-use common::init_logging::init_logging;
+use common::init_trace::init_tracing;
 
 #[test]
 #[serial]
 fn test_output_long_book_exists() {
-    init_logging();
     debug!("fn output_epub_exists...");
     let (ctx, _md, temp) = create_dummy_book("long_book_example").unwrap();
 
@@ -40,7 +39,6 @@ fn test_output_long_book_is_valid() {
 #[test]
 #[serial]
 fn test_long_book_lookup_chapter_1_heading() {
-    init_logging();
     debug!("look_for_chapter_1_heading...");
     let mut doc = generate_epub("long_book_example").unwrap();
     debug!("doc current path = {:?}", doc.1);
@@ -62,7 +60,7 @@ fn test_long_book_lookup_chapter_1_heading() {
 #[test]
 #[serial]
 fn test_long_book_lookup_chapter_2_image_link_in_readme() {
-    init_logging();
+    init_tracing();
     let mut doc = generate_epub("long_book_example").unwrap();
     // let mut doc = common::epub::generate_epub_preserve_temp_folder("long_book_example").unwrap();
 
@@ -81,7 +79,6 @@ fn test_long_book_lookup_chapter_2_image_link_in_readme() {
 #[test]
 #[serial]
 fn test_long_book_contains_all_chapter_files_and_assets() {
-    init_logging();
     debug!("rendered_document_contains_all_chapter_files_and_assets...");
     let chapters = vec![
         "chapter_1.html",
