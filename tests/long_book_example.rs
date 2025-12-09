@@ -4,7 +4,6 @@ use tracing::debug;
 mod common;
 use crate::common::epub::{create_dummy_book, output_epub_is_valid};
 use common::epub::generate_epub;
-use common::init_trace::init_tracing;
 
 #[test]
 #[serial]
@@ -60,7 +59,6 @@ fn test_long_book_lookup_chapter_1_heading() {
 #[test]
 #[serial]
 fn test_long_book_lookup_chapter_2_image_link_in_readme() {
-    init_tracing();
     let mut doc = generate_epub("long_book_example").unwrap();
     // let mut doc = common::epub::generate_epub_preserve_temp_folder("long_book_example").unwrap();
 
