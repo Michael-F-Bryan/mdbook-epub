@@ -1,7 +1,7 @@
 [book]
 title = "RemoteImageFetchExample"
 authors = []
-multilingual = false
+
 src = "src"
 lang = "en"
 

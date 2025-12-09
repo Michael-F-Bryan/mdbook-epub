@@ -9,6 +9,7 @@ use mime_guess::Mime;
 use std::fmt::{Display, Formatter};
 use std::hash::Hash;
 use std::path::{MAIN_SEPARATOR_STR, Path, PathBuf};
+use tracing::{debug, trace};
 use url::Url;
 
 /// The type of asset, remote or local

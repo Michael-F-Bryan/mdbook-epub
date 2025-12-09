@@ -1,6 +1,6 @@
-use log::debug;
 use serial_test::serial;
 use std::path::Path;
+use tracing::debug;
 
 mod common;
 use crate::common::epub::output_epub_is_valid;

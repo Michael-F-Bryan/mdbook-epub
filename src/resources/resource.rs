@@ -3,9 +3,10 @@ use std::path::MAIN_SEPARATOR_STR;
 
 use const_format::concatcp;
 use html_parser::{Dom, Element, Node};
-use mdbook::book::BookItem;
-use mdbook::renderer::RenderContext;
+use mdbook_core::book::BookItem;
+use mdbook_renderer::RenderContext;
 use pulldown_cmark::{Event, Tag};
+use tracing::{debug, trace, warn};
 use url::Url;
 
 use crate::resources::asset::{Asset, AssetKind};
@@ -35,7 +36,7 @@ pub(crate) fn find(ctx: &RenderContext) -> Result<HashMap<String, Asset>, Error>
 
     debug!(
         "Start iteration over a [{:?}] sections in src_dir = {:?}",
-        ctx.book.sections.len(),
+        ctx.book.items.len(),
         src_dir
     );
     for section in ctx.book.iter() {
@@ -396,13 +397,13 @@ mod tests {
     fn ctx_with_chapters(
         chapters: &Value,
         destination: &str,
-    ) -> Result<RenderContext, mdbook::errors::Error> {
+    ) -> Result<RenderContext, mdbook_core::errors::Error> {
         let json_ctx = json!({
-            "version": mdbook::MDBOOK_VERSION,
+            "version": mdbook_core::MDBOOK_VERSION,
             "root": "tests/long_book_example",
-            "book": {"sections": chapters, "__non_exhaustive": null},
+            "book": {"items": chapters, "__non_exhaustive": null},
             "config": {
-                "book": {"authors": [], "language": "en", "multilingual": false,
+                "book": {"authors": [], "language": "en", "text-direction": "ltr",
                     "src": "src", "title": "DummyBook"},
                 "output": {"epub": {"curly-quotes": true}}},
             "destination": destination

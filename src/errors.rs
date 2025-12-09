@@ -47,7 +47,7 @@ pub enum Error {
     AssetOutsideSrcDir(#[from] std::path::StripPrefixError),
 
     #[error(transparent)]
-    Book(#[from] mdbook::errors::Error),
+    Book(#[from] mdbook_core::errors::Error),
     #[error(transparent)]
     Semver(#[from] semver::Error),
     #[error(transparent)]

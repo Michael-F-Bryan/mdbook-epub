@@ -14,6 +14,7 @@ use std::{
     io::{self, Read},
     path::Path,
 };
+use tracing::debug;
 
 /// Struct to keep file (image) data 'mime type' after recognizing downloaded content
 #[allow(dead_code)]
@@ -210,6 +211,7 @@ mod tests {
     use mime_guess::Mime;
     use std::path::PathBuf;
     use tempfile::TempDir;
+    use tracing::trace;
     use url::Url;
 
     use super::{ContentRetriever, ResourceHandler, RetrievedContent, UpdatedAssetData};
