@@ -1,0 +1,8 @@
+[book]
+title = "EmbeddedImageExample"
+authors = []
+
+src = "src"
+language = "en"
+
+[output.epub]
