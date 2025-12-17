@@ -2,18 +2,18 @@ use std::io;
 use std::path::PathBuf;
 use std::process;
 
-use ::env_logger;
-use ::serde_json;
 use clap::Parser;
 use mdbook_driver::MDBook;
 use mdbook_renderer::RenderContext;
+use ::serde_json;
 
 use ::mdbook_epub;
 use mdbook_epub::errors::Error;
+use mdbook_epub::init_tracing;
 use tracing::{debug, error, info};
 
 fn main() {
-    env_logger::init();
+    init_tracing();
     info!("Booting EPUB generator...");
     let args = Args::parse();
     debug!("prepared generator args = {:?}", args);

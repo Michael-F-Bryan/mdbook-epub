@@ -24,6 +24,9 @@ mod generator;
 mod resources;
 mod utils;
 mod validation;
+pub mod init_trace;
+// Reexport function
+pub use init_trace::init_tracing;
 
 /// The default stylesheet used to make the rendered document pretty.
 pub const DEFAULT_CSS: &str = include_str!("master.css");
@@ -84,4 +87,27 @@ pub fn output_filename(dest: &Path, config: &MdConfig) -> Result<PathBuf, Error>
         }
         None => Ok(dest.join("book.epub")),
     }
+}
+
+// IO helper functions to make Errors more clear on debug
+pub fn file_io<T>(
+    result: std::io::Result<T>,
+    action: &str,
+    path: impl Into<PathBuf>,
+) -> Result<T, Error> {
+    result.map_err(|e| Error::AssetFileIo {
+        action: action.to_string(),
+        path: path.into(),
+        source: e,
+    })
+}
+
+pub fn path_io<T>(
+    result: std::io::Result<T>,
+    path: impl Into<PathBuf>,
+) -> Result<T, Error> {
+    result.map_err(|e| Error::AssetPathIo {
+        path: path.into(),
+        source: e,
+    })
 }

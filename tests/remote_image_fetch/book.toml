@@ -3,6 +3,6 @@ title = "RemoteImageFetchExample"
 authors = []
 
 src = "src"
-lang = "en"
+language = "en"
 
 [output.epub]

@@ -9,6 +9,7 @@ use std::iter;
 use std::path::{Component, Path};
 use tracing::{debug, error, trace};
 use url::Url;
+use crate::resources::resource::EMBEDDED_URL_START;
 
 /// Filter is used for replacing remote urls with local images downloaded from internet
 pub struct AssetRemoteLinkFilter<'a> {
@@ -100,6 +101,15 @@ impl<'a> AssetRemoteLinkFilter<'a> {
                         title: title.to_owned(),
                         id: id.to_owned(),
                     });
+                },
+                AssetKind::Embedded => {
+                    debug!("Embedded URL '{}' by Event", &url_str);
+                    return Event::Start(Tag::Image {
+                        link_type,
+                        dest_url: CowStr::from(asset.original_link),
+                        title: title.to_owned(),
+                        id: id.to_owned(),
+                    });
                 }
             }
         } else {
@@ -167,7 +177,6 @@ impl<'a> AssetRemoteLinkFilter<'a> {
                 trace!("1. assets\n'{:?}'", &self.assets);
 
                 if let Some(asset) = self.assets.get(&original_link) {
-                    // let new = self.path_prefix(asset.filename.as_path());
                     let depth = self.depth;
                     let new = compute_path_prefix(depth, asset.filename.as_path(), Some(asset));
 
@@ -179,7 +188,8 @@ impl<'a> AssetRemoteLinkFilter<'a> {
                     // REAL SRC REPLACING happens here...
                     content = content.replace(&original_link, new.as_str());
                     trace!("new content after replacement\n{}", &content);
-                } else {
+                } else if !original_link.trim().starts_with(EMBEDDED_URL_START) {
+                    // embedded resource is NOT an error
                     error!("Asset was not found by original_link: {}", original_link);
                     unreachable!("{original_link} should be replaced, but it doesn't.");
                 }

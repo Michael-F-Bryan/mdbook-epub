@@ -1,4 +1,4 @@
-use crate::DEFAULT_CSS;
+use crate::{file_io, DEFAULT_CSS};
 use crate::config::Config;
 use crate::filters::asset_link::AssetRemoteLinkFilter;
 use crate::filters::footnote::FootnoteFilter;
@@ -120,12 +120,12 @@ impl<'a> Generator<'a> {
     /// rendered differently in the document by provided information of assets.
     fn find_assets(&mut self) -> Result<(), Error> {
         info!("2.1 Start find_assets()...");
-        let error = String::from(
-            "Failed finding/fetch resource taken from content? Look up content for possible error...",
-        );
         // resources::find can emit very unclear error based on internal MD content,
         // so let's give a tip to user in error message
         let assets = resource::find(self.ctx).map_err(|e| {
+            let error = String::from(
+                "Failed finding/fetch resource taken from content? Look up content for possible error...",
+            );
             error!("{} Caused by: {}", error, e);
             e
         })?;
@@ -138,6 +138,7 @@ impl<'a> Generator<'a> {
         info!("3.1 Generate chapters == ");
 
         let mut added_count = 0;
+        // add the main chapters + sub-chapters
         for (idx, item) in self.ctx.book.iter().enumerate() {
             let is_first = idx == 0;
             if let BookItem::Chapter(ref ch) = *item {
@@ -198,14 +199,6 @@ impl<'a> Generator<'a> {
         content = content.level(level);
 
         self.builder.add_content(content)?;
-
-        // second pass to actually add the sub-chapters
-        for sub_item in &ch.sub_items {
-            if let BookItem::Chapter(ref sub_ch) = *sub_item {
-                trace!("add sub-item = {:?}", sub_ch.name);
-                self.add_chapter(sub_ch, None)?;
-            }
-        }
 
         Ok(())
     }
@@ -326,7 +319,7 @@ impl<'a> Generator<'a> {
             let full_path = self.resolve_path(path)?;
             let mt = mime_guess::from_path(&full_path).first_or_octet_stream();
 
-            let content = File::open(&full_path)?;
+            let content = file_io(File::open(&full_path), "add-resource", &full_path)?;
             debug!(
                 "Adding resource [{}]: {:?} / {:?} ",
                 count,
@@ -347,7 +340,7 @@ impl<'a> Generator<'a> {
             let full_path = self.resolve_path(path)?;
             let mt = mime_guess::from_path(&full_path).first_or_octet_stream();
 
-            let content = File::open(&full_path)?;
+            let content = file_io(File::open(&full_path), "add-cover-image", &full_path)?;
             debug!("Adding cover image: {:?} / {:?} ", path, mt.to_string());
             self.builder
                 .add_cover_image(path, content, mt.to_string())?;
@@ -367,8 +360,8 @@ impl<'a> Generator<'a> {
         for additional_css in &self.config.additional_css {
             debug!("generating stylesheet: {:?}", &additional_css);
             let full_path = self.resolve_path(additional_css)?;
-            let mut f = File::open(&full_path)?;
-            f.read_to_end(&mut stylesheet)?;
+            let mut f = file_io(File::open(&full_path), "open-stylesheet", &full_path)?;
+            file_io(f.read_to_end(&mut stylesheet), "read-stylesheet", additional_css)?;
         }
         debug!("found style(s) = [{}]", stylesheet.len());
         Ok(stylesheet)
@@ -416,12 +409,13 @@ mod tests {
     use std::path::Path;
     use tempfile::TempDir;
     use url::Url;
+    use crate::init_tracing;
 
     use std::sync::Once;
     static INIT: Once = Once::new();
     pub fn init_logging() {
         INIT.call_once(|| {
-            let _ = env_logger::builder().is_test(true).try_init();
+            let _ = init_tracing();
         });
     }
 

@@ -3,7 +3,7 @@ title = "CurlyQuotesBookExample"
 authors = []
 
 src = "src"
-lang = "en"
+language = "en"
 
 [output.epub]
 curly-quotes = true

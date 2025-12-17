@@ -150,6 +150,7 @@ jobs:
       - name: Run tests
         run: cargo test --verbose -- --include-ignored
         env:
+          RUST_BACKTRACE: full
           EPUBCHECK_JAR: ${{ env.EPUBCHECK_JAR }}
 
       - name: Run Clippy

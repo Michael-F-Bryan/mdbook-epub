@@ -5,12 +5,10 @@ use tracing::debug;
 mod common;
 use crate::common::epub::output_epub_is_valid;
 use common::epub::generate_epub;
-use common::init_logging::init_logging;
 
 #[test]
 #[serial]
 fn test_straight_quotes_transformed_into_curly_quotes() {
-    init_logging();
     debug!("straight_quotes_transformed_into_curly_quotes...");
     let mut doc = generate_epub("straight_quotes_into_curly_quotes").unwrap();
     debug!("doc current path = {:?}", doc.1);
