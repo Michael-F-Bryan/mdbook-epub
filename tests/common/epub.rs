@@ -102,7 +102,6 @@ pub fn create_dummy_book_preserve_temp_folder(
 }
 
 pub fn epub_check(path: &Path) -> Result<(), Error> {
-    init_tracing();
     debug!("check epub book by path = '{}'...", &path.display());
 
     // windows workaround

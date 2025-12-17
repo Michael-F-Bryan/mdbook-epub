@@ -1,4 +1,4 @@
-use crate::DEFAULT_CSS;
+use crate::{file_io, DEFAULT_CSS};
 use crate::config::Config;
 use crate::filters::asset_link::AssetRemoteLinkFilter;
 use crate::filters::footnote::FootnoteFilter;
@@ -319,7 +319,7 @@ impl<'a> Generator<'a> {
             let full_path = self.resolve_path(path)?;
             let mt = mime_guess::from_path(&full_path).first_or_octet_stream();
 
-            let content = File::open(&full_path)?;
+            let content = file_io(File::open(&full_path), "add-resource", &full_path)?;
             debug!(
                 "Adding resource [{}]: {:?} / {:?} ",
                 count,
@@ -340,7 +340,7 @@ impl<'a> Generator<'a> {
             let full_path = self.resolve_path(path)?;
             let mt = mime_guess::from_path(&full_path).first_or_octet_stream();
 
-            let content = File::open(&full_path)?;
+            let content = file_io(File::open(&full_path), "add-cover-image", &full_path)?;
             debug!("Adding cover image: {:?} / {:?} ", path, mt.to_string());
             self.builder
                 .add_cover_image(path, content, mt.to_string())?;
@@ -360,8 +360,8 @@ impl<'a> Generator<'a> {
         for additional_css in &self.config.additional_css {
             debug!("generating stylesheet: {:?}", &additional_css);
             let full_path = self.resolve_path(additional_css)?;
-            let mut f = File::open(&full_path)?;
-            f.read_to_end(&mut stylesheet)?;
+            let mut f = file_io(File::open(&full_path), "open-stylesheet", &full_path)?;
+            file_io(f.read_to_end(&mut stylesheet), "read-stylesheet", additional_css)?;
         }
         debug!("found style(s) = [{}]", stylesheet.len());
         Ok(stylesheet)

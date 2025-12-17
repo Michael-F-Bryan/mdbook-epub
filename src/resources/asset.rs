@@ -17,6 +17,9 @@ use url::Url;
 pub(crate) enum AssetKind {
     Remote(Url),
     Local(PathBuf),
+    // image embedded into MD
+    #[allow(dead_code)]
+    Embedded,
 }
 
 #[derive(Clone, PartialEq, Debug)]
@@ -196,6 +199,7 @@ impl Display for AssetKind {
         match self {
             AssetKind::Remote(url) => write!(f, "Remote: '{}'", url.as_str()),
             AssetKind::Local(path) => write!(f, "Local '{}'", path.display()),
+            AssetKind::Embedded => write!(f, "Embedded"),
         }
     }
 }

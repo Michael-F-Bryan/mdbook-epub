@@ -31,6 +31,19 @@ pub enum Error {
     #[error("Unable to parse render context")]
     RenderContext,
 
+    #[error("Failed to {action} '{path}': {source}")]
+    AssetFileIo {
+        action: String,  // string action type: "open", "create", "read", "write"
+        path: PathBuf,
+        source: std::io::Error,
+    },
+
+    #[error("Path error for '{path}': {source}")]
+    AssetPathIo {
+        path: PathBuf,
+        source: std::io::Error,
+    },
+
     #[error("Unable to open asset")]
     AssetOpen(#[from] std::io::Error),
 

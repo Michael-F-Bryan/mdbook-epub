@@ -88,3 +88,26 @@ pub fn output_filename(dest: &Path, config: &MdConfig) -> Result<PathBuf, Error>
         None => Ok(dest.join("book.epub")),
     }
 }
+
+// IO helper functions to make Errors more clear on debug
+pub fn file_io<T>(
+    result: std::io::Result<T>,
+    action: &str,
+    path: impl Into<PathBuf>,
+) -> Result<T, Error> {
+    result.map_err(|e| Error::AssetFileIo {
+        action: action.to_string(),
+        path: path.into(),
+        source: e,
+    })
+}
+
+pub fn path_io<T>(
+    result: std::io::Result<T>,
+    path: impl Into<PathBuf>,
+) -> Result<T, Error> {
+    result.map_err(|e| Error::AssetPathIo {
+        path: path.into(),
+        source: e,
+    })
+}
