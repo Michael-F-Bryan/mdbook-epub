@@ -10,7 +10,7 @@ use tracing::{debug, trace, warn};
 use url::Url;
 
 use crate::resources::asset::{Asset, AssetKind};
-use crate::{Error, utils, path_io};
+use crate::{Config, Error, path_io, utils};
 
 // Internal constants for reveling 'upper folder' paths in resource links inside MD
 pub(crate) const UPPER_PARENT: &str = concatcp!("..", MAIN_SEPARATOR_STR);
@@ -35,6 +35,8 @@ pub(crate) fn find(ctx: &RenderContext) -> Result<HashMap<String, Asset>, Error>
     let mut assets: HashMap<String, Asset> = HashMap::new();
     debug!("Finding resources by:\n{:?}", ctx.config);
     let src_dir = path_io(ctx.root.join(&ctx.config.book.src).canonicalize(), &ctx.config.book.src)?;
+    let allow_assets_outside_src_dir =
+        Config::from_render_context(ctx)?.allow_assets_outside_book_src_dir;
 
     debug!(
         "Start iteration over a [{:?}] sections in src_dir = {:?}",
@@ -55,7 +57,12 @@ pub(crate) fn find(ctx: &RenderContext) -> Result<HashMap<String, Asset>, Error>
                     let asset = if let Ok(url) = Url::parse(&link) {
                         Asset::from_url(&link, url, &ctx.destination)
                     } else {
-                        let result = Asset::from_local(&link, &src_dir, ch.path.as_ref().unwrap());
+                        let result = Asset::from_local(
+                            &link,
+                            &src_dir,
+                            ch.path.as_ref().unwrap(),
+                            allow_assets_outside_src_dir,
+                        );
                         if let Err(Error::AssetOutsideSrcDir(_)) = result {
                             warn!("Asset '{link}' is outside source dir '{src_dir:?}' and ignored");
                             continue;
@@ -71,30 +78,24 @@ pub(crate) fn find(ctx: &RenderContext) -> Result<HashMap<String, Asset>, Error>
                     match asset.source {
                         // local asset kind
                         AssetKind::Local(_) => {
-                            let relative = asset.location_on_disk.strip_prefix(&src_dir);
-                            match relative {
-                                Ok(_relative_link_path) => {
-                                    let link_key = asset.original_link.clone();
-                                    if let std::collections::hash_map::Entry::Vacant(e) =
-                                        assets.entry(link_key.to_owned())
-                                    {
-                                        debug!(
-                                            "Adding asset by link '{:?}' : {}",
-                                            link_key, &asset
-                                        );
-                                        e.insert(asset);
-                                        assets_count += 1;
-                                    } else {
-                                        debug!("Skipped asset for '{}'", link_key);
-                                    }
+                            let inside_src = asset.location_on_disk.strip_prefix(&src_dir).is_ok();
+                            if inside_src || allow_assets_outside_src_dir {
+                                let link_key = asset.original_link.clone();
+                                if let std::collections::hash_map::Entry::Vacant(e) =
+                                    assets.entry(link_key.to_owned())
+                                {
+                                    debug!("Adding asset by link '{:?}' : {}", link_key, &asset);
+                                    e.insert(asset);
+                                    assets_count += 1;
+                                } else {
+                                    debug!("Skipped asset for '{}'", link_key);
                                 }
-                                _ => {
-                                    // skip incorrect resource/image link outside of book /SRC/ folder
-                                    warn!(
-                                        "Sorry, we can't add 'Local asset' that is outside of book's /src/ folder, {:?}",
-                                        &asset
-                                    );
-                                }
+                            } else {
+                                // skip incorrect resource/image link outside of book /SRC/ folder
+                                warn!(
+                                    "Sorry, we can't add 'Local asset' that is outside of book's /src/ folder, {:?}",
+                                    &asset
+                                );
                             }
                         }
                         AssetKind::Remote(_) => {
@@ -274,6 +275,42 @@ mod tests {
     }
 
     #[test]
+    fn test_find_local_asset_outside_src_when_enabled() {
+        let inside_link = "./rust-logo.png";
+        let outside_link = "../third_party/wikimedia/Epub_logo_color.svg";
+
+        let tmp_dir = TempDir::new().unwrap();
+        let temp = tmp_dir.path().join("mdbook-epub");
+        let dest_dir = temp.as_path().to_string_lossy().to_string();
+        let chapters = json!([{
+            "Chapter": {
+                "name": "Chapter 1",
+                "content": format!("# Chapter 1\r\n\r\n![Image]({inside_link})\r\n![Image]({outside_link})"),
+                "number": [1],
+                "sub_items": [],
+                "path": "chapter_1.md",
+                "parent_names": []
+            }
+        }]);
+        let ctx = ctx_with_chapters_allow_assets_outside(&chapters, &dest_dir, true).unwrap();
+
+        let mut assets = find(&ctx).unwrap();
+        assert_eq!(2, assets.len());
+
+        let outside_asset = assets.remove(outside_link).unwrap();
+        let expected_outside_path = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("tests/long_book_example/third_party/wikimedia/Epub_logo_color.svg")
+            .canonicalize()
+            .unwrap();
+
+        assert_eq!(outside_asset.location_on_disk, expected_outside_path);
+        assert_eq!(
+            outside_asset.filename,
+            PathBuf::from("third_party/wikimedia/Epub_logo_color.svg")
+        );
+    }
+
+    #[test]
     fn test_find_remote_asset() {
         let link = "https://www.rust-lang.org/static/images/rust-logo-blk.svg";
         let link2 = "https://www.rust-lang.org/static/images/rust-logo-blk.png";
@@ -345,7 +382,8 @@ mod tests {
             Asset::from_local(
                 "a.png",
                 Path::new("tests\\dummy\\src"),
-                Path::new("ch\\a.md")
+                Path::new("ch\\a.md"),
+                false,
             )
             .unwrap_err()
             .to_string()
@@ -361,7 +399,8 @@ mod tests {
             Asset::from_local(
                 "a.png",
                 Path::new("tests/long_book_example/src"),
-                Path::new("ch/a.md")
+                Path::new("ch/a.md"),
+                false,
             )
             .unwrap_err()
             .to_string()
@@ -379,7 +418,8 @@ mod tests {
             Asset::from_local(
                 "wikimedia",
                 Path::new("tests/long_book_example"),
-                Path::new("third_party/a.md")
+                Path::new("third_party/a.md"),
+                false,
             )
             .unwrap_err()
             .to_string()
@@ -398,7 +438,8 @@ mod tests {
             Asset::from_local(
                 "wikimedia",
                 Path::new("tests\\dummy"),
-                Path::new("third_party\\a.md")
+                Path::new("third_party\\a.md"),
+                false,
             )
             .unwrap_err()
             .to_string()
@@ -409,6 +450,14 @@ mod tests {
         chapters: &Value,
         destination: &str,
     ) -> Result<RenderContext, mdbook_core::errors::Error> {
+        ctx_with_chapters_allow_assets_outside(chapters, destination, false)
+    }
+
+    fn ctx_with_chapters_allow_assets_outside(
+        chapters: &Value,
+        destination: &str,
+        allow_assets_outside_book_src_dir: bool,
+    ) -> Result<RenderContext, mdbook_core::errors::Error> {
         let json_ctx = json!({
             "version": mdbook_core::MDBOOK_VERSION,
             "root": "tests/long_book_example",
@@ -416,7 +465,10 @@ mod tests {
             "config": {
                 "book": {"authors": [], "language": "en", "text-direction": "ltr",
                     "src": "src", "title": "DummyBook"},
-                "output": {"epub": {"curly-quotes": true}}},
+                "output": {"epub": {
+                    "curly-quotes": true,
+                    "allow-assets-outside-book-src-dir": allow_assets_outside_book_src_dir
+                }}},
             "destination": destination
         });
         RenderContext::from_json(json_ctx.to_string().as_bytes())

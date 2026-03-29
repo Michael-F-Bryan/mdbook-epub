@@ -24,6 +24,8 @@ pub struct Config {
     pub no_section_label: bool,
     /// Use "smart quotes" instead of the usual `"` character.
     pub curly_quotes: bool,
+    /// Allow collecting linked local assets that are outside the book `src/` directory.
+    pub allow_assets_outside_book_src_dir: bool,
     /// Add backreference links to footnote definitions and allow pop-up footnote behaviour.
     /// Requires `epub-version = 3`, in which case it is enabled by default.
     pub footnote_backrefs: bool,
@@ -72,6 +74,7 @@ impl Default for Config {
             additional_resources: Vec::new(),
             no_section_label: false,
             curly_quotes: false,
+            allow_assets_outside_book_src_dir: false,
             footnote_backrefs: false,
             epub_version: None,
         }
@@ -96,6 +99,35 @@ mod tests {
         let ctx = RenderContext::from_json(json.as_bytes()).unwrap();
         let config = Config::from_render_context(&ctx);
         assert!(config.is_ok());
+        assert!(!config.unwrap().allow_assets_outside_book_src_dir);
+    }
+
+    #[test]
+    fn test_from_render_context_allow_assets_outside_book_src_dir() {
+        let json = json!({
+            "version": mdbook_core::MDBOOK_VERSION,
+            "root": "tests/long_book_example",
+            "book": {"items": [], "__non_exhaustive": null},
+            "config": {
+                "book": {
+                    "authors": [],
+                    "language": "en",
+                    "text-direction": "ltr",
+                    "src": "src",
+                    "title": "DummyBook"
+                },
+                "output": {
+                    "epub": {
+                        "allow-assets-outside-book-src-dir": true
+                    }
+                }
+            },
+            "destination": "book/epub"
+        })
+        .to_string();
+        let ctx = RenderContext::from_json(json.as_bytes()).unwrap();
+        let config = Config::from_render_context(&ctx).unwrap();
+        assert!(config.allow_assets_outside_book_src_dir);
     }
 
     fn ctx_with_template(source: &str, destination: &Path) -> serde_json::Value {

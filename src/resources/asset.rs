@@ -99,6 +99,7 @@ impl Asset {
         link: &str,
         src_dir: &Path,
         chapter_path: &Path,
+        allow_outside_src_dir: bool,
     ) -> Result<Asset, Error> {
         debug!(
             "Composing asset path for {:?} + {:?} in chapter = {:?}",
@@ -128,7 +129,12 @@ impl Asset {
             return Err(Error::AssetFile(absolute_location));
         }
         // Use filename as embedded file path with content from absolute_location.
-        let filename = full_filename.strip_prefix(src_dir)?;
+        // By default this must be relative to `src/`, but it may be outside when explicitly allowed.
+        let filename = match full_filename.strip_prefix(src_dir) {
+            Ok(filename) => filename.to_path_buf(),
+            Err(_error) if allow_outside_src_dir => utils::normalize_path(Path::new(link)),
+            Err(error) => return Err(Error::AssetOutsideSrcDir(error)),
+        };
 
         let asset = Asset::new(
             link,

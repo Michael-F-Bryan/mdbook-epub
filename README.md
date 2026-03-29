@@ -66,6 +66,9 @@ Recognized options:
 `additional-resources`: A list of path to files which should be added to the
 EPUB, such as typefaces. They will be added with path `OEBPS/<filename>`.
 
+`allow-assets-outside-book-src-dir`: Allow local assets linked from markdown to
+be collected even when they resolve outside the book's `src/` directory.
+
 `no-section-label`: In the contents list, don't prefix the chapter title with
 its section number.
 
@@ -87,6 +90,7 @@ additional-css = ["./path/to/main.css"]
 use-default-css = false
 cover-image = "ebook-cover.png"
 additional-resources = ["./assets/Open-Sans-Regular.ttf"]
+allow-assets-outside-book-src-dir = true
 no-section-label = true
 curly-quotes = true
 epub-version = 3
