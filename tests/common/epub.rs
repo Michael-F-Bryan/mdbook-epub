@@ -13,6 +13,7 @@ use tracing::{debug, error};
 /// Convenience function for compiling the dummy book into an `EpubDoc`.
 #[allow(dead_code)]
 pub fn generate_epub(epub_book_name: &str) -> Result<(EpubDoc<BufReader<File>>, PathBuf), Error> {
+    init_tracing();
     debug!("generate_epub: {:?}...", epub_book_name);
     let (ctx, _md, temp) = create_dummy_book(epub_book_name).unwrap();
     debug!("temp dir = {:?}", &temp);
@@ -34,6 +35,7 @@ pub fn generate_epub(epub_book_name: &str) -> Result<(EpubDoc<BufReader<File>>, 
 pub fn generate_epub_preserve_temp_folder(
     epub_book_name: &str,
 ) -> Result<(EpubDoc<BufReader<File>>, PathBuf), Error> {
+    init_tracing();
     debug!("generate_epub: {:?}...", epub_book_name);
     let (ctx, _md, temp) = create_dummy_book_preserve_temp_folder(epub_book_name).unwrap();
     debug!("temp dir = {:?}", &temp);

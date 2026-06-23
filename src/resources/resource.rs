@@ -10,7 +10,7 @@ use tracing::{debug, trace, warn};
 use url::Url;
 
 use crate::resources::asset::{Asset, AssetKind};
-use crate::{Error, utils, path_io};
+use crate::{Error, path_io, utils};
 
 // Internal constants for reveling 'upper folder' paths in resource links inside MD
 pub(crate) const UPPER_PARENT: &str = concatcp!("..", MAIN_SEPARATOR_STR);
@@ -34,7 +34,10 @@ pub(crate) const UPPER_FOLDER_PATHS: &[&str] =
 pub(crate) fn find(ctx: &RenderContext) -> Result<HashMap<String, Asset>, Error> {
     let mut assets: HashMap<String, Asset> = HashMap::new();
     debug!("Finding resources by:\n{:?}", ctx.config);
-    let src_dir = path_io(ctx.root.join(&ctx.config.book.src).canonicalize(), &ctx.config.book.src)?;
+    let src_dir = path_io(
+        ctx.root.join(&ctx.config.book.src).canonicalize(),
+        &ctx.config.book.src,
+    )?;
 
     debug!(
         "Start iteration over a [{:?}] sections in src_dir = {:?}",
@@ -103,7 +106,7 @@ pub(crate) fn find(ctx: &RenderContext) -> Result<HashMap<String, Asset>, Error>
                             debug!("Adding Remote asset by link '{}' : {}", link_key, &asset);
                             assets.insert(link_key, asset);
                             assets_count += 1;
-                        },
+                        }
                         AssetKind::Embedded => {
                             debug!("Embedded asset '{}' by Event", &asset.original_link);
                         }
@@ -128,13 +131,14 @@ fn find_assets_in_nested_html_tags(element: &Element) -> Result<Vec<String>, Err
 
     if element.name == "img"
         && let Some(dest) = &element.attributes["src"]
-        && !dest.trim().starts_with(EMBEDDED_URL_START) // skip EMBEDDED url
+        && !dest.trim().starts_with(EMBEDDED_URL_START)
+    // skip EMBEDDED url
     {
         found_asset.push(dest.clone());
     }
     for item in &element.children {
         if let Node::Element(nested_element) = item {
-            found_asset.extend(find_assets_in_nested_html_tags(nested_element)?.into_iter());
+            found_asset.extend(find_assets_in_nested_html_tags(nested_element)?);
         }
     }
 
@@ -168,8 +172,7 @@ fn find_assets_in_markdown(chapter_src_content: &str) -> Result<Vec<String>, Err
                 if let Ok(dom) = Dom::parse(&content) {
                     for item in dom.children {
                         if let Node::Element(ref element) = item {
-                            found_asset
-                                .extend(find_assets_in_nested_html_tags(element)?.into_iter());
+                            found_asset.extend(find_assets_in_nested_html_tags(element)?);
                         }
                     }
                 }
