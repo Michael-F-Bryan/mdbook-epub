@@ -205,6 +205,7 @@ impl<'a> AssetRemoteLinkFilter<'a> {
         // old_key: &str,
     ) -> Result<String, Error> {
         trace!("1. DUMP assets:\n{:?}\n", self.assets);
+        let asset_link = asset.original_link.clone();
         match self.download_handler.download(asset) {
             Ok(updated_data) => {
                 let updated_asset = asset.with_updated_fields(updated_data);
@@ -214,7 +215,10 @@ impl<'a> AssetRemoteLinkFilter<'a> {
                 trace!("2. DUMP assets:\n{:?}", self.assets);
                 Ok(updated_asset.filename.to_string_lossy().to_string())
             }
-            Err(error) => Err(error),
+            Err(error) => {
+                error!("Downloading '{}' has failed: '{error}'", &asset_link);
+                Err(error)
+            }
         }
     }
 }

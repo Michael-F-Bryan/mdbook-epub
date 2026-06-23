@@ -1,4 +1,3 @@
-use crate::{file_io, DEFAULT_CSS};
 use crate::config::Config;
 use crate::filters::asset_link::AssetRemoteLinkFilter;
 use crate::filters::footnote::FootnoteFilter;
@@ -7,6 +6,7 @@ use crate::resources::asset::Asset;
 use crate::resources::resource::{self};
 use crate::resources::retrieve::{ContentRetriever, ResourceHandler};
 use crate::validation::validate_config_epub_version;
+use crate::{DEFAULT_CSS, file_io};
 use crate::{Error, utils};
 use epub_builder::{EpubBuilder, EpubContent, ZipLibrary};
 use handlebars::{Handlebars, RenderError, RenderErrorReason};
@@ -361,7 +361,11 @@ impl<'a> Generator<'a> {
             debug!("generating stylesheet: {:?}", &additional_css);
             let full_path = self.resolve_path(additional_css)?;
             let mut f = file_io(File::open(&full_path), "open-stylesheet", &full_path)?;
-            file_io(f.read_to_end(&mut stylesheet), "read-stylesheet", additional_css)?;
+            file_io(
+                f.read_to_end(&mut stylesheet),
+                "read-stylesheet",
+                additional_css,
+            )?;
         }
         debug!("found style(s) = [{}]", stylesheet.len());
         Ok(stylesheet)
@@ -402,6 +406,7 @@ impl Debug for Generator<'_> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::init_tracing;
     use crate::resources::asset::AssetKind;
     use crate::resources::retrieve::{MockContentRetriever, RetrievedContent, UpdatedAssetData};
     use mime_guess::mime;
@@ -409,7 +414,6 @@ mod tests {
     use std::path::Path;
     use tempfile::TempDir;
     use url::Url;
-    use crate::init_tracing;
 
     use std::sync::Once;
     static INIT: Once = Once::new();
@@ -564,7 +568,7 @@ mod tests {
     #[test]
     fn test_render_remote_assets_in_sub_chapter() {
         init_logging();
-        let link = "https://upload.wikimedia.org/wikipedia/commons/4/4e/Open_Source_Initiative_keyhole.svg";
+        let link = "https://www.cloudflare.com/icons.svg";
         let tmp_dir = TempDir::new().unwrap();
         let dest_dir = tmp_dir.path().join("mdbook-epub");
         let ch1_1 = json!({
@@ -609,7 +613,7 @@ mod tests {
         assert_eq!(g.assets.len(), 1);
 
         let pat = |heading, prefix| {
-            format!("<h1>{heading}</h1>\n<p><img src=\"{prefix}e3825a3756080f55.svg\"")
+            format!("<h1>{heading}</h1>\n<p><img src=\"{prefix}be8d297f5c063a3c.svg\"")
         };
         if let BookItem::Chapter(ref ch) = ctx.book.items[0] {
             let rendered: String = g.render_chapter(ch).unwrap();

@@ -1,6 +1,6 @@
-use crate::{file_io, path_io, Error};
 use crate::resources::asset::{Asset, AssetKind};
-use infer::Infer;
+use crate::{Error, file_io, path_io};
+use infer::{Infer, MatcherType, Type};
 use mime_guess::Mime;
 #[cfg(test)]
 use mockall::automock;
@@ -86,7 +86,11 @@ impl Default for UpdatedAssetData {
 pub(crate) trait ContentRetriever {
     fn download(&self, asset: &Asset) -> Result<UpdatedAssetData, Error>;
     fn read(&self, path: &Path, buffer: &mut Vec<u8>) -> Result<(), Error> {
-        file_io(file_io(File::open(path), "open-downloaded", path)?.read_to_end(buffer), "read-downloaded", path)?;
+        file_io(
+            file_io(File::open(path), "open-downloaded", path)?.read_to_end(buffer),
+            "read-downloaded",
+            path,
+        )?;
         Ok(())
     }
     fn retrieve(&self, url: &str) -> Result<RetrievedContent, Error>;
@@ -142,7 +146,11 @@ impl ContentRetriever for ResourceHandler {
                     .write(true)
                     .open(&new_location_on_disk)?;
                 debug!("File on disk: \n{:?}", &file);
-                file_io(io::copy(&mut retrieved_content.reader, &mut file), "copy-download", &new_location_on_disk)?;
+                file_io(
+                    io::copy(&mut retrieved_content.reader, &mut file),
+                    "copy-download",
+                    &new_location_on_disk,
+                )?;
                 debug!(
                     "Downloaded asset by '{}' : {:?}",
                     url, &new_location_on_disk
@@ -167,15 +175,68 @@ impl ContentRetriever for ResourceHandler {
         match res.status().as_u16() {
             200 => {
                 let mut bytes: Vec<u8> = Vec::with_capacity(1000);
-                let (_, body) = res.into_parts();
+                let (parts, body) = res.into_parts();
                 let _ = body.into_reader().read_to_end(&mut bytes);
 
+                // get mime type from header
+                let mime_type = parts
+                    .headers
+                    .get("content-type")
+                    .and_then(|val| val.to_str().ok())
+                    // convert to String here
+                    .map(|s| s.split(';').next().unwrap_or(s).trim().to_string())
+                    .unwrap_or_else(|| "application/octet-stream".to_string());
+
                 let infer = Infer::new();
-                let kind = infer.get(&bytes).ok_or_else(|| {
-                    Error::AssetFileNotFound(format!(
-                        "Could not determine mime-type for resource: {url}"
-                    ))
-                })?;
+                let kind = infer.get(&bytes).unwrap_or_else(|| {
+                    // Sometimes Infer can't get mime types, so here is an Alternative
+                    // Checking one more time for Extended MIME-types
+                    let (matcher_type, mime, extension) = match mime_type.as_str() {
+                        // Images
+                        "image/svg+xml" => (MatcherType::Image, "image/svg+xml", "svg"),
+                        "image/png" => (MatcherType::Image, "image/png", "png"),
+                        "image/jpeg" | "image/jpg" => (MatcherType::Image, "image/jpeg", "jpg"),
+                        "image/gif" => (MatcherType::Image, "image/gif", "gif"),
+                        "image/webp" => (MatcherType::Image, "image/webp", "webp"),
+                        "image/x-icon" | "image/vnd.microsoft.icon" => (MatcherType::Image, "image/x-icon", "ico"),
+
+                        // Documents
+                        "application/pdf" => (MatcherType::Doc, "application/pdf", "pdf"),
+                        "application/msword" => (MatcherType::Doc, "application/msword", "doc"),
+                        "application/vnd.openxmlformats-officedocument.wordprocessingml.document" => (MatcherType::Doc, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "docx"),
+                        "application/vnd.ms-excel" => (MatcherType::Doc, "application/vnd.ms-excel", "xls"),
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" => (MatcherType::Doc, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "xlsx"),
+                        "text/html" => (MatcherType::Text, "text/html", "html"),
+                        "text/plain" => (MatcherType::Text, "text/plain", "txt"),
+                        "application/json" => (MatcherType::Text, "application/json", "json"),
+                        "application/xml" | "text/xml" => (MatcherType::Text, "application/xml", "xml"),
+
+                        // Archives
+                        "application/zip" => (MatcherType::Archive, "application/zip", "zip"),
+                        "application/x-tar" => (MatcherType::Archive, "application/x-tar", "tar"),
+                        "application/x-rar-compressed" => (MatcherType::Archive, "application/x-rar-compressed", "rar"),
+                        "application/x-7z-compressed" => (MatcherType::Archive, "application/x-7z-compressed", "7z"),
+                        "application/gzip" => (MatcherType::Archive, "application/gzip", "gz"),
+
+                        // Audio / Video
+                        "audio/mpeg" => (MatcherType::Audio, "audio/mpeg", "mp3"),
+                        "audio/ogg" => (MatcherType::Audio, "audio/ogg", "ogg"),
+                        "audio/wav" => (MatcherType::Audio, "audio/wav", "wav"),
+                        "video/mp4" => (MatcherType::Video, "video/mp4", "mp4"),
+                        "video/x-matroska" => (MatcherType::Video, "video/x-matroska", "mkv"),
+                        "video/quicktime" => (MatcherType::Video, "video/quicktime", "mov"),
+
+                        _ => (MatcherType::Custom, "application/octet-stream", "bin"),
+                    };
+
+                    // Return Type (as Type::new takes &str mime and extension)
+                    Type::new(
+                        matcher_type,
+                        mime,
+                        extension,
+                        dummy_check, // fake check just for compile
+                    )
+                });
 
                 let mime_type = kind.mime_type().to_string();
                 let extension = kind.extension().to_string();
@@ -202,6 +263,10 @@ impl ContentRetriever for ResourceHandler {
             _ => unreachable!("Unexpected response status for '{url}'"),
         }
     }
+}
+
+pub fn dummy_check(_buf: &[u8]) -> bool {
+    true
 }
 
 #[cfg(test)]
