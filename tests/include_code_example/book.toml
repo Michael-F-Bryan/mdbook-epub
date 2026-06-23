@@ -1,8 +1,0 @@
-[book]
-title = "IncludeCodeExample"
-authors = []
-
-src = "src"
-language = "en"
-
-[output.epub]

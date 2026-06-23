@@ -1,5 +1,6 @@
 use crate::errors::Error;
 use crate::resources::asset::{Asset, AssetKind};
+use crate::resources::resource::EMBEDDED_URL_START;
 use crate::resources::retrieve::ContentRetriever;
 use html_parser::{Dom, Node};
 use pulldown_cmark::{CowStr, Event, Tag};
@@ -9,7 +10,6 @@ use std::iter;
 use std::path::{Component, Path};
 use tracing::{debug, error, trace};
 use url::Url;
-use crate::resources::resource::EMBEDDED_URL_START;
 
 /// Filter is used for replacing remote urls with local images downloaded from internet
 pub struct AssetRemoteLinkFilter<'a> {
@@ -55,8 +55,8 @@ impl<'a> AssetRemoteLinkFilter<'a> {
         id: CowStr<'a>,
     ) -> Event<'a> {
         let url_str = dest_url.as_ref(); // var shadowing
+        debug!("Lookup for asset: by {}", &url_str);
         if let Some(asset) = self.assets.get_mut(&url_str.to_string()).cloned() {
-            debug!("Lookup for asset: by {}", &url_str);
             match asset.source {
                 AssetKind::Remote(_) => {
                     debug!("Compare: {} vs {}", &asset.original_link, &url_str);
@@ -101,7 +101,7 @@ impl<'a> AssetRemoteLinkFilter<'a> {
                         title: title.to_owned(),
                         id: id.to_owned(),
                     });
-                },
+                }
                 AssetKind::Embedded => {
                     debug!("Embedded URL '{}' by Event", &url_str);
                     return Event::Start(Tag::Image {
