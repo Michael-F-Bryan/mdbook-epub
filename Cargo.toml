@@ -44,7 +44,7 @@ mdbook-renderer = { version = "0.5.3", default-features = false }
 handlebars = "6.4.1"# downgraded due to parent 'mdbook' dependency and error there
 html_parser = "0.7.0"
 url = "2.5"
-ureq = "3.1"
+ureq = "3.3"
 infer = "0.19"
 const_format = "0.2"
 
