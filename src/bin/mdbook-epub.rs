@@ -2,15 +2,17 @@ use std::io;
 use std::path::PathBuf;
 use std::process;
 
+use ::serde_json;
 use clap::Parser;
 use mdbook_driver::MDBook;
 use mdbook_renderer::RenderContext;
-use ::serde_json;
 
 use ::mdbook_epub;
 use mdbook_epub::errors::Error;
 use mdbook_epub::init_tracing;
 use tracing::{debug, error, info};
+
+const VERSION: &str = concat!("v", clap::crate_version!());
 
 fn main() {
     init_tracing();
@@ -30,7 +32,7 @@ fn run(args: &Args) -> Result<(), Error> {
     // get a `RenderContext`, either from stdin (because it's used as a plugin)
     // or by instrumenting MDBook directly
     let ctx: RenderContext = if args.standalone {
-        println!("Running mdbook-epub as standalone app...");
+        println!("Running mdbook-epub '{}' as standalone app...", VERSION);
         let error = format!(
             "book.toml root file is not found by a path {:?}",
             &args.root.display()
@@ -45,7 +47,8 @@ fn run(args: &Args) -> Result<(), Error> {
         RenderContext::new(md.root, md.book, md.config, destination)
     } else {
         println!(
-            "Running mdbook-epub as plugin waiting on the STDIN input. If you wanted to process the files in the current folder, use the -s flag from documentation, See: mdbook-epub --help"
+            "Running mdbook-epub '{}' as plugin waiting on the STDIN input. If you wanted to process the files in the current folder, use the -s flag from documentation, See: mdbook-epub --help",
+            VERSION
         );
         serde_json::from_reader(io::stdin()).map_err(|_| Error::RenderContext)?
     };
