@@ -110,6 +110,17 @@ set RUST_LOG=debug
 mdbook-epub
 ```
 
+## Running tests using 'cargo nextest' locally
+
+Before running all tests you should download (or build) [epubcheck.jar](https://github.com/w3c/epubcheck/releases) cli
+java utility. You need JDK to be correctly installed and properly run JAR commands.
+
+When all is done and works properly all tests can be executed by command below.
+
+```
+EPUBCHECK_JAR=/path/epubcheck/target/epubcheck.jar RUST_BACKTRACE=1 cargo nextest run --run-ignored=all
+```
+
 ## Planned Features
 
 The following features are planned (a checked box indicates it's complete). This
