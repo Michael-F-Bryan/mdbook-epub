@@ -123,7 +123,7 @@ jobs:
 
     steps:
       - name: Set up Rust
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Install cargo version
         uses: dtolnay/rust-toolchain@stable
