@@ -293,7 +293,7 @@ impl<'a> Generator<'a> {
 
         let mut unique_assets = HashSet::new();
         let mut count = 0;
-        for (_key, asset) in self.assets.iter_mut() {
+        for asset in self.assets.values_mut() {
             // self.handler.download(asset)?;
             debug!("Try to add asset : {}", asset);
             if unique_assets.insert(&asset.location_on_disk) {
