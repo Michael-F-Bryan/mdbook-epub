@@ -35,7 +35,7 @@ fn run(args: &Args) -> Result<(), Error> {
         println!("Running mdbook-epub '{}' as standalone app...", VERSION);
         let error = format!(
             "book.toml root file is not found by a path {:?}",
-            &args.root.display()
+            args.root.display()
         );
         let md = MDBook::load(&args.root).expect(&error);
         let destination = md.build_dir_for("epub");

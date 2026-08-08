@@ -120,7 +120,7 @@ impl Asset {
         let absolute_location = full_filename.canonicalize().map_err(|this_error| {
             Error::AssetFileNotFound(format!(
                 "Asset was not found: '{link}' by '{}', error = {}",
-                &full_filename.display(),
+                full_filename.display(),
                 this_error
             ))
         })?;
