@@ -4,6 +4,7 @@ permissions:
   contents: write
 
 on:
+  workflow_dispatch: # Manual run
   push:
     tags:
       - v[0-9]+.*
@@ -27,7 +28,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v7
       - name: Set up Rust
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@master
         with:
           toolchain: stable
       - name: Build release
