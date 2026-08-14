@@ -63,7 +63,12 @@ impl<'a> AssetRemoteLinkFilter<'a> {
                     // Check equality of remote_url and dest_url
                     if asset.original_link.as_str() == url_str {
                         debug!("1. Found URL '{}' by Event", &url_str);
-                        match self.process_asset(&asset, url_str) {
+                        match Self::download_and_store_asset(
+                            self.assets,
+                            &asset,
+                            url_str,
+                            self.download_handler,
+                        ) {
                             Ok(new_file_name) => {
                                 debug!("SUCCESSFULLY downloaded resource by URL '{}'", &url_str);
                                 let depth = self.depth;
@@ -127,42 +132,12 @@ impl<'a> AssetRemoteLinkFilter<'a> {
         let mut found_links = Vec::new();
         if let Ok(dom) = Dom::parse(&html.clone().into_string()) {
             for item in dom.children {
-                match item {
-                    Node::Element(ref element) if element.name == "img" => {
-                        if let Some(dest_url) = &element.attributes["src"]
-                            && Url::parse(dest_url).is_ok()
-                        {
-                            debug!("Found a valid remote img src:\"{}\".", dest_url);
-                            if let Some(asset) = self.assets.get_mut(dest_url).cloned() {
-                                debug!("Lookup Remote asset: by {}", &dest_url);
-                                if let AssetKind::Remote(ref _remote_url) = asset.source {
-                                    debug!("Compare: {} vs {}", &asset.original_link, &dest_url);
-                                    // Check equality of remote_url and dest_url
-                                    if asset.original_link.as_str() == dest_url.as_str() {
-                                        debug!("1. Found URL '{}' by Event", &dest_url);
-                                        match self.process_asset(&asset, dest_url) {
-                                            Ok(_) => {
-                                                debug!(
-                                                    "SUCCESSFULLY downloaded resource by URL '{}'",
-                                                    &dest_url
-                                                );
-                                            }
-                                            Err(error) => {
-                                                error!(
-                                                    "Can't download resource by URL '{}'. Error = {}",
-                                                    &dest_url, error
-                                                );
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-
-                            found_links.push(dest_url.clone());
-                        }
-                    }
-                    _ => {}
-                }
+                Self::match_dom_node_item(
+                    item,
+                    self.assets,
+                    &mut found_links,
+                    self.download_handler,
+                );
             }
         }
 
@@ -198,21 +173,69 @@ impl<'a> AssetRemoteLinkFilter<'a> {
         }
     }
 
-    fn process_asset(
-        &mut self,
+    fn match_dom_node_item(
+        item: Node,
+        assets: &mut HashMap<String, Asset>,
+        found_links: &mut Vec<String>,
+        download_handler: &'a dyn ContentRetriever,
+    ) -> () {
+        match item {
+            Node::Element(ref element) if element.name == "img" => {
+                if let Some(dest_url) = &element.attributes["src"]
+                    && Url::parse(dest_url).is_ok()
+                {
+                    debug!("Found a valid remote img src:\"{}\".", dest_url);
+                    if let Some(asset) = assets.get_mut(dest_url).cloned() {
+                        debug!("Lookup Remote asset: by {}", &dest_url);
+                        if let AssetKind::Remote(ref _remote_url) = asset.source {
+                            debug!("Compare: {} vs {}", &asset.original_link, &dest_url);
+                            // Check equality of remote_url and dest_url
+                            if asset.original_link.as_str() == dest_url.as_str() {
+                                debug!("1. Found URL '{}' by Event", &dest_url);
+                                match Self::download_and_store_asset(
+                                    assets,
+                                    &asset,
+                                    dest_url,
+                                    download_handler,
+                                ) {
+                                    Ok(_) => {
+                                        debug!(
+                                            "SUCCESSFULLY downloaded resource by URL '{}'",
+                                            &dest_url
+                                        );
+                                    }
+                                    Err(error) => {
+                                        error!(
+                                            "Can't download resource by URL '{}'. Error = {}",
+                                            &dest_url, error
+                                        );
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    found_links.push(dest_url.clone());
+                }
+            }
+            _ => {}
+        }
+    }
+
+    fn download_and_store_asset<'b>(
+        assets: &mut HashMap<String, Asset>,
         asset: &Asset,
         link_key: &str,
-        // old_key: &str,
+        download_handler: &'a dyn ContentRetriever,
     ) -> Result<String, Error> {
-        trace!("1. DUMP assets:\n{:?}\n", self.assets);
+        trace!("1. DUMP assets:\n{:?}\n", assets);
         let asset_link = asset.original_link.clone();
-        match self.download_handler.download(asset) {
+        match download_handler.download(asset) {
             Ok(updated_data) => {
                 let updated_asset = asset.with_updated_fields(updated_data);
                 // replaced previous asset by new, updated one
-                self.assets
-                    .insert(link_key.to_string(), updated_asset.clone());
-                trace!("2. DUMP assets:\n{:?}", self.assets);
+                assets.insert(link_key.to_string(), updated_asset.clone());
+                trace!("2. DUMP assets:\n{:?}", assets);
                 Ok(updated_asset.filename.to_string_lossy().to_string())
             }
             Err(error) => {
