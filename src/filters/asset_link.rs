@@ -178,7 +178,7 @@ impl<'a> AssetRemoteLinkFilter<'a> {
         assets: &mut HashMap<String, Asset>,
         found_links: &mut Vec<String>,
         download_handler: &'a dyn ContentRetriever,
-    ) -> () {
+    ) {
         match item {
             Node::Element(ref element) if element.name == "img" => {
                 if let Some(dest_url) = &element.attributes["src"]
@@ -222,7 +222,7 @@ impl<'a> AssetRemoteLinkFilter<'a> {
         }
     }
 
-    fn download_and_store_asset<'b>(
+    fn download_and_store_asset(
         assets: &mut HashMap<String, Asset>,
         asset: &Asset,
         link_key: &str,

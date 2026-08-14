@@ -92,11 +92,11 @@ fn match_asset_source(
     asset: Asset,
     src_dir: &PathBuf,
     assets_count: &mut i32,
-) -> () {
+) {
     match asset.source {
         // local asset kind
         AssetKind::Local(_) => {
-            let relative = asset.location_on_disk.strip_prefix(&src_dir);
+            let relative = asset.location_on_disk.strip_prefix(src_dir);
             match relative {
                 Ok(_relative_link_path) => {
                     let link_key = asset.original_link.clone();
