@@ -31,8 +31,8 @@ fn test_output_long_book_exists() {
 #[test]
 #[serial]
 fn test_output_long_book_is_valid() {
-    output_epub_is_valid("long_book_example");
-    // common::epub::output_epub_is_valid_preserve_temp_folder("long_book_example");
+    // output_epub_is_valid("long_book_example");
+    common::epub::output_epub_is_valid_preserve_temp_folder("long_book_example");
 }
 
 #[test]
@@ -54,6 +54,32 @@ fn test_long_book_lookup_chapter_1_heading() {
     let content = file.unwrap();
     debug!("content = {:?}", content.len());
     assert!(content.contains("<h1>Chapter 1</h1>"));
+}
+
+#[test]
+#[serial]
+fn test_long_book_chapter_1_rustdoc_include_expanded() {
+    debug!("rustdoc_include shortcode should be expanded by the LinkPreprocessor...");
+    let mut doc = generate_epub("long_book_example").unwrap();
+
+    let path = if cfg!(target_os = "linux") {
+        Path::new("OEBPS").join("chapter_1.html") // linux
+    } else {
+        Path::new("OEBPS/chapter_1.html").to_path_buf() // windows with 'forward slash' /
+    };
+    let content = doc.0.get_resource_str_by_path(path).unwrap();
+
+    // `{{#rustdoc_include ...}}` from chapter_1.md must be replaced with the
+    // anchored content of `../listings/.../main.rs`
+    assert!(
+        !content.contains("{{#rustdoc_include"),
+        "the {{#rustdoc_include}} shortcode was not expanded"
+    );
+    assert!(
+        content.contains("guess.cmp"),
+        "expected the anchored code from main.rs to be present"
+    );
+    assert!(content.contains("You win!"));
 }
 
 #[test]

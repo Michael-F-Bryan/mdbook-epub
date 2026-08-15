@@ -8,6 +8,8 @@ language = "en"
 [build]
 build-dir = "book-epub"
 
+[preprocessor.links]
+
 [output.epub]
 curly-quotes = true
 epub-version = 3
