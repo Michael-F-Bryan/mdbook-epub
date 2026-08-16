@@ -61,11 +61,11 @@ impl IncludeDocFilter {
 
 /// Returns `true` when the line is a hidden rustdoc line, i.e. it starts
 /// with `#` followed by whitespace or is a bare `#`. Attribute lines like
-/// `#[cfg(test)]` are real code and are not hidden.
+/// `#[cfg(test)]` are real code and should not be hidden.
 fn is_hidden_line(line: &str) -> bool {
     let mut chars = line.chars();
     match chars.next() {
-        Some('#') => chars.next().map_or(true, char::is_whitespace),
+        Some('#') => chars.next().is_none_or(char::is_whitespace),
         _ => false,
     }
 }
@@ -141,17 +141,19 @@ mod tests {
 
     #[test]
     fn test_apply_removes_hidden_lines_in_language_block() {
-        let md = "```rust\n\
-                  # struct Foo {\n\
-                  #     x: i32,\n\
-                  # }\n\
-                  \n\
-                  impl Foo {\n\
-                      fn f() {}\n\
-                  }\n\
-                  # \n\
-                  # fn main() {}\n\
-                  ```";
+        let md = concat!(
+            "```rust\n",
+            "# struct Foo {\n",
+            "#     x: i32,\n",
+            "# }\n",
+            "\n",
+            "impl Foo {\n",
+            "    fn f() {}\n",
+            "}\n",
+            "# \n",
+            "# fn main() {}\n",
+            "```",
+        );
         assert_eq!(
             text_events(md, true),
             vec!["\nimpl Foo {\n    fn f() {}\n}\n".to_string()]
@@ -160,17 +162,19 @@ mod tests {
 
     #[test]
     fn test_apply_keeps_attribute_lines() {
-        let md = "```rust\n\
-                  pub fn add(left: u64, right: u64) -> u64 {\n\
-                      left + right\n\
-                  }\n\
-                  \n\
-                  #[cfg(test)]\n\
-                  mod tests {\n\
-                      #[test]\n\
-                      fn it_works() {}\n\
-                  }\n\
-                  ```";
+        let md = concat!(
+            "```rust\n",
+            "pub fn add(left: u64, right: u64) -> u64 {\n",
+            "    left + right\n",
+            "}\n",
+            "\n",
+            "#[cfg(test)]\n",
+            "mod tests {\n",
+            "    #[test]\n",
+            "    fn it_works() {}\n",
+            "}\n",
+            "```",
+        );
         assert_eq!(
             text_events(md, true),
             vec![
@@ -195,7 +199,7 @@ mod tests {
         let md = "# Heading\n\nSome text with # not at line start\n";
         assert_eq!(
             text_events(md, true),
-            vec!["Heading".to_string(), "Some text with # not at line start\n".to_string()]
+            vec!["Heading".to_string(), "Some text with # not at line start".to_string()]
         );
     }
 

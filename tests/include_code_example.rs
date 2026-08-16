@@ -26,6 +26,11 @@ fn test_include_code_example() {
     // `{{#rustdoc_include}}`, `{{#playground}}
     assert!(!content.contains("{{#rustdoc_include"));
     assert!(!content.contains("{{#playground"));
+    // hidden rustdoc lines (`#`) are removed from language code blocks...
+    assert!(!content.contains("# fn main() {}"));
+    // ...while visible code and `#[...]` attribute lines are kept
+    assert!(content.contains("impl&lt;'a&gt; ImportantExcerpt&lt;'a&gt; {"));
+    assert!(content.contains("#[cfg(test)]"));
 }
 
 #[ignore = "CI/CD only"]

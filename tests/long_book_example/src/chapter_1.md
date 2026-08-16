@@ -10,7 +10,9 @@ Here is the Rust logo:
 ![Rust Logo](rust-logo.png)
 
 Listing example:
+```rust
 {{#rustdoc_include ../listings/ch02-guessing-game-tutorial/no-listing-04-looping/src/main.rs:here}}
+```
 
 <p><img alt="Rust Logo in html" src="rust-logo.svg" class="center" style="width: 20%;" /></p>
 

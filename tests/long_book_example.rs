@@ -2,7 +2,7 @@ use serial_test::serial;
 use std::path::Path;
 use tracing::debug;
 mod common;
-use crate::common::epub::{create_dummy_book, output_epub_is_valid};
+use crate::common::epub::create_dummy_book;
 use common::epub::generate_epub;
 
 #[test]
@@ -31,8 +31,8 @@ fn test_output_long_book_exists() {
 #[test]
 #[serial]
 fn test_output_long_book_is_valid() {
-    // output_epub_is_valid("long_book_example");
-    common::epub::output_epub_is_valid_preserve_temp_folder("long_book_example");
+    common::epub::output_epub_is_valid("long_book_example");
+    // common::epub::output_epub_is_valid_preserve_temp_folder("long_book_example");
 }
 
 #[test]
