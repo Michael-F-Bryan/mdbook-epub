@@ -29,6 +29,8 @@ pub struct Config {
     pub footnote_backrefs: bool,
     /// EPUB version to use if specified, otherwise defaults to the epub-builder default.
     pub epub_version: Option<u8>,
+    /// An internal technical setting (if included docs need later postprocessing)
+    pub preprocessor_list: Option<Vec<String>>,
 }
 
 impl Config {
@@ -74,6 +76,7 @@ impl Default for Config {
             curly_quotes: false,
             footnote_backrefs: false,
             epub_version: None,
+            preprocessor_list: None,
         }
     }
 }
