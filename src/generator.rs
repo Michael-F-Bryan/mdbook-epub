@@ -25,7 +25,7 @@ use std::{
     path::PathBuf,
 };
 use tracing::{debug, error, info, trace, warn};
-use crate::filters::include_doc_post_processor::IncludeDocFilter;
+use crate::filters::include_doc_filter::IncludeDocFilter;
 
 /// The actual EPUB book renderer.
 pub struct Generator<'a> {
