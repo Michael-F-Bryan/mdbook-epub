@@ -902,6 +902,7 @@ dependencies = [
  "infer",
  "mdbook-core",
  "mdbook-driver",
+ "mdbook-preprocessor",
  "mdbook-renderer",
  "mime_guess",
  "mockall",

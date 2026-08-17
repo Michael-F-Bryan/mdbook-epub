@@ -10,3 +10,8 @@ Logo 2
 
 Logo 3
 ![Logo at root](../reddit.svg)
+
+Listing example:
+```rust
+{{#rustdoc_include ../../listings/ch02-guessing-game-tutorial/no-listing-04-looping/src/main.rs:here}}
+``

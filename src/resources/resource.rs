@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::path::MAIN_SEPARATOR_STR;
+use std::path::{MAIN_SEPARATOR_STR, PathBuf};
 
 use const_format::concatcp;
 use html_parser::{Dom, Element, Node};
@@ -71,46 +71,8 @@ pub(crate) fn find(ctx: &RenderContext) -> Result<HashMap<String, Asset>, Error>
                         "Check relative path assets chapter: '{}' for\n{}",
                         ch.name, asset
                     );
-                    match asset.source {
-                        // local asset kind
-                        AssetKind::Local(_) => {
-                            let relative = asset.location_on_disk.strip_prefix(&src_dir);
-                            match relative {
-                                Ok(_relative_link_path) => {
-                                    let link_key = asset.original_link.clone();
-                                    if let std::collections::hash_map::Entry::Vacant(e) =
-                                        assets.entry(link_key.to_owned())
-                                    {
-                                        debug!(
-                                            "Adding asset by link '{:?}' : {}",
-                                            link_key, &asset
-                                        );
-                                        e.insert(asset);
-                                        assets_count += 1;
-                                    } else {
-                                        debug!("Skipped asset for '{}'", link_key);
-                                    }
-                                }
-                                _ => {
-                                    // skip incorrect resource/image link outside of book /SRC/ folder
-                                    warn!(
-                                        "Sorry, we can't add 'Local asset' that is outside of book's /src/ folder, {:?}",
-                                        &asset
-                                    );
-                                }
-                            }
-                        }
-                        AssetKind::Remote(_) => {
-                            // remote asset kind
-                            let link_key = asset.original_link.clone();
-                            debug!("Adding Remote asset by link '{}' : {}", link_key, &asset);
-                            assets.insert(link_key, asset);
-                            assets_count += 1;
-                        }
-                        AssetKind::Embedded => {
-                            debug!("Embedded asset '{}' by Event", &asset.original_link);
-                        }
-                    };
+                    // process asset item
+                    match_asset_source(&mut assets, asset, &src_dir, &mut assets_count);
                 }
                 debug!(
                     "Found '{}' links and assets inside '{}'",
@@ -123,6 +85,51 @@ pub(crate) fn find(ctx: &RenderContext) -> Result<HashMap<String, Asset>, Error>
     }
     debug!("Added '{}' links and assets in total", assets.len());
     Ok(assets)
+}
+
+fn match_asset_source(
+    assets: &mut HashMap<String, Asset>,
+    asset: Asset,
+    src_dir: &PathBuf,
+    assets_count: &mut i32,
+) {
+    match asset.source {
+        // local asset kind
+        AssetKind::Local(_) => {
+            let relative = asset.location_on_disk.strip_prefix(src_dir);
+            match relative {
+                Ok(_relative_link_path) => {
+                    let link_key = asset.original_link.clone();
+                    if let std::collections::hash_map::Entry::Vacant(e) =
+                        assets.entry(link_key.to_owned())
+                    {
+                        debug!("Adding asset by link '{:?}' : {}", link_key, &asset);
+                        e.insert(asset);
+                        *assets_count += 1;
+                    } else {
+                        debug!("Skipped asset for '{}'", link_key);
+                    }
+                }
+                _ => {
+                    // skip incorrect resource/image link outside of book /SRC/ folder
+                    warn!(
+                        "Sorry, we can't add 'Local asset' that is outside of book's /src/ folder, {:?}",
+                        &asset
+                    );
+                }
+            }
+        }
+        AssetKind::Remote(_) => {
+            // remote asset kind
+            let link_key = asset.original_link.clone();
+            debug!("Adding Remote asset by link '{}' : {}", link_key, &asset);
+            assets.insert(link_key, asset);
+            *assets_count += 1;
+        }
+        AssetKind::Embedded => {
+            debug!("Embedded asset '{}' by Event", &asset.original_link);
+        }
+    };
 }
 
 // Look up resources in nested HTML element

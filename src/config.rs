@@ -29,6 +29,8 @@ pub struct Config {
     pub footnote_backrefs: bool,
     /// EPUB version to use if specified, otherwise defaults to the epub-builder default.
     pub epub_version: Option<u8>,
+    /// An internal technical setting (if included docs need later postprocessing)
+    pub preprocessor_list: Option<Vec<String>>,
 }
 
 impl Config {
@@ -60,6 +62,12 @@ impl Config {
             None => Ok(DEFAULT_TEMPLATE.to_string()),
         }
     }
+
+    pub fn has_preprocessor(&self, name: &str) -> bool {
+        self.preprocessor_list
+            .as_ref()
+            .is_some_and(|list| list.iter().any(|s| s == name))
+    }
 }
 
 impl Default for Config {
@@ -74,6 +82,7 @@ impl Default for Config {
             curly_quotes: false,
             footnote_backrefs: false,
             epub_version: None,
+            preprocessor_list: None,
         }
     }
 }

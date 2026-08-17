@@ -21,11 +21,14 @@ mod config;
 pub mod errors;
 mod filters;
 mod generator;
+pub mod init_trace;
+mod preprocessor;
 mod resources;
 mod utils;
 mod validation;
-pub mod init_trace;
+
 // Reexport function
+use crate::preprocessor::run_link_preprocessor;
 pub use init_trace::init_tracing;
 
 /// The default stylesheet used to make the rendered document pretty.
@@ -73,7 +76,21 @@ pub fn generate(ctx: &RenderContext) -> Result<(), Error> {
     );
     let f = File::create(&outfile)?;
     debug!("Path to epub file: '{:?}'", f);
-    Generator::new(ctx)?.generate(f)?;
+
+    // mdbook runs its built-in preprocessors (like the `LinkPreprocessor`,
+    // which expands the `{{#include}}`, `{{#rustdoc_include}}`, `{{#playground}}`
+    // and `{{#title}}` shortcodes) before handing the book to a renderer.
+    // When used as a mdbook plugin the `RenderContext` already contains the
+    // preprocessed book. In case a standalone invocations (`mdbook-epub -s`) and
+    // programmatic calls (e.g. the integration tests) it bypasses mdbook, so we run
+    // the `LinkPreprocessor` here beforehand. We do that just like in mdbook itself
+    // only when it is enabled via `[preprocessor.links]` in `book.toml`.
+    let ctx = match run_link_preprocessor(ctx)? {
+        Some(preprocessed_ctx) => preprocessed_ctx,
+        None => ctx.clone(),
+    };
+
+    Generator::new(&ctx)?.generate(f)?;
 
     Ok(())
 }
@@ -102,10 +119,7 @@ pub fn file_io<T>(
     })
 }
 
-pub fn path_io<T>(
-    result: std::io::Result<T>,
-    path: impl Into<PathBuf>,
-) -> Result<T, Error> {
+pub fn path_io<T>(result: std::io::Result<T>, path: impl Into<PathBuf>) -> Result<T, Error> {
     result.map_err(|e| Error::AssetPathIo {
         path: path.into(),
         source: e,

@@ -40,6 +40,7 @@ tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.22", features = ["env-filter"] }
 mdbook-core = { version = "0.5.4", default-features = false }          # I'm kinda anxious about it as they say it's for internal use, examples still outdated
 mdbook-driver = { version = "0.5.4", default-features = false }        # Because we support standalone rendering...
+mdbook-preprocessor = { version = "0.5.4", default-features = false }   # Preprocessor trait + context, to run the built-in LinkPreprocessor
 mdbook-renderer = { version = "0.5.4", default-features = false }
 handlebars = "6.4.1"# downgraded due to parent 'mdbook' dependency and error there
 html_parser = "0.7.0"

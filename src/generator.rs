@@ -25,6 +25,7 @@ use std::{
     path::PathBuf,
 };
 use tracing::{debug, error, info, trace, warn};
+use crate::filters::include_doc_filter::IncludeDocFilter;
 
 /// The actual EPUB book renderer.
 pub struct Generator<'a> {
@@ -46,7 +47,15 @@ impl<'a> Generator<'a> {
         handler: impl ContentRetriever + 'static,
     ) -> Result<Generator<'a>, Error> {
         let handler = Box::new(handler);
-        let config = Config::from_render_context(ctx)?;
+        let mut config = Config::from_render_context(ctx)?;
+
+        if ctx.config.preprocessors::<serde_json::Value>()?.contains_key("links") && config.preprocessor_list.is_none() {
+            debug!(
+            "The LinkPreprocessor is enabled in book.toml \
+             (`[preprocessor.links]` is present), using it"
+        );
+            config.preprocessor_list = Some(vec!["links".to_string()]);
+        }
 
         let epub_version = validate_config_epub_version(&config)?;
 
@@ -236,9 +245,17 @@ impl<'a> Generator<'a> {
                 FootnoteFilter::new(false)
             };
 
+        let mut included_doc_filter =
+            if self.config.has_preprocessor("links") {
+                IncludeDocFilter::new(true)
+            } else {
+                IncludeDocFilter::new(false)
+            };
+
         let events = parser
             .map(|event| quote_converter.apply(event))
             .map(|event| asset_link_filter.apply(event))
+            .map(|event| included_doc_filter.apply(event))
             .filter_map(|event| footnote_filter.apply(event));
 
         trace!("Found Rendering events map = [{:?}]", &events);
