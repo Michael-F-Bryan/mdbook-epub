@@ -246,7 +246,7 @@ impl<'a> Generator<'a> {
             };
 
         let mut included_doc_filter =
-            if self.config.preprocessor_list.is_some() && self.config.preprocessor_list.as_ref().unwrap().contains(&"links".to_string()) {
+            if self.config.has_preprocessor("links") {
                 IncludeDocFilter::new(true)
             } else {
                 IncludeDocFilter::new(false)

@@ -62,6 +62,12 @@ impl Config {
             None => Ok(DEFAULT_TEMPLATE.to_string()),
         }
     }
+
+    pub fn has_preprocessor(&self, name: &str) -> bool {
+        self.preprocessor_list
+            .as_ref()
+            .is_some_and(|list| list.iter().any(|s| s == name))
+    }
 }
 
 impl Default for Config {
